@@ -21,6 +21,8 @@ import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.micronaut.context.ApplicationContext;
+import io.micronaut.runtime.Micronaut;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -80,6 +82,8 @@ public class RestModule implements IgniteComponent {
 
     /** Netty channel. */
     private volatile Channel channel;
+    
+    private volatile ApplicationContext context;
 
     /**
      * Creates a new instance of REST module.
@@ -103,41 +107,17 @@ public class RestModule implements IgniteComponent {
     /** {@inheritDoc} */
     @Override
     public void start() {
-        if (channel != null) {
-            throw new IgniteException("RestModule is already started.");
-        }
-
-        var router = new Router();
-
-        router
-                .get(
-                        NODE_CFG_URL,
-                        (req, resp) -> resp.json(nodeCfgPresentation.represent())
-                )
-                .get(
-                        CLUSTER_CFG_URL,
-                        (req, resp) -> resp.json(clusterCfgPresentation.represent())
-                )
-                .get(
-                        NODE_CFG_URL + ":" + PATH_PARAM,
-                        (req, resp) -> handleRepresentByPath(req, resp, nodeCfgPresentation)
-                )
-                .get(
-                        CLUSTER_CFG_URL + ":" + PATH_PARAM,
-                        (req, resp) -> handleRepresentByPath(req, resp, clusterCfgPresentation)
-                )
-                .put(
-                        NODE_CFG_URL,
-                        APPLICATION_JSON,
-                        (req, resp) -> handleUpdate(req, resp, nodeCfgPresentation)
-                )
-                .put(
-                        CLUSTER_CFG_URL,
-                        APPLICATION_JSON,
-                        (req, resp) -> handleUpdate(req, resp, clusterCfgPresentation)
-                );
-
-        channel = startRestEndpoint(router).channel();
+        var clusterConfigurationController = new ClusterConfigurationController(clusterCfgPresentation);
+        var nodeConfigurationController = new NodeConfigurationController(nodeCfgPresentation);
+        
+        final String[] args = {"-Dmicronaut.server.port=10300", "-Dmicronaut.server.netty.worker.event-loop-group=ignite-worker"};
+        context = Micronaut.build(args)
+                .classes(NamedEventLoopGroupFactory.class)
+                .singletons(clusterConfigurationController, nodeConfigurationController)
+                .start();
+//        if (channel != null) {
+//            throw new IgniteException("RestModule is already started.");
+//        }
     }
 
     /**
@@ -162,10 +142,10 @@ public class RestModule implements IgniteComponent {
         ServerBootstrap b = bootstrapFactory.createServerBootstrap()
                 .handler(new LoggingHandler(LogLevel.INFO))
                 .childHandler(hnd);
-
+        
         for (int portCandidate = desiredPort; portCandidate <= desiredPort + portRange; portCandidate++) {
             ChannelFuture bindRes = b.bind(portCandidate).awaitUninterruptibly();
-
+            
             if (bindRes.isSuccess()) {
                 ch = bindRes.channel();
                 port = portCandidate;
@@ -174,6 +154,7 @@ public class RestModule implements IgniteComponent {
                 throw new RuntimeException(bindRes.cause());
             }
         }
+        
 
         if (ch == null) {
             String msg = "Cannot start REST endpoint. "
@@ -194,6 +175,11 @@ public class RestModule implements IgniteComponent {
     /** {@inheritDoc} */
     @Override
     public void stop() throws Exception {
+        if (context != null) {
+            context.stop();
+            context = null;
+        }
+        
         if (channel != null) {
             channel.close().await();
 

@@ -17,6 +17,9 @@
 
 package org.apache.ignite.rest;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Error result represent a tuple of error type and user-friendly error message.
  */
@@ -33,7 +36,8 @@ public class ErrorResult {
      * @param type    Error type describing the class of the error occurred.
      * @param message User-friendly error message.
      */
-    public ErrorResult(String type, String message) {
+    @JsonCreator
+    public ErrorResult(@JsonProperty("type") String type, @JsonProperty("message") String message) {
         this.type = type;
         this.message = message;
     }
