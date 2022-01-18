@@ -217,7 +217,7 @@ public class IgniteImpl implements Ignite {
                 distributedTblMgr
         );
 
-        restModule = new RestModule(nodeCfgMgr, clusterCfgMgr, nettyBootstrapFactory);
+        restModule = new RestModule(nodeCfgMgr, clusterCfgMgr);
 
         clientHandlerModule = new ClientHandlerModule(
                 qryEngine,

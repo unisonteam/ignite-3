@@ -27,9 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.ignite.configuration.annotation.Config;
-import org.apache.ignite.configuration.annotation.ConfigValue;
-import org.apache.ignite.configuration.annotation.ConfigurationRoot;
 import org.apache.ignite.configuration.annotation.Value;
 import org.apache.ignite.configuration.validation.ConfigurationValidationException;
 import org.apache.ignite.configuration.validation.ValidationContext;
@@ -37,6 +34,7 @@ import org.apache.ignite.configuration.validation.ValidationIssue;
 import org.apache.ignite.configuration.validation.Validator;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
+import org.apache.ignite.rest.TestRootConfiguration;
 import org.apache.ignite.rest.presentation.hocon.HoconPresentation;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -171,29 +169,5 @@ public class ConfigurationPresentationTest {
                 ConfigurationValidationException.class,
                 () -> cfgPresentation.update("{\"root\":{\"foo\":\"error\",\"subCfg\":{\"bar\":\"foo\"}}}")
         );
-    }
-
-    /**
-     * Test root configuration schema.
-     */
-    @ConfigurationRoot(rootName = "root")
-    public static class TestRootConfigurationSchema {
-        /** Foo field. */
-        @Value(hasDefault = true)
-        public String foo = "foo";
-
-        /** Sub configuration schema. */
-        @ConfigValue
-        public TestSubConfigurationSchema subCfg;
-    }
-
-    /**
-     * Test sub configuration schema.
-     */
-    @Config
-    public static class TestSubConfigurationSchema {
-        /** Bar field. */
-        @Value(hasDefault = true)
-        public String bar = "bar";
     }
 }

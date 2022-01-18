@@ -32,7 +32,7 @@ import org.apache.ignite.rest.presentation.ConfigurationPresentation;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Representing the configuration as a string using HOCON as a converter to JSON.
+ * Representing the configuration as a string using HOCON as a converter to plain text.
  */
 public class HoconPresentation implements ConfigurationPresentation<String> {
     /** Configuration registry. */

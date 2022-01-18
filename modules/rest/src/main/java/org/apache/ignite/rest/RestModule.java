@@ -17,32 +17,25 @@
 
 package org.apache.ignite.rest;
 
-import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
+import io.micronaut.context.ApplicationContext;
+import io.micronaut.http.server.exceptions.ServerStartupException;
+import io.micronaut.runtime.Micronaut;
+import io.micronaut.runtime.exceptions.ApplicationStartupException;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
 import java.net.BindException;
 import java.util.Map;
 import org.apache.ignite.configuration.schemas.rest.RestConfiguration;
 import org.apache.ignite.configuration.schemas.rest.RestView;
-import org.apache.ignite.configuration.validation.ConfigurationValidationException;
 import org.apache.ignite.internal.configuration.ConfigurationManager;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
 import org.apache.ignite.internal.manager.IgniteComponent;
-import org.apache.ignite.lang.IgniteException;
 import org.apache.ignite.lang.IgniteLogger;
-import org.apache.ignite.network.NettyBootstrapFactory;
-import org.apache.ignite.rest.netty.RestApiHttpRequest;
-import org.apache.ignite.rest.netty.RestApiHttpResponse;
-import org.apache.ignite.rest.netty.RestApiInitializer;
 import org.apache.ignite.rest.presentation.ConfigurationPresentation;
+import org.apache.ignite.rest.presentation.PresentationsFactory;
 import org.apache.ignite.rest.presentation.hocon.HoconPresentation;
-import org.apache.ignite.rest.routes.Router;
 
 /**
  * Rest module is responsible for starting a REST endpoints for accessing and managing configuration.
@@ -50,24 +43,20 @@ import org.apache.ignite.rest.routes.Router;
  * <p>It is started on port 10300 by default but it is possible to change this in configuration itself. Refer to default config file in
  * resources for the example.
  */
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Ignite REST module",
+                version = "3.0.0-alpha",
+                license = @License(name = "Apache 2.0", url = "https://ignite.apache.org"),
+                contact = @Contact(email = "user@ignite.apache.org")
+        )
+)
 public class RestModule implements IgniteComponent {
     /** Default port. */
     public static final int DFLT_PORT = 10300;
 
-    /** Node configuration route. */
-    private static final String NODE_CFG_URL = "/management/v1/configuration/node/";
-
-    /** Cluster configuration route. */
-    private static final String CLUSTER_CFG_URL = "/management/v1/configuration/cluster/";
-
-    /** Path parameter. */
-    private static final String PATH_PARAM = "selector";
-
     /** Ignite logger. */
     private final IgniteLogger log = IgniteLogger.forClass(RestModule.class);
-
-    /** Node configuration register. */
-    private final ConfigurationRegistry nodeCfgRegistry;
 
     /** Presentation of node configuration. */
     private final ConfigurationPresentation<String> nodeCfgPresentation;
@@ -75,107 +64,49 @@ public class RestModule implements IgniteComponent {
     /** Presentation of cluster configuration. */
     private final ConfigurationPresentation<String> clusterCfgPresentation;
 
-    /** Netty bootstrap factory. */
-    private final NettyBootstrapFactory bootstrapFactory;
+    /** Node configuration registry. */
+    private final ConfigurationRegistry nodeCfgRegistry;
 
-    /** Netty channel. */
-    private volatile Channel channel;
+    /** Configuration presentations factory. */
+    private final PresentationsFactory presentationsFactory;
+
+    /** Micronaut application context. */
+    private ApplicationContext context;
 
     /**
      * Creates a new instance of REST module.
      *
-     * @param nodeCfgMgr       Node configuration manager.
-     * @param clusterCfgMgr    Cluster configuration manager.
-     * @param bootstrapFactory Netty bootstrap factory.
+     * @param nodeCfgMgr    Node configuration manager.
+     * @param clusterCfgMgr Cluster configuration manager.
      */
     public RestModule(
             ConfigurationManager nodeCfgMgr,
-            ConfigurationManager clusterCfgMgr,
-            NettyBootstrapFactory bootstrapFactory) {
-        nodeCfgRegistry = nodeCfgMgr.configurationRegistry();
+            ConfigurationManager clusterCfgMgr) {
 
-        nodeCfgPresentation = new HoconPresentation(nodeCfgMgr.configurationRegistry());
-        clusterCfgPresentation = new HoconPresentation(clusterCfgMgr.configurationRegistry());
-
-        this.bootstrapFactory = bootstrapFactory;
+        this.nodeCfgRegistry = nodeCfgMgr.configurationRegistry();
+        this.nodeCfgPresentation = new HoconPresentation(nodeCfgRegistry);
+        this.clusterCfgPresentation = new HoconPresentation(clusterCfgMgr.configurationRegistry());
+        this.presentationsFactory = new PresentationsFactory(clusterCfgPresentation, nodeCfgPresentation);
     }
 
     /** {@inheritDoc} */
     @Override
     public void start() {
-        if (channel != null) {
-            throw new IgniteException("RestModule is already started.");
-        }
-
-        var router = new Router();
-
-        router
-                .get(
-                        NODE_CFG_URL,
-                        (req, resp) -> resp.json(nodeCfgPresentation.represent())
-                )
-                .get(
-                        CLUSTER_CFG_URL,
-                        (req, resp) -> resp.json(clusterCfgPresentation.represent())
-                )
-                .get(
-                        NODE_CFG_URL + ":" + PATH_PARAM,
-                        (req, resp) -> handleRepresentByPath(req, resp, nodeCfgPresentation)
-                )
-                .get(
-                        CLUSTER_CFG_URL + ":" + PATH_PARAM,
-                        (req, resp) -> handleRepresentByPath(req, resp, clusterCfgPresentation)
-                )
-                .put(
-                        NODE_CFG_URL,
-                        APPLICATION_JSON,
-                        (req, resp) -> handleUpdate(req, resp, nodeCfgPresentation)
-                )
-                .put(
-                        CLUSTER_CFG_URL,
-                        APPLICATION_JSON,
-                        (req, resp) -> handleUpdate(req, resp, clusterCfgPresentation)
-                );
-
-        channel = startRestEndpoint(router).channel();
-    }
-
-    /**
-     * Start endpoint.
-     *
-     * @param router Dispatcher of http requests.
-     * @return Future which will be notified when this channel is closed.
-     * @throws RuntimeException if this module cannot be bound to a port.
-     */
-    private ChannelFuture startRestEndpoint(Router router) {
         RestView restConfigurationView = nodeCfgRegistry.getConfiguration(RestConfiguration.KEY).value();
 
         int desiredPort = restConfigurationView.port();
         int portRange = restConfigurationView.portRange();
 
-        int port = 0;
-
-        Channel ch = null;
-
-        var hnd = new RestApiInitializer(router);
-
-        ServerBootstrap b = bootstrapFactory.createServerBootstrap()
-                .handler(new LoggingHandler(LogLevel.INFO))
-                .childHandler(hnd);
-
         for (int portCandidate = desiredPort; portCandidate <= desiredPort + portRange; portCandidate++) {
-            ChannelFuture bindRes = b.bind(portCandidate).awaitUninterruptibly();
-
-            if (bindRes.isSuccess()) {
-                ch = bindRes.channel();
-                port = portCandidate;
+            try {
+                context = buildMicronautContext(portCandidate).start();
                 break;
-            } else if (!(bindRes.cause() instanceof BindException)) {
-                throw new RuntimeException(bindRes.cause());
+            } catch (ApplicationStartupException e) {
+                log.error("Got exception during node start on port " + portCandidate + ", trying again");
             }
         }
 
-        if (ch == null) {
+        if (context == null) {
             String msg = "Cannot start REST endpoint. "
                     + "All ports in range [" + desiredPort + ", " + (desiredPort + portRange) + "] are in use.";
 
@@ -183,83 +114,31 @@ public class RestModule implements IgniteComponent {
 
             throw new RuntimeException(msg);
         }
+    }
 
-        if (log.isInfoEnabled()) {
-            log.info("REST protocol started successfully on port " + port);
+    private Micronaut buildMicronautContext(int portCandidate) {
+        return Micronaut.build("")
+                .properties(Map.of("micronaut.server.port", portCandidate))
+                .singletons(presentationsFactory)
+                .banner(false)
+                .mapError(ServerStartupException.class, this::mapServerStartupException)
+                .mapError(ApplicationStartupException.class, ex -> -1);
+    }
+
+    private int mapServerStartupException(ServerStartupException exception) {
+        if (exception.getCause() instanceof BindException) {
+            return -1;
+        } else {
+            return 1;
         }
-
-        return ch.closeFuture();
     }
 
     /** {@inheritDoc} */
     @Override
-    public void stop() throws Exception {
-        if (channel != null) {
-            channel.close().await();
-
-            channel = null;
-        }
-    }
-
-    /**
-     * Handle a request to get the configuration by {@link #PATH_PARAM path}.
-     *
-     * @param req          Rest request.
-     * @param res          Rest response.
-     * @param presentation Configuration presentation.
-     */
-    private void handleRepresentByPath(
-            RestApiHttpRequest req,
-            RestApiHttpResponse res,
-            ConfigurationPresentation<String> presentation
-    ) {
-        try {
-            String cfgPath = req.queryParams().get(PATH_PARAM);
-
-            res.json(presentation.representByPath(cfgPath));
-        } catch (IllegalArgumentException pathE) {
-            ErrorResult errRes = new ErrorResult("CONFIG_PATH_UNRECOGNIZED", pathE.getMessage());
-
-            res.status(BAD_REQUEST);
-            res.json(Map.of("error", errRes));
-        }
-    }
-
-    /**
-     * Handle a configuration update request as json.
-     *
-     * @param req          Rest request.
-     * @param res          Rest response.
-     * @param presentation Configuration presentation.
-     */
-    private void handleUpdate(
-            RestApiHttpRequest req,
-            RestApiHttpResponse res,
-            ConfigurationPresentation<String> presentation
-    ) {
-        try {
-            String updateReq = req
-                    .request()
-                    .content()
-                    .readCharSequence(req.request().content().readableBytes(), UTF_8)
-                    .toString();
-
-            presentation.update(updateReq);
-        } catch (IllegalArgumentException e) {
-            ErrorResult errRes = new ErrorResult("INVALID_CONFIG_FORMAT", e.getMessage());
-
-            res.status(BAD_REQUEST);
-            res.json(Map.of("error", errRes));
-        } catch (ConfigurationValidationException e) {
-            ErrorResult errRes = new ErrorResult("VALIDATION_EXCEPTION", e.getMessage());
-
-            res.status(BAD_REQUEST);
-            res.json(Map.of("error", errRes));
-        } catch (IgniteException e) {
-            ErrorResult errRes = new ErrorResult("APPLICATION_EXCEPTION", e.getMessage());
-
-            res.status(BAD_REQUEST);
-            res.json(Map.of("error", errRes));
+    public synchronized void stop() throws Exception {
+        if (context != null) {
+            context.stop();
+            context = null;
         }
     }
 }

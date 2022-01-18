@@ -16,7 +16,8 @@
  */
 
 /**
- * This package contains classes that represent URI routers and their dispatching.
+ * This package contains classes that implement the number of ExceptionHandlers. They wrap plain exceptions into a human-readable rest
+ * responses.
  */
 
-package org.apache.ignite.rest.routes;
+package org.apache.ignite.rest.exception.handler;
