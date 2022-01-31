@@ -12,6 +12,11 @@
 
     <artifactId>ignite-cli-2</artifactId>
 
+    <properties>
+        <picocli.version>4.6.2</picocli.version>
+        <jansi.version>1.18</jansi.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.micronaut</groupId>
@@ -24,29 +29,16 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli-shell-jline3</artifactId>
-            <version>4.6.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.micronaut.test</groupId>
-            <artifactId>micronaut-test-junit5</artifactId>
-            <scope>test</scope>
+            <version>${picocli.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
-            <version>1.18</version>
+            <version>${jansi.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>info.picocli</groupId>
@@ -67,6 +59,22 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <scope>runtime</scope>
+        </dependency>
+<!--        Test dependencies-->
+        <dependency>
+            <groupId>io.micronaut.test</groupId>
+            <artifactId>micronaut-test-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -98,8 +106,8 @@
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
-                        <arg>-Amicronaut.processing.group=org.apache.ignite.cli.commands</arg>
-                        <arg>-Amicronaut.processing.module=ignite-cli-2</arg>
+                        <arg>-Amicronaut.processing.group=org.apache.ignite.cli</arg>
+                        <arg>-Amicronaut.processing.artifactId=ignite-cli-2</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
