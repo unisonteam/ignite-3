@@ -107,7 +107,7 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Amicronaut.processing.group=org.apache.ignite.cli</arg>
-                        <arg>-Amicronaut.processing.artifactId=ignite-cli-2</arg>
+                        <arg>-Amicronaut.processing.artifactId=${artifactId}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
