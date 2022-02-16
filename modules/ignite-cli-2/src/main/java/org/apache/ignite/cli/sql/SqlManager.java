@@ -20,14 +20,14 @@ package org.apache.ignite.cli.sql;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.apache.ignite.cli.sql.table.Table;
 
 /**
  * Manager to work with any sql operation.
  */
-public class SqlManager {
+public class SqlManager implements AutoCloseable {
     private final Connection connection;
 
     public SqlManager(String jdbcUrl) throws SQLException {
@@ -40,38 +40,18 @@ public class SqlManager {
      * @param sql provided sql command.
      * @throws SQLException when occurs any problem with sql database.
      */
-    public void executeSql(String sql) throws SQLException {
+    public Table<String> executeSql(String sql) throws SQLException {
         Statement statement = connection.createStatement();
         statement.execute(sql);
         ResultSet resultSet = statement.getResultSet();
-        printResultSet(resultSet);
+        Table<String> table = Table.fromResultSet(resultSet);
         resultSet.close();
         statement.close();
+        return table;
     }
-
-    private static void printResultSet(ResultSet rs) throws SQLException {
-
-        // Prepare metadata object and get the number of columns.
-        ResultSetMetaData rsmd = rs.getMetaData();
-        int columnsNumber = rsmd.getColumnCount();
-
-        // Print column names (a header).
-        for (int i = 1; i <= columnsNumber; i++) {
-            if (i > 1) {
-                System.out.print(" | ");
-            }
-            System.out.print(rsmd.getColumnName(i));
-        }
-        System.out.println();
-
-        while (rs.next()) {
-            for (int i = 1; i <= columnsNumber; i++) {
-                if (i > 1) {
-                    System.out.print(" | ");
-                }
-                System.out.print(rs.getString(i));
-            }
-            System.out.println("");
-        }
+    
+    @Override
+    public void close() throws Exception {
+        connection.close();
     }
 }
