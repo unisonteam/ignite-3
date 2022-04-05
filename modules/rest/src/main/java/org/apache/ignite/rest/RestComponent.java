@@ -1,0 +1,144 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.ignite.rest;
+
+import io.micronaut.context.ApplicationContext;
+import io.micronaut.http.server.exceptions.ServerStartupException;
+import io.micronaut.runtime.Micronaut;
+import io.micronaut.runtime.exceptions.ApplicationStartupException;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
+import java.net.BindException;
+import java.util.Map;
+import org.apache.ignite.configuration.schemas.rest.RestConfiguration;
+import org.apache.ignite.configuration.schemas.rest.RestView;
+import org.apache.ignite.internal.configuration.ConfigurationManager;
+import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.rest.presentation.ConfigurationPresentation;
+import org.apache.ignite.internal.configuration.rest.presentation.hocon.HoconPresentation;
+import org.apache.ignite.internal.manager.IgniteComponent;
+import org.apache.ignite.lang.IgniteLogger;
+import org.apache.ignite.rest.presentation.PresentationsFactory;
+
+/**
+ * Rest module is responsible for starting a REST endpoints for accessing and managing configuration.
+ *
+ * <p>It is started on port 10300 by default but it is possible to change this in configuration itself. Refer to default config file in
+ * resources for the example.
+ */
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Ignite REST module",
+                version = "3.0.0-alpha",
+                license = @License(name = "Apache 2.0", url = "https://ignite.apache.org"),
+                contact = @Contact(email = "user@ignite.apache.org")
+        )
+)
+public class RestComponent implements IgniteComponent {
+    /** Default port. */
+    public static final int DFLT_PORT = 10300;
+
+    /** Ignite logger. */
+    private final IgniteLogger log = IgniteLogger.forClass(RestComponent.class);
+
+    /** Presentation of node configuration. */
+    private final ConfigurationPresentation<String> nodeCfgPresentation;
+
+    /** Presentation of cluster configuration. */
+    private final ConfigurationPresentation<String> clusterCfgPresentation;
+
+    /** Node configuration registry. */
+    private final ConfigurationRegistry nodeCfgRegistry;
+
+    /** Configuration presentations factory. */
+    private final PresentationsFactory presentationsFactory;
+
+    /** Micronaut application context. */
+    private ApplicationContext context;
+
+    /**
+     * Creates a new instance of REST module.
+     *
+     * @param nodeCfgMgr    Node configuration manager.
+     * @param clusterCfgMgr Cluster configuration manager.
+     */
+    public RestComponent(
+            ConfigurationManager nodeCfgMgr,
+            ConfigurationManager clusterCfgMgr) {
+
+        this.nodeCfgRegistry = nodeCfgMgr.configurationRegistry();
+        this.nodeCfgPresentation = new HoconPresentation(nodeCfgRegistry);
+        this.clusterCfgPresentation = new HoconPresentation(clusterCfgMgr.configurationRegistry());
+        this.presentationsFactory = new PresentationsFactory(clusterCfgPresentation, nodeCfgPresentation);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void start() {
+        RestView restConfigurationView = nodeCfgRegistry.getConfiguration(RestConfiguration.KEY).value();
+
+        int desiredPort = restConfigurationView.port();
+        int portRange = restConfigurationView.portRange();
+
+        for (int portCandidate = desiredPort; portCandidate <= desiredPort + portRange; portCandidate++) {
+            try {
+                context = buildMicronautContext(portCandidate).start();
+                break;
+            } catch (ApplicationStartupException e) {
+                log.error("Got exception " + e.getCause() + " during node start on port " + portCandidate + " , trying again");
+            }
+        }
+
+        if (context == null) {
+            String msg = "Cannot start REST endpoint. "
+                    + "All ports in range [" + desiredPort + ", " + (desiredPort + portRange) + "] are in use.";
+
+            log.error(msg);
+
+            throw new RuntimeException(msg);
+        }
+    }
+
+    private Micronaut buildMicronautContext(int portCandidate) {
+        return Micronaut.build("")
+                .properties(Map.of("micronaut.server.port", portCandidate))
+                .singletons(presentationsFactory)
+                .banner(false)
+                .mapError(ServerStartupException.class, this::mapServerStartupException)
+                .mapError(ApplicationStartupException.class, ex -> -1);
+    }
+
+    private int mapServerStartupException(ServerStartupException exception) {
+        if (exception.getCause() instanceof BindException) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public synchronized void stop() throws Exception {
+        if (context != null) {
+            context.stop();
+            context = null;
+        }
+    }
+}
