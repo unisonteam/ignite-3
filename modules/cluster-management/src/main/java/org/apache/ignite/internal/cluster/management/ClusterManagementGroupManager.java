@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.cluster.management;
 
-import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.failedFuture;
 import static java.util.stream.Collectors.toSet;
@@ -44,10 +43,8 @@ import org.apache.ignite.internal.cluster.management.raft.ClusterStateStorage;
 import org.apache.ignite.internal.cluster.management.raft.CmgRaftGroupListener;
 import org.apache.ignite.internal.cluster.management.raft.CmgRaftService;
 import org.apache.ignite.internal.cluster.management.raft.commands.JoinReadyCommand;
-import org.apache.ignite.internal.cluster.management.rest.InitCommandHandler;
 import org.apache.ignite.internal.manager.IgniteComponent;
 import org.apache.ignite.internal.raft.Loza;
-import org.apache.ignite.internal.rest.RestComponent;
 import org.apache.ignite.internal.util.IgniteSpinBusyLock;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.internal.vault.VaultManager;
@@ -59,6 +56,7 @@ import org.apache.ignite.network.ClusterService;
 import org.apache.ignite.network.NetworkAddress;
 import org.apache.ignite.network.NetworkMessage;
 import org.apache.ignite.network.TopologyEventHandler;
+import org.apache.ignite.rest.RestComponent;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -106,8 +104,6 @@ public class ClusterManagementGroupManager implements IgniteComponent {
 
     private final Loza raftManager;
 
-    private final RestComponent restComponent;
-
     private final ClusterStateStorage clusterStateStorage;
 
     /** Local state. */
@@ -126,7 +122,6 @@ public class ClusterManagementGroupManager implements IgniteComponent {
     ) {
         this.clusterService = clusterService;
         this.raftManager = raftManager;
-        this.restComponent = restComponent;
         this.clusterStateStorage = clusterStateStorage;
         this.localStateStorage = new LocalStateStorage(vault);
         this.clusterInitializer = new ClusterInitializer(clusterService);
@@ -188,10 +183,6 @@ public class ClusterManagementGroupManager implements IgniteComponent {
                         handleInit((CmgInitMessage) message, senderAddr, correlationId);
                     }
                 })
-        );
-
-        restComponent.registerHandlers(routes ->
-                routes.post(REST_ENDPOINT, APPLICATION_JSON.toString(), new InitCommandHandler(clusterInitializer))
         );
     }
 

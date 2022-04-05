@@ -49,7 +49,6 @@ import org.apache.ignite.internal.configuration.ConfigurationModule;
 import org.apache.ignite.internal.configuration.ConfigurationModules;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
 import org.apache.ignite.internal.configuration.ServiceLoaderModulesProvider;
-import org.apache.ignite.internal.configuration.rest.ConfigurationHttpHandlers;
 import org.apache.ignite.internal.configuration.storage.ConfigurationStorage;
 import org.apache.ignite.internal.configuration.storage.DistributedConfigurationStorage;
 import org.apache.ignite.internal.configuration.storage.LocalConfigurationStorage;
@@ -58,7 +57,6 @@ import org.apache.ignite.internal.metastorage.server.persistence.RocksDbKeyValue
 import org.apache.ignite.internal.raft.Loza;
 import org.apache.ignite.internal.recovery.ConfigurationCatchUpListener;
 import org.apache.ignite.internal.recovery.RecoveryCompletionFutureFactory;
-import org.apache.ignite.internal.rest.RestComponent;
 import org.apache.ignite.internal.sql.engine.QueryProcessor;
 import org.apache.ignite.internal.sql.engine.SqlQueryProcessor;
 import org.apache.ignite.internal.sql.engine.message.SqlQueryMessagesSerializationRegistryInitializer;
@@ -86,6 +84,7 @@ import org.apache.ignite.network.NettyBootstrapFactory;
 import org.apache.ignite.network.NetworkAddress;
 import org.apache.ignite.network.scalecube.ScaleCubeClusterServiceFactory;
 import org.apache.ignite.raft.jraft.RaftMessagesSerializationRegistryInitializer;
+import org.apache.ignite.rest.RestComponent;
 import org.apache.ignite.sql.IgniteSql;
 import org.apache.ignite.table.manager.IgniteTables;
 import org.apache.ignite.tx.IgniteTransactions;
@@ -221,8 +220,6 @@ public class IgniteImpl implements Ignite {
 
         nettyBootstrapFactory = new NettyBootstrapFactory(networkConfiguration, clusterLocalConfiguration.getName());
 
-        restComponent = new RestComponent(nodeCfgMgr, nettyBootstrapFactory);
-
         clusterSvc = new ScaleCubeClusterServiceFactory().createClusterService(
                 clusterLocalConfiguration,
                 networkConfiguration,
@@ -243,7 +240,7 @@ public class IgniteImpl implements Ignite {
                 vaultMgr,
                 clusterSvc,
                 raftMgr,
-                restComponent,
+                null,
                 new RocksDbClusterStateStorage(workDir.resolve(CMG_DB_PATH))
         );
 
@@ -264,6 +261,8 @@ public class IgniteImpl implements Ignite {
                 modules.distributed().internalSchemaExtensions(),
                 modules.distributed().polymorphicSchemaExtensions()
         );
+
+        restComponent = new RestComponent(nodeCfgMgr, clusterCfgMgr);
 
         baselineMgr = new BaselineManager(
                 clusterCfgMgr,
@@ -320,8 +319,6 @@ public class IgniteImpl implements Ignite {
                 clusterSvc,
                 nettyBootstrapFactory
         );
-
-        new ConfigurationHttpHandlers(nodeCfgMgr, clusterCfgMgr).registerHandlers(restComponent);
 
         longJvmPauseDetector = new LongJvmPauseDetector(name);
     }
@@ -562,7 +559,7 @@ public class IgniteImpl implements Ignite {
      */
     // TODO: should be encapsulated in local properties, see https://issues.apache.org/jira/browse/IGNITE-15131
     public NetworkAddress restAddress() {
-        return NetworkAddress.from(restComponent.localAddress());
+        return new NetworkAddress(restComponent.host(), restComponent.port());
     }
 
     /**
