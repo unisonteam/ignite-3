@@ -16,7 +16,7 @@
  */
 
 /**
- * This package contains REST component core implementation.
+ * Contains a factory that adds configuration presentations to the micronaut context.
  */
 
-package org.apache.ignite.internal.rest;
+package org.apache.ignite.internal.rest.configuration.presentation;
