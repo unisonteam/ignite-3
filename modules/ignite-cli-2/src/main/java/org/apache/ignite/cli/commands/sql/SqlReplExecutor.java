@@ -17,52 +17,49 @@ import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 
+/**
+ * SQL REPL command executor.
+ */
 @Singleton
 public class SqlReplExecutor {
-  private static final String PROMPT = "sql-cli> ";
-  private static final String COMMAND_PREFIX = "!";
+    private static final String PROMPT = "sql-cli> ";
+    private static final String COMMAND_PREFIX = "!";
 
-  @Inject
-  private ReplExecutor replExecutor;
-  @Inject
-  private Terminal terminal;
+    @Inject
+    private ReplExecutor replExecutor;
+    @Inject
+    private Terminal terminal;
 
-  public void executeRepl(SqlExecutor sqlExecutor) {
-    LineReader reader = LineReaderBuilder.builder()
-        .terminal(terminal)
-        //.completer()
-        .parser(new DefaultParser())
-        .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
-        .build();
-    SqlReplCommandExecutor executor = new SqlReplCommandExecutor(sqlExecutor);
-    RegistryCommandExecutor call =
-        new RegistryCommandExecutor(replExecutor.createRegistry(),
-                                    replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class),
-                                    reader, false);
-    // start the shell and process input until the user quits with Ctrl-D
-    while (true) {
-      try {
-        String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null).trim();
-        if (line.startsWith(COMMAND_PREFIX)) {
-          DefaultCallExecutionPipeline.builder(call)
-              .inputProvider(() -> new ReplCallInput(line.substring(COMMAND_PREFIX.length())))
-              .output(new PrintWriter(System.out, true))
-              .errOutput(new PrintWriter(System.err, true))
-              .build()
-              .runPipeline();
-        } else {
-          DefaultCallExecutionPipeline.builder(executor)
-              .inputProvider(() -> new ReplCallInput(line))
-              .output(new PrintWriter(System.out, true))
-              .errOutput(new PrintWriter(System.err, true))
-              .build()
-              .runPipeline();
+    /**
+     * Execute SQL REPL.
+     *
+     * @param sqlExecutor SQL executor.
+     */
+    public void executeRepl(SqlExecutor sqlExecutor) {
+        LineReader reader = LineReaderBuilder.builder().terminal(terminal)
+                //.completer()
+                .parser(new DefaultParser()).variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
+                .build();
+        SqlReplCommandExecutor executor = new SqlReplCommandExecutor(sqlExecutor);
+        RegistryCommandExecutor call = new RegistryCommandExecutor(replExecutor.createRegistry(),
+                replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class), reader, false);
+        // start the shell and process input until the user quits with Ctrl-D
+        while (true) {
+            try {
+                String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null).trim();
+                if (line.startsWith(COMMAND_PREFIX)) {
+                    DefaultCallExecutionPipeline.builder(call)
+                            .inputProvider(() -> new ReplCallInput(line.substring(COMMAND_PREFIX.length())))
+                            .output(new PrintWriter(System.out, true)).errOutput(new PrintWriter(System.err, true)).build().runPipeline();
+                } else {
+                    DefaultCallExecutionPipeline.builder(executor).inputProvider(() -> new ReplCallInput(line))
+                            .output(new PrintWriter(System.out, true)).errOutput(new PrintWriter(System.err, true)).build().runPipeline();
+                }
+            } catch (UserInterruptException e) {
+                // Ignore
+            } catch (EndOfFileException e) {
+                break;
+            }
         }
-      } catch (UserInterruptException e) {
-        // Ignore
-      } catch (EndOfFileException e) {
-        break;
-      }
     }
-  }
 }

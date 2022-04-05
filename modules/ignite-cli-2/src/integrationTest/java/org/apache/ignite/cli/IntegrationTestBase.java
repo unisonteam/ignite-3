@@ -17,6 +17,8 @@ package org.apache.ignite.cli;
  * limitations under the License.
  */
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.ignite.internal.testframework.IgniteTestUtils.testNodeName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -26,14 +28,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgnitionManager;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.internal.schema.configuration.SchemaConfigurationConverter;
 import org.apache.ignite.internal.testframework.BaseIgniteAbstractTest;
-import org.apache.ignite.internal.testframework.IgniteTestUtils;
 import org.apache.ignite.internal.testframework.WorkDirectory;
 import org.apache.ignite.internal.testframework.WorkDirectoryExtension;
 import org.apache.ignite.internal.util.Cursor;
@@ -64,7 +68,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class IntegrationTestBase extends BaseIgniteAbstractTest {
     public static final int DEFAULT_NODES_COUNT = 3;
     /** Correct ignite cluster url. */
-    protected static final String CLUSTER_URL = "https://127.0.0.1:8080";
+    protected static final String CLUSTER_URL = "https://127.0.0.1:3344";
     /** Cluster nodes. */
     protected static final List<Ignite> CLUSTER_NODES = new ArrayList<>();
     private static final IgniteLogger LOG = IgniteLogger.forClass(IntegrationTestBase.class);
@@ -72,9 +76,6 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
     private static final int BASE_PORT = 3344;
     /** Nodes bootstrap configuration pattern. */
     private static final String NODE_BOOTSTRAP_CFG = "{\n"
-            + "  \"node\": {\n"
-            + "    \"metastorageNodes\":[ {} ]\n"
-            + "  },\n"
             + "  \"network\": {\n"
             + "    \"port\":{},\n"
             + "    \"nodeFinder\":{\n"
@@ -209,20 +210,27 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
      * @param testInfo Test information oject.
      */
     @BeforeAll
-    void startNodes(TestInfo testInfo) {
-        //TODO: IGNITE-16034 Here we assume that Metastore consists into one node, and it starts at first.
-        String metastorageNodes = '\"' + IgniteTestUtils.testNodeName(testInfo, 0) + '\"';
-
+    void startNodes(TestInfo testInfo) throws ExecutionException, InterruptedException {
         String connectNodeAddr = "\"localhost:" + BASE_PORT + '\"';
 
-        for (int i = 0; i < nodes(); i++) {
-            String curNodeName = IgniteTestUtils.testNodeName(testInfo, i);
+        List<CompletableFuture<Ignite>> futures = IntStream.range(0, nodes())
+                .mapToObj(i -> {
+                    String nodeName = testNodeName(testInfo, i);
 
-            CLUSTER_NODES.add(IgnitionManager.start(curNodeName, IgniteStringFormatter.format(NODE_BOOTSTRAP_CFG,
-                    metastorageNodes,
-                    BASE_PORT + i,
-                    connectNodeAddr
-            ), WORK_DIR.resolve(curNodeName)));
+                    String config = IgniteStringFormatter.format(NODE_BOOTSTRAP_CFG, BASE_PORT + i, connectNodeAddr);
+
+                    return IgnitionManager.start(nodeName, config, WORK_DIR.resolve(nodeName));
+                })
+                .collect(toList());
+
+        String metaStorageNodeName = testNodeName(testInfo, 0);
+
+        IgnitionManager.init(metaStorageNodeName, List.of(metaStorageNodeName));
+
+        for (CompletableFuture<Ignite> future : futures) {
+            future.get(); //fixme
+
+            CLUSTER_NODES.add(future.join());
         }
     }
 
@@ -239,12 +247,17 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
      * After all.
      */
     @AfterAll
-    void stopNodes() throws Exception {
+    void stopNodes(TestInfo testInfo) throws Exception {
         LOG.info("Start tearDown()");
 
-        IgniteUtils.closeAll(reverse(CLUSTER_NODES));
-
         CLUSTER_NODES.clear();
+
+        List<AutoCloseable> closeables = IntStream.range(0, nodes())
+                .mapToObj(i -> testNodeName(testInfo, i))
+                .map(nodeName -> (AutoCloseable) () -> IgnitionManager.stop(nodeName))
+                .collect(toList());
+
+        IgniteUtils.closeAll(closeables);
 
         LOG.info("End tearDown()");
     }
