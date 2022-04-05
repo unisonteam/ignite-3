@@ -17,9 +17,15 @@
 
 package org.apache.ignite.internal.rest.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.micronaut.serde.annotation.Serdeable;
+
 /**
  * Error result represent a tuple of error type and user-friendly error message.
  */
+@Serdeable
 public class ErrorResult {
     /** Error type describing the class of the error occurred. */
     private final String type;
@@ -33,7 +39,8 @@ public class ErrorResult {
      * @param type    Error type describing the class of the error occurred.
      * @param message User-friendly error message.
      */
-    public ErrorResult(String type, String message) {
+    @JsonCreator
+    public ErrorResult(@JsonProperty("type") String type, @JsonProperty("message") String message) {
         this.type = type;
         this.message = message;
     }
@@ -43,6 +50,7 @@ public class ErrorResult {
      *
      * @return Error type describing the class of the error occurred.
      */
+    @JsonGetter("type")
     public String type() {
         return type;
     }
@@ -52,6 +60,7 @@ public class ErrorResult {
      *
      * @return User-friendly error message.
      */
+    @JsonGetter("message")
     public String message() {
         return message;
     }
