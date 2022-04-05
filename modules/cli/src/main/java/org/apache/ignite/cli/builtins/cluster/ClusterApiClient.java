@@ -39,7 +39,7 @@ import org.apache.ignite.cli.IgniteCliException;
  */
 @Singleton
 public class ClusterApiClient {
-    private static final String CLUSTER_INIT_URL = "/management/v1/cluster/init/";
+    private static final String CLUSTER_INIT_URL = "/management/v1/init/";
 
     private final HttpClient httpClient;
 

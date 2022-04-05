@@ -21,6 +21,7 @@ import static org.apache.ignite.internal.util.CollectionUtils.nullOrEmpty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.micronaut.serde.annotation.Serdeable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * REST command for initializing a cluster.
  */
+@Serdeable
 public class InitCommand {
     private final Collection<String> metaStorageNodes;
 
