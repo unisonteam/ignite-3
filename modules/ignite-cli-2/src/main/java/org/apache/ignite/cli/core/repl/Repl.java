@@ -84,18 +84,24 @@ public class Repl {
     }
     
     public void onSleep() {
-        onSleep.run();
+        safeRun(onSleep);
     }
     
     public void onWakeUp() {
-        onWakeUp.run();
+        safeRun(onWakeUp);
     }
     
     public void onEnable() {
-        onEnable.run();
+        safeRun(onEnable);
     }
-    
+
     public void dispose() {
-        onDispose.run();
+        safeRun(onDispose);
+    }
+
+    private static void safeRun(Runnable runnable) {
+        if (runnable != null) {
+            runnable.run();
+        }
     }
 }

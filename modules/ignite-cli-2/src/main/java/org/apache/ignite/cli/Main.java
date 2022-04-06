@@ -18,7 +18,6 @@
 package org.apache.ignite.cli;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
-import jakarta.inject.Inject;
 import java.util.HashMap;
 import org.apache.ignite.cli.commands.CliCommands;
 import org.apache.ignite.cli.core.CliManager;
@@ -30,9 +29,7 @@ import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
  */
 public class Main {
     private static final String name = "ignite-cli";
-    @Inject
-    private CliManager cliManager;
-    
+
     /**
      * Entry point.
      *
@@ -52,5 +49,5 @@ public class Main {
                 .withAliases(aliases)
                 .build());
     }
-    
+
 }
