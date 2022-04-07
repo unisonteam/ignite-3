@@ -1,15 +1,10 @@
 package org.apache.ignite.cli.core.repl.executor;
 
-import org.apache.ignite.cli.core.repl.Repl;
-import org.jline.console.impl.Builtins;
+import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.LineReader;
-import org.jline.terminal.Terminal;
-import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
+import picocli.CommandLine.IFactory;
+import picocli.shell.jline3.PicocliCommands;
 
 public interface CommandExecutorProvider {
-    CommandExecutor get(Repl repl,
-            Terminal terminal,
-            PicocliCommandsFactory factory,
-            Builtins builtins,
-            LineReader reader);
+    CommandExecutor get(IFactory factory, SystemRegistryImpl systemRegistry, PicocliCommands picocliCommands, LineReader reader);
 }
