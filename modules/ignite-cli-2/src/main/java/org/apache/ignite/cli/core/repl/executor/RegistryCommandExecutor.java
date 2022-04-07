@@ -23,7 +23,7 @@ public class RegistryCommandExecutor implements CommandExecutor {
     @Override
     public CommandOutput execute(String line) throws Exception {
         Object execute = systemRegistry.execute(line);
-        return execute::toString;
+        return execute == null ? null : execute::toString;
     }
 
     @Override
