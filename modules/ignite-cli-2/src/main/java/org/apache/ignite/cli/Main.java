@@ -19,7 +19,7 @@ package org.apache.ignite.cli;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
 import java.util.HashMap;
-import org.apache.ignite.cli.commands.CliCommands;
+import org.apache.ignite.cli.commands.TopLevelCliCommands;
 import org.apache.ignite.cli.core.CliManager;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
@@ -36,18 +36,19 @@ public class Main {
      * @param args ignore.
      */
     public static void main(String[] args) throws Exception {
-        MicronautFactory micronautFactory = new MicronautFactory();
-        CliManager cliManager = micronautFactory.create(CliManager.class);
-        cliManager.init(micronautFactory);
-        HashMap<String, String> aliases = new HashMap<>();
-        aliases.put("zle", "widget");
-        aliases.put("bindkey", "keymap");
-        cliManager.enableRepl(Repl.builder()
-                .withName(name)
-                .withCommandsClass(CliCommands.class)
-                .withCommandExecutorProvider(RegistryCommandExecutor::new)
-                .withAliases(aliases)
-                .build());
-    }
+        try (MicronautFactory micronautFactory = new MicronautFactory()) {
+            CliManager cliManager = micronautFactory.create(CliManager.class);
+            cliManager.init(micronautFactory);
+            HashMap<String, String> aliases = new HashMap<>();
+            aliases.put("zle", "widget");
+            aliases.put("bindkey", "keymap");
 
+            cliManager.executeRepl(Repl.builder()
+                    .withName(name)
+                    .withCommandsClass(TopLevelCliCommands.class)
+                    .withCommandExecutorProvider(RegistryCommandExecutor::new)
+                    .withAliases(aliases)
+                    .build());
+        }
+    }
 }

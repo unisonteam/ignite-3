@@ -41,15 +41,13 @@ public class SqlManager implements AutoCloseable {
      * @throws SQLException when occurs any problem with sql database.
      */
     public Table<String> executeSql(String sql) throws SQLException {
-        Statement statement = connection.createStatement();
-        statement.execute(sql);
-        ResultSet resultSet = statement.getResultSet();
-        Table<String> table = Table.fromResultSet(resultSet);
-        resultSet.close();
-        statement.close();
-        return table;
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+            ResultSet resultSet = statement.getResultSet();
+            return Table.fromResultSet(resultSet);
+        }
     }
-    
+
     @Override
     public void close() throws Exception {
         connection.close();
