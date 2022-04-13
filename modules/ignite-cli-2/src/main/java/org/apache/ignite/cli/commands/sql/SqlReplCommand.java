@@ -33,7 +33,7 @@ public class SqlReplCommand implements Callable<Table<String>> {
     public Table<String> call() throws Exception {
         try (SqlManager sqlManager = new SqlManager(jdbc)) {
             if (command == null && file == null) {
-                cliManager.enableRepl(Repl.builder()
+                cliManager.executeRepl(Repl.builder()
                         .withName("sql-cli")
                         .withCustomAction(sqlManager::executeSql)
                         .withCommandExecutorProvider(SqlReplCommandExecutor::new)
