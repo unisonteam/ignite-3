@@ -19,7 +19,7 @@ package org.apache.ignite.cli;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
 import java.util.HashMap;
-import org.apache.ignite.cli.commands.TopLevelCliCommands;
+import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.cli.core.CliManager;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
@@ -45,7 +45,7 @@ public class Main {
 
             cliManager.executeRepl(Repl.builder()
                     .withName(name)
-                    .withCommandsClass(TopLevelCliCommands.class)
+                    .withCommandsClass(TopLevelCliCommand.class)
                     .withCommandExecutorProvider(RegistryCommandExecutor::new)
                     .withAliases(aliases)
                     .build());

@@ -18,6 +18,7 @@
         <fliptables.version>1.1.0</fliptables.version>
         <h2.version>2.1.210</h2.version>
         <ignite.version>3.0.0-SNAPSHOT</ignite.version>
+        <assertj-core.version>3.22.0</assertj-core.version>
     </properties>
 
     <dependencies>
@@ -126,6 +127,17 @@
             <version>${h2.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj-core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-lambda</artifactId>
+            <version>1.2.1</version>
+        </dependency>
 
     </dependencies>
 
@@ -138,6 +150,42 @@
         </resources>
 
         <plugins>
+            <!--
+                Plugin that adds integration test sources and resources from integrationTest directory.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-test-source</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/integrationTest/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-test-resource</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>add-test-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/integrationTest/resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>io.micronaut.build</groupId>
                 <artifactId>micronaut-maven-plugin</artifactId>
@@ -154,6 +202,11 @@
                             <groupId>info.picocli</groupId>
                             <artifactId>picocli-codegen</artifactId>
                             <version>${picocli.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.micronaut</groupId>
+                            <artifactId>micronaut-inject-java</artifactId>
+                            <version>3.2.7</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
