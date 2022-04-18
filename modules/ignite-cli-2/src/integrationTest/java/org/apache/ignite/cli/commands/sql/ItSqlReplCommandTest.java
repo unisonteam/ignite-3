@@ -2,14 +2,17 @@ package org.apache.ignite.cli.commands.sql;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import org.apache.ignite.cli.IntegrationTestBase;
+import org.apache.ignite.cli.commands.CliCommandTestIntegrationBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
-class ItSqlReplCommandTest extends IntegrationTestBase {
+/**
+ * Tests for {@link SqlReplCommand}.
+ */
+class ItSqlReplCommandTest extends CliCommandTestIntegrationBase {
 
     @BeforeEach
     public void setUp(TestInfo testInfo) throws Exception {
@@ -46,6 +49,5 @@ class ItSqlReplCommandTest extends IntegrationTestBase {
                 // todo: specify error output
                 () -> assertErrOutputIs("Cannot connect to jdbc")
         );
-
     }
 }

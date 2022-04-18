@@ -15,4 +15,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-java -jar target/ignite.jar
+java -jar target/ignite.jar "$@"

@@ -2,11 +2,14 @@ package org.apache.ignite.cli.commands.topology;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import org.apache.ignite.cli.IntegrationTestBase;
+import org.apache.ignite.cli.commands.CliCommandTestIntegrationBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class ItTopologyCommandTest extends IntegrationTestBase {
+/**
+ * Tests for {@link ItTopologyCommand}.
+ */
+class ItTopologyCommandTest extends CliCommandTestIntegrationBase {
 
     @Test
     @DisplayName("Should print topology when valid cluster url is provided")

@@ -3,11 +3,14 @@ package org.apache.ignite.cli.commands.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import org.apache.ignite.cli.IntegrationTestBase;
+import org.apache.ignite.cli.commands.CliCommandTestIntegrationBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class ItConfigCommandTest extends IntegrationTestBase {
+/**
+ * Tests for {@link ConfigCommand}.
+ */
+class ItConfigCommandTest extends CliCommandTestIntegrationBase {
 
     @Test
     @DisplayName("Should read config when valid cluster-url is given")

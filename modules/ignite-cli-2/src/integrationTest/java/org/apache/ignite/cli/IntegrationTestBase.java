@@ -16,14 +16,10 @@ package org.apache.ignite.cli;
  * limitations under the License.
  */
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import jakarta.inject.Inject;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgnitionManager;
-import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.internal.schema.configuration.SchemaConfigurationConverter;
 import org.apache.ignite.internal.testframework.BaseIgniteAbstractTest;
@@ -58,7 +53,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import picocli.CommandLine;
 
 /**
  * Integration test base. Setups ignite cluster per test class and provides useful fixtures and assertions.
@@ -68,8 +62,6 @@ import picocli.CommandLine;
 @MicronautTest
 public class IntegrationTestBase extends BaseIgniteAbstractTest {
     public static final int DEFAULT_NODES_COUNT = 3;
-    /** Correct ignite jdbc url. */
-    protected static final String JDBC_URL = "jdbc:ignite:thin://127.0.0.1:10800";
     /** Correct ignite cluster url. */
     protected static final String CLUSTER_URL = "https://127.0.0.1:8080";
     /** Cluster nodes. */
@@ -92,15 +84,6 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
     /** Work directory. */
     @WorkDirectory
     private static Path WORK_DIR;
-
-    @Inject
-    TopLevelCliCommand topLevelCliCommand;
-
-    private CommandLine cmd;
-
-    private StringWriter sout;
-    private StringWriter serr;
-    private int exitCode = Integer.MIN_VALUE;
 
     protected static Table createAndPopulateTable() {
         TableDefinition schTbl1 = SchemaBuilders.tableBuilder("PUBLIC", "PERSON").columns(
@@ -219,70 +202,6 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
         return StreamSupport.stream(cur.spliterator(), false).collect(Collectors.toList());
     }
 
-    protected void setupCmd(Object command) {
-        cmd = new CommandLine(command);
-        sout = new StringWriter();
-        serr = new StringWriter();
-        cmd.setOut(new PrintWriter(sout));
-        cmd.setErr(new PrintWriter(serr));
-    }
-
-    protected void execute(String... args) {
-        exitCode = cmd.execute(args);
-    }
-
-    protected void assertExitCodeIs(int expectedExitCode) {
-        assertThat(expectedExitCode)
-                .as("Expected exit code to be: " + expectedExitCode + " but was " + exitCode)
-                .isEqualTo(exitCode);
-    }
-
-    protected void assertExitCodeIsZero() {
-        assertExitCodeIs(0);
-    }
-
-    protected void assertOutputIsNotEmpty() {
-        assertThat(sout.toString())
-                .as("Expected command output not to be empty")
-                .isNotEmpty();
-    }
-
-    protected void assertOutputIs(String expectedOutput) {
-        assertThat(sout.toString())
-                .as("Expected command output to be: " + expectedOutput + " but was " + sout.toString())
-                .isEqualTo(expectedOutput);
-    }
-
-    protected void assertOutputContains(String expectedOutput) {
-        assertThat(sout.toString())
-                .as("Expected command output to contain: " + expectedOutput + " but was " + sout.toString())
-                .contains(expectedOutput);
-    }
-
-    protected void assertOutputIsEmpty() {
-        assertThat(sout.toString())
-                .as("Expected command output to be empty")
-                .isEmpty();
-    }
-
-    protected void assertErrOutputIsNotEmpty() {
-        assertThat(serr.toString())
-                .as("Expected command error output not to be empty")
-                .isNotEmpty();
-    }
-
-    protected void assertErrOutputIsEmpty() {
-        assertThat(serr.toString())
-                .as("Expected command error output to be empty")
-                .isEmpty();
-    }
-
-    protected void assertErrOutputIs(String expectedErrOutput) {
-        assertThat(serr.toString())
-                .as("Expected command error output to be equal to: " + expectedErrOutput)
-                .isEqualTo(expectedErrOutput);
-    }
-
     /**
      * Before all.
      *
@@ -345,17 +264,15 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
     @BeforeEach
     public void setUp(TestInfo testInfo) throws Exception {
         setupBase(testInfo, WORK_DIR);
-        setupCmd(topLevelCliCommand);
     }
 
     /**
      * Invokes after the test has finished.
      *
-     * @param testInfo Test information oject.
-     * @throws Exception If failed.
+     * @param testInfo Test information object.
      */
     @AfterEach
-    public void tearDown(TestInfo testInfo) throws Exception {
+    public void tearDown(TestInfo testInfo) {
         tearDownBase(testInfo);
         dropAllTables();
     }
