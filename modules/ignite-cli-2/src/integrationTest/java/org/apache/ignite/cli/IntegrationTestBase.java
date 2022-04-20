@@ -1,4 +1,4 @@
-package org.apache.ignite.cli.commands.sql;
+package org.apache.ignite.cli;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,12 +17,9 @@ package org.apache.ignite.cli.commands.sql;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,17 +53,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
-import picocli.CommandLine;
 
 /**
- * Integration test base. Setups ignite cluster per test class
- * and provides useful fixtures and assertions.
+ * Integration test base. Setups ignite cluster per test class and provides useful fixtures and assertions.
  */
 @ExtendWith(WorkDirectoryExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@MicronautTest
 public class IntegrationTestBase extends BaseIgniteAbstractTest {
-    /** Correct ignite jdbc url. */
-    static final String JDBC_URL = "jdbc:ignite:thin://127.0.0.1:10800";
+    public static final int DEFAULT_NODES_COUNT = 3;
+    /** Correct ignite cluster url. */
+    protected static final String CLUSTER_URL = "https://127.0.0.1:8080";
     /** Cluster nodes. */
     protected static final List<Ignite> CLUSTER_NODES = new ArrayList<>();
     private static final IgniteLogger LOG = IgniteLogger.forClass(IntegrationTestBase.class);
@@ -84,49 +81,9 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
             + "    }\n"
             + "  }\n"
             + "}";
-    public static final int DEFAULT_NODES_COUNT = 3;
     /** Work directory. */
     @WorkDirectory
     private static Path WORK_DIR;
-
-    private CommandLine cmd;
-
-    private StringWriter sout;
-    private StringWriter serr;
-    private int exitCode = Integer.MIN_VALUE;
-
-    protected void setupCmd(Object command) {
-        cmd = new CommandLine(command);
-        sout = new StringWriter();
-        serr = new StringWriter();
-        cmd.setOut(new PrintWriter(sout));
-        cmd.setErr(new PrintWriter(serr));
-    }
-
-    protected int execute(String... args) {
-        exitCode = cmd.execute(args);
-        return exitCode;
-    }
-
-    protected void assertExitCodeIs(int expectedExitCode) {
-        assertEquals(expectedExitCode, exitCode, "Expected exit code to be: " + expectedExitCode + " but was " + exitCode);
-    }
-
-    protected void assertOutputIsNotEmpty() {
-        assertFalse(sout.toString().isEmpty(), "Expected command output not to be empty");
-    }
-
-    protected void assertOutputIsEmpty() {
-        assertTrue(sout.toString().isEmpty(), "Expected command output to be empty");
-    }
-
-    protected void assertErrOutputIsNotEmpty() {
-        assertFalse(serr.toString().isEmpty(), "Expected command error output not to be empty");
-    }
-
-    protected void assertErrOutputIs(String expectedErrOutput) {
-        assertEquals(expectedErrOutput, serr.toString());
-    }
 
     protected static Table createAndPopulateTable() {
         TableDefinition schTbl1 = SchemaBuilders.tableBuilder("PUBLIC", "PERSON").columns(
@@ -305,19 +262,19 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
      * @throws Exception If failed.
      */
     @BeforeEach
-    public void setup(TestInfo testInfo) throws Exception {
+    public void setUp(TestInfo testInfo) throws Exception {
         setupBase(testInfo, WORK_DIR);
     }
 
     /**
      * Invokes after the test has finished.
      *
-     * @param testInfo Test information oject.
-     * @throws Exception If failed.
+     * @param testInfo Test information object.
      */
     @AfterEach
-    public void tearDown(TestInfo testInfo) throws Exception {
+    public void tearDown(TestInfo testInfo) {
         tearDownBase(testInfo);
+        dropAllTables();
     }
 }
 

@@ -19,10 +19,11 @@ package org.apache.ignite.cli;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
 import java.util.HashMap;
-import org.apache.ignite.cli.commands.TopLevelCliCommands;
+import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.cli.core.CliManager;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
+import picocli.CommandLine;
 
 /**
  * Ignite cli entry point.
@@ -37,18 +38,30 @@ public class Main {
      */
     public static void main(String[] args) throws Exception {
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
-            CliManager cliManager = micronautFactory.create(CliManager.class);
-            cliManager.init(micronautFactory);
-            HashMap<String, String> aliases = new HashMap<>();
-            aliases.put("zle", "widget");
-            aliases.put("bindkey", "keymap");
-
-            cliManager.executeRepl(Repl.builder()
-                    .withName(name)
-                    .withCommandsClass(TopLevelCliCommands.class)
-                    .withCommandExecutorProvider(RegistryCommandExecutor::new)
-                    .withAliases(aliases)
-                    .build());
+            if (args.length != 0) {
+                executeCommand(args, micronautFactory);
+            } else {
+                enterRepl(micronautFactory);
+            }
         }
+    }
+
+    private static void enterRepl(MicronautFactory micronautFactory) throws Exception {
+        CliManager cliManager = micronautFactory.create(CliManager.class);
+        cliManager.init(micronautFactory);
+        HashMap<String, String> aliases = new HashMap<>();
+        aliases.put("zle", "widget");
+        aliases.put("bindkey", "keymap");
+
+        cliManager.executeRepl(Repl.builder()
+                .withName(name)
+                .withCommandsClass(TopLevelCliCommand.class)
+                .withCommandExecutorProvider(RegistryCommandExecutor::new)
+                .withAliases(aliases)
+                .build());
+    }
+
+    private static void executeCommand(String[] args, MicronautFactory micronautFactory) {
+        new CommandLine(TopLevelCliCommand.class, micronautFactory).execute(args);
     }
 }

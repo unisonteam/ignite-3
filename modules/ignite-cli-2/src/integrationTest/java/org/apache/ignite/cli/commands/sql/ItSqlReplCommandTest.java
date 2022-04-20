@@ -2,23 +2,22 @@ package org.apache.ignite.cli.commands.sql;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import jakarta.inject.Inject;
+import org.apache.ignite.cli.commands.CliCommandTestIntegrationBase;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
-@MicronautTest
-class ItSqlReplCommandTest extends IntegrationTestBase {
-
-    @Inject
-    SqlReplCommand sqlReplCommand;
+/**
+ * Tests for {@link SqlReplCommand}.
+ */
+class ItSqlReplCommandTest extends CliCommandTestIntegrationBase {
 
     @BeforeEach
-    void setUp() {
+    public void setUp(TestInfo testInfo) throws Exception {
+        super.setUp(testInfo);
         createAndPopulateTable();
-        setupCmd(sqlReplCommand);
     }
 
     @AfterEach
@@ -29,18 +28,19 @@ class ItSqlReplCommandTest extends IntegrationTestBase {
     @Test
     @DisplayName("Should execute select * from table and display table when jdbc-url is correct")
     void selectFromTable() {
-        execute("--execute", "select * from person", "--jdbc-url", JDBC_URL);
+        execute("sql", "--execute", "select * from person", "--jdbc-url", JDBC_URL);
 
         assertAll(
-                () -> assertExitCodeIs(0),
-                this::assertOutputIsNotEmpty
+                this::assertExitCodeIsZero,
+                this::assertOutputIsNotEmpty,
+                this::assertErrOutputIsEmpty
         );
     }
 
     @Test
     @DisplayName("Should display readable error when wrong jdbc is given")
     void wrongJdbcUrl() {
-        execute("--execute", "select * from person", "--jdbc-url", "jdbc:ignite:thin://no-such-host.com:10800");
+        execute("sql", "--execute", "select * from person", "--jdbc-url", "jdbc:ignite:thin://no-such-host.com:10800");
 
         assertAll(
                 () -> assertExitCodeIs(1),
@@ -49,6 +49,5 @@ class ItSqlReplCommandTest extends IntegrationTestBase {
                 // todo: specify error output
                 () -> assertErrOutputIs("Cannot connect to jdbc")
         );
-
     }
 }
