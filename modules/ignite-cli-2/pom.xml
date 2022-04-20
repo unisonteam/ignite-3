@@ -13,8 +13,6 @@
     <artifactId>ignite-cli-2</artifactId>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <picocli.version>4.6.2</picocli.version>
         <jansi.version>1.18</jansi.version>
         <fliptables.version>1.1.0</fliptables.version>
@@ -135,11 +133,6 @@
             <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.stefanbirkner</groupId>
-            <artifactId>system-lambda</artifactId>
-            <version>1.2.1</version>
-        </dependency>
 
     </dependencies>
 
@@ -215,8 +208,8 @@
                         <arg>-Amicronaut.processing.group=org.apache.ignite.cli</arg>
                         <arg>-Amicronaut.processing.artifactId=${artifactId}</arg>
                     </compilerArgs>
-                    <source>10</source>
-                    <target>10</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
 

@@ -1,6 +1,5 @@
 package org.apache.ignite.cli.call.configuration;
 
-import org.apache.ignite.cli.core.Builder;
 import org.apache.ignite.cli.core.call.CallInput;
 
 /**
@@ -27,6 +26,13 @@ public class UpdateConfigurationCallInput implements CallInput {
     }
 
     /**
+     * @return Builder for {@link UpdateConfigurationCallInput}.
+     */
+    public static UpdateConfigurationCallInputBuilder builder() {
+        return new UpdateConfigurationCallInputBuilder();
+    }
+
+    /**
      * @return Node ID.
      */
     public String getNodeId() {
@@ -48,16 +54,9 @@ public class UpdateConfigurationCallInput implements CallInput {
     }
 
     /**
-     * @return Builder for {@link UpdateConfigurationCallInput}.
-     */
-    public static UpdateConfigurationCallInputBuilder builder() {
-        return new UpdateConfigurationCallInputBuilder();
-    }
-
-    /**
      * Builder for {@link UpdateConfigurationCallInput}.
      */
-    public static class UpdateConfigurationCallInputBuilder implements Builder<UpdateConfigurationCallInput> {
+    public static class UpdateConfigurationCallInputBuilder {
         private String nodeId;
         private String config;
         private String clusterUrl;
@@ -77,7 +76,6 @@ public class UpdateConfigurationCallInput implements CallInput {
             return this;
         }
 
-        @Override
         public UpdateConfigurationCallInput build() {
             return new UpdateConfigurationCallInput(nodeId, config, clusterUrl);
         }

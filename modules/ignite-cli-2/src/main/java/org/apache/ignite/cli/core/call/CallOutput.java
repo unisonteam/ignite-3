@@ -6,7 +6,7 @@ package org.apache.ignite.cli.core.call;
  */
 public interface CallOutput<T> {
     /**
-     * @return Body of the call. Can be {@link String} or any other type.
+     * @return Body of the call's output. Can be {@link String} or any other type.
      */
     T body();
 
@@ -16,7 +16,7 @@ public interface CallOutput<T> {
     CallOutputStatus status();
 
     /**
-     * @return True if status is {@link CallOutputStatus#ERROR}.
+     * @return True if output has an error.
      */
     boolean hasError();
 

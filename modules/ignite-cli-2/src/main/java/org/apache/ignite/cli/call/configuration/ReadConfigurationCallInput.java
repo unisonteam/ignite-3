@@ -1,6 +1,5 @@
 package org.apache.ignite.cli.call.configuration;
 
-import org.apache.ignite.cli.core.Builder;
 import org.apache.ignite.cli.core.call.CallInput;
 
 /**
@@ -57,7 +56,7 @@ public class ReadConfigurationCallInput implements CallInput {
     /**
      * Builder for {@link ReadConfigurationCallInput}.
      */
-    public static class ReadConfigurationCallInputBuilder implements Builder<ReadConfigurationCallInput> {
+    public static class ReadConfigurationCallInputBuilder {
         private String nodeId;
         private String selector;
         private String clusterUrl;
@@ -77,7 +76,6 @@ public class ReadConfigurationCallInput implements CallInput {
             return this;
         }
 
-        @Override
         public ReadConfigurationCallInput build() {
             return new ReadConfigurationCallInput(nodeId, selector, clusterUrl);
         }

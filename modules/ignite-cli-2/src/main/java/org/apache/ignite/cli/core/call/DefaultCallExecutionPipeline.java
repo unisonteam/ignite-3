@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
 import org.apache.ignite.cli.commands.decorators.core.Decorator;
 import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
-import org.apache.ignite.cli.core.Builder;
 
 /**
  * Implementation of {@link CallExecutionPipeline} that is used by default.
@@ -67,8 +66,7 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> implements Cal
     }
 
     /** Builder for {@link DefaultCallExecutionPipeline}. */
-    public static class DefaultCommandExecutionPipelineBuilder<I extends CallInput, T>
-            implements Builder<DefaultCallExecutionPipeline<I,T>> {
+    public static class DefaultCommandExecutionPipelineBuilder<I extends CallInput, T> {
 
         private Supplier<I> inputProvider;
         private Call<I, T> call;
@@ -100,7 +98,6 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> implements Cal
             return this;
         }
 
-        @Override
         public DefaultCallExecutionPipeline<I, T> build() {
             return new DefaultCallExecutionPipeline<>(call, output, errOutput, decorator, inputProvider);
         }

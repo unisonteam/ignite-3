@@ -31,7 +31,7 @@ class ItSqlReplCommandTest extends CliCommandTestIntegrationBase {
         execute("sql", "--execute", "select * from person", "--jdbc-url", JDBC_URL);
 
         assertAll(
-                () -> assertExitCodeIs(0),
+                this::assertExitCodeIsZero,
                 this::assertOutputIsNotEmpty,
                 this::assertErrOutputIsEmpty
         );

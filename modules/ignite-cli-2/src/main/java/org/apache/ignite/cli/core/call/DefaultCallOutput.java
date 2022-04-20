@@ -1,7 +1,6 @@
 package org.apache.ignite.cli.core.call;
 
 import java.util.Objects;
-import org.apache.ignite.cli.core.Builder;
 
 /**
  * Default implementation of {@link CallOutput} with {@link String} body.
@@ -74,7 +73,7 @@ public class DefaultCallOutput implements CallOutput<String> {
                 .build();
     }
 
-    public static class DefaultCallOutputBuilder implements Builder<DefaultCallOutput> {
+    public static class DefaultCallOutputBuilder {
         private CallOutputStatus status;
         private String body;
         private Throwable cause;
