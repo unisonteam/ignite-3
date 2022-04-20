@@ -17,11 +17,6 @@ public class DefaultCallOutput implements CallOutput<String> {
     }
 
     @Override
-    public CallOutputStatus status() {
-        return status;
-    }
-
-    @Override
     public boolean hasError() {
         return cause != null;
     }

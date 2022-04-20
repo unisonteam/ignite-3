@@ -11,11 +11,6 @@ public interface CallOutput<T> {
     T body();
 
     /**
-     * @return Status of the call execution.
-     */
-    CallOutputStatus status();
-
-    /**
      * @return True if output has an error.
      */
     boolean hasError();
