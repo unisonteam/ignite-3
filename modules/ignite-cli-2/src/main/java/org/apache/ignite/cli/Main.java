@@ -20,43 +20,40 @@ package org.apache.ignite.cli;
 import io.micronaut.configuration.picocli.MicronautFactory;
 import java.util.HashMap;
 import org.apache.ignite.cli.commands.TopLevelCliCommand;
-import org.apache.ignite.cli.core.CliManager;
 import org.apache.ignite.cli.core.repl.Repl;
-import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
+import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import picocli.CommandLine;
 
 /**
  * Ignite cli entry point.
  */
 public class Main {
-    private static final String name = "ignite-cli";
-
     /**
      * Entry point.
      *
      * @param args ignore.
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
             if (args.length != 0) {
                 executeCommand(args, micronautFactory);
             } else {
-                enterRepl(micronautFactory);
+                try {
+                    enterRepl(micronautFactory);
+                } catch (Exception e) {
+                    System.err.println("Error occurred during REPL initialization");
+                }
             }
         }
     }
 
     private static void enterRepl(MicronautFactory micronautFactory) throws Exception {
-        CliManager cliManager = micronautFactory.create(CliManager.class);
-        cliManager.init(micronautFactory);
+        ReplExecutor replExecutor = new ReplExecutor(micronautFactory);
         HashMap<String, String> aliases = new HashMap<>();
         aliases.put("zle", "widget");
         aliases.put("bindkey", "keymap");
 
-        cliManager.executeRepl(Repl.builder()
-                .withName(name)
-                .withCommandsClass(TopLevelCliCommand.class)
-                .withCommandExecutorProvider(RegistryCommandExecutor::new)
+        replExecutor.execute(Repl.builder()
                 .withAliases(aliases)
                 .build());
     }
