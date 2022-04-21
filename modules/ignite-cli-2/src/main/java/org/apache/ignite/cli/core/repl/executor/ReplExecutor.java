@@ -25,6 +25,9 @@ import picocli.CommandLine;
 import picocli.shell.jline3.PicocliCommands;
 import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 
+/**
+ * Executor of {@link Repl}.
+ */
 public class ReplExecutor {
     private static final String PROMPT = "ignite-cli> ";
 
@@ -34,12 +37,22 @@ public class ReplExecutor {
     private final Parser parser = new DefaultParser();
     private final Supplier<Path> workDirProvider = () -> Paths.get(System.getProperty("user.dir"));
 
+    /**
+     * Constructor.
+     *
+     * @param micronautFactory command factory instance {@link MicronautFactory}.
+     */
     public ReplExecutor(MicronautFactory micronautFactory) throws Exception {
         factory = new PicocliCommandsFactory(micronautFactory);
         terminal = micronautFactory.create(Terminal.class);
         factory.setTerminal(terminal);
     }
 
+    /**
+     * Executor method. This is thread blocking method, until REPL stop executing.
+     *
+     * @param repl data class of executing REPL.
+     */
     public void execute(Repl repl) {
         AnsiConsole.systemInstall();
         try {

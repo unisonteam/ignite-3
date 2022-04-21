@@ -8,6 +8,7 @@ import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 
 /**
  * Implementation of {@link CallExecutionPipeline} that is used by default.
+ *
  * @param <I> Call input type.
  * @param <T> Call output's body type.
  */
@@ -42,7 +43,11 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> implements Cal
         this.inputProvider = inputProvider;
     }
 
-    /** @return builder for {@link DefaultCallExecutionPipeline}. */
+    /**
+     * Builder helper method.
+     *
+     * @return builder for {@link DefaultCallExecutionPipeline}.
+     * */
     public static <I extends CallInput, T> DefaultCommandExecutionPipelineBuilder<I, T> builder(
             Call<I, T> call) {
         return new DefaultCommandExecutionPipelineBuilder<>(call);

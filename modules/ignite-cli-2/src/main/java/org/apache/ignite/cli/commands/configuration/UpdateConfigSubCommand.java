@@ -2,9 +2,9 @@ package org.apache.ignite.cli.commands.configuration;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCall;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCallInput;
+import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;

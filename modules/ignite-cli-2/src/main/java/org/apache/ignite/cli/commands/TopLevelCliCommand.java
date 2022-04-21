@@ -21,14 +21,14 @@ import picocli.shell.jline3.PicocliCommands;
                 ""},
         footer = {"", "Press Ctrl-D to exit."},
         subcommands = {
-        SqlReplCommand.class,
+                SqlReplCommand.class,
                 PicocliCommands.ClearScreen.class,
                 CommandLine.HelpCommand.class,
                 ConfigCommand.class,
                 VersionCommand.class,
                 StatusCommand.class,
                 TopologyCommand.class
-})
+        })
 @Singleton
 public class TopLevelCliCommand implements Runnable {
     @Override

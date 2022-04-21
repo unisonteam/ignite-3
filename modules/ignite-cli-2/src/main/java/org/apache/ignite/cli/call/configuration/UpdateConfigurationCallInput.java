@@ -26,6 +26,8 @@ public class UpdateConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Builder method.
+     *
      * @return Builder for {@link UpdateConfigurationCallInput}.
      */
     public static UpdateConfigurationCallInputBuilder builder() {
@@ -33,6 +35,8 @@ public class UpdateConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Get node ID.
+     *
      * @return Node ID.
      */
     public String getNodeId() {
@@ -40,6 +44,8 @@ public class UpdateConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Get configuration.
+     *
      * @return Configuration to update.
      */
     public String getConfig() {
@@ -47,6 +53,8 @@ public class UpdateConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Get cluster URL.
+     *
      * @return Cluster url.
      */
     public String getClusterUrl() {

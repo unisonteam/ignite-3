@@ -1,4 +1,5 @@
 package org.apache.ignite.cli.commands;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,15 +18,12 @@ package org.apache.ignite.cli.commands;
  */
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
 import jakarta.inject.Inject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.apache.ignite.cli.IntegrationTestBase;
-import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import picocli.CommandLine;

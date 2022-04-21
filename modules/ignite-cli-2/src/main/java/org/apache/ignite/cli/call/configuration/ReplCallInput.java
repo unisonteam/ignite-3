@@ -16,6 +16,8 @@ public class ReplCallInput implements CallInput {
     }
 
     /**
+     * Command line getter.
+     *
      * @return Command line.
      */
     public String getLine() {
