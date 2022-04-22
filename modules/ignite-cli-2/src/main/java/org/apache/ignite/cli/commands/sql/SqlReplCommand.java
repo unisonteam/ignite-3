@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
@@ -20,17 +21,19 @@ import org.jline.reader.MaskingCallback;
 import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
+import org.jline.utils.InfoCmp.Capability;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(name = "sql")
 public class SqlReplCommand implements Callable<Table<String>> {
     private static final String PROMPT = "sql-cli> ";
+    private static final String COMMAND_PREFIX = "!";
 
     @Inject
     private Terminal terminal;
 
-    @Option(names = {"--jdbc-url"}, required = false)
+    @Option(names = {"--jdbc-url"}, required = true)
     private String jdbc;
     @Option(names = {"-execute", "--execute"})
     private String command;
@@ -39,8 +42,6 @@ public class SqlReplCommand implements Callable<Table<String>> {
 
     @Override
     public Table<String> call() throws Exception {
-//        return executeRepl(sql -> null);
-
         try (SqlManager sqlManager = new SqlManager(jdbc)) {
             if (command == null && file == null) {
                 return executeRepl(sqlManager);
@@ -49,7 +50,6 @@ public class SqlReplCommand implements Callable<Table<String>> {
                 return sqlManager.execute(executeCommand);
             }
         }
-
     }
 
     private Table<String> executeRepl(SqlExecutor sqlExecutor) {
@@ -59,17 +59,21 @@ public class SqlReplCommand implements Callable<Table<String>> {
                 .parser(new DefaultParser())
                 .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
                 .build();
-        SqlReplCommandExecutor executor = new SqlReplCommandExecutor(terminal, sqlExecutor);
+        SqlReplCommandExecutor executor = new SqlReplCommandExecutor(sqlExecutor);
         // start the shell and process input until the user quits with Ctrl-D
         while (true) {
             try {
-                String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null);
-                DefaultCallExecutionPipeline.builder(executor)
-                        .inputProvider(() -> new ReplCallInput(line.trim()))
-                        .output(new PrintWriter(System.out, true))
-                        .errOutput(new PrintWriter(System.err, true))
-                        .build()
-                        .runPipeline();
+                String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null).trim();
+                if (line.startsWith(COMMAND_PREFIX)) {
+                    executeCommand(line);
+                } else {
+                    DefaultCallExecutionPipeline.builder(executor)
+                            .inputProvider(() -> new ReplCallInput(line))
+                            .output(new PrintWriter(System.out, true))
+                            .errOutput(new PrintWriter(System.err, true))
+                            .build()
+                            .runPipeline();
+                }
             } catch (UserInterruptException e) {
                 // Ignore
             } catch (EndOfFileException e) {
@@ -77,6 +81,12 @@ public class SqlReplCommand implements Callable<Table<String>> {
             }
         }
         return null;
+    }
+
+    private void executeCommand(String line) {
+        if (Objects.equals(line, "clear")) {
+            terminal.puts(Capability.clear_screen);
+        }
     }
 
     private static String extract(File file) throws IOException {
