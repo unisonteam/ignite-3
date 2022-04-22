@@ -68,6 +68,13 @@ public class DefaultCallOutput implements CallOutput<String> {
                 .build();
     }
 
+    public static DefaultCallOutput failure(Throwable cause) {
+        return DefaultCallOutput.builder()
+                .status(CallOutputStatus.ERROR)
+                .cause(cause)
+                .build();
+    }
+
     public static class DefaultCallOutputBuilder {
         private CallOutputStatus status;
         private String body;

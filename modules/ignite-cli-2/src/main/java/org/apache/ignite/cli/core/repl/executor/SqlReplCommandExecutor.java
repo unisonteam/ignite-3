@@ -1,48 +1,26 @@
 package org.apache.ignite.cli.core.repl.executor;
 
-import java.util.Objects;
-import org.apache.ignite.cli.commands.decorators.core.CommandOutput;
-import org.jline.console.SystemRegistry;
-import org.jline.reader.LineReader;
-import org.jline.widget.TailTipWidgets;
-import picocli.CommandLine;
-import picocli.CommandLine.IFactory;
-import picocli.shell.jline3.PicocliCommands;
+import org.apache.ignite.cli.call.configuration.ReplCallInput;
+import org.apache.ignite.cli.core.call.Call;
+import org.apache.ignite.cli.core.call.CallOutput;
+import org.apache.ignite.cli.core.call.DefaultCallOutput;
+import org.apache.ignite.cli.sql.table.Table;
 
-public class SqlReplCommandExecutor implements CommandExecutor {
+public class SqlReplCommandExecutor implements Call<ReplCallInput, String> {
 
-    private final CommandLine clearCommandLine;
-    private final SystemRegistry systemRegistry;
+    private final SqlExecutor sqlExecutor;
 
-    public SqlReplCommandExecutor(IFactory factory, SystemRegistry systemRegistry, PicocliCommands picocliCommands, LineReader reader) {
-        this.systemRegistry = systemRegistry;
-        systemRegistry.register("help", picocliCommands);
-
-        clearCommandLine = new CommandLine(PicocliCommands.ClearScreen.class, factory);
-
-        TailTipWidgets widgets = new TailTipWidgets(reader, systemRegistry::commandDescription, 5,
-            TailTipWidgets.TipType.COMPLETER);
-        widgets.enable();
+    public SqlReplCommandExecutor(SqlExecutor sqlExecutor) {
+        this.sqlExecutor = sqlExecutor;
     }
-    
+
     @Override
-    public CommandOutput execute(String line) throws Exception {
-        //TODO: temporary hint to support clear command
-        if (Objects.equals(line, "clear")) {
-            clearCommandLine.execute(line);
-            return null;
+    public CallOutput<String> execute(ReplCallInput input) {
+        try {
+            Table<String> result = sqlExecutor.execute(input.getLine());
+            return DefaultCallOutput.success(String.valueOf(result));
+        } catch (Exception e) {
+            return DefaultCallOutput.failure(e);
         }
-        Object execute = systemRegistry.execute(line);
-        return execute == null ? null : execute::toString;
-    }
-    
-    @Override
-    public void cleanUp() {
-        systemRegistry.cleanUp();
-    }
-    
-    @Override
-    public void trace(Exception e) {
-        systemRegistry.trace(e);
     }
 }
