@@ -26,6 +26,8 @@ public class ReadConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Get node ID.
+     *
      * @return Node ID.
      */
     public String getNodeId() {
@@ -33,6 +35,8 @@ public class ReadConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Get selector.
+     *
      * @return Selector for configuration tree.
      */
     public String getSelector() {
@@ -40,6 +44,8 @@ public class ReadConfigurationCallInput implements CallInput {
     }
 
     /**
+     * Get cluster URL.
+     *
      * @return Cluster URL.
      */
     public String getClusterUrl() {

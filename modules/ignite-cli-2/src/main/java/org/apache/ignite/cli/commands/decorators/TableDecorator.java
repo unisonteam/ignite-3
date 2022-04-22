@@ -6,13 +6,18 @@ import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 import org.apache.ignite.cli.sql.table.Table;
 
 /**
- * Decorator for {@link Table}.
+ * Implementation of {@link Decorator} for {@link Table}.
  */
 public class TableDecorator implements Decorator<Table<String>, TerminalOutput> {
 
-    /** {@inheritDoc} */
+    /**
+     * Transform {@link Table} to {@link TerminalOutput}.
+     *
+     * @param data incoming {@link Table}.
+     * @return User friendly interpretation of {@link Table} in {@link TerminalOutput}.
+     */
     @Override
-    public TerminalOutput decorate(Table<String> table) {
-        return () -> FlipTableConverters.fromIterable(table, String.class);
+    public TerminalOutput decorate(Table<String> data) {
+        return () -> FlipTableConverters.fromIterable(data, String.class);
     }
 }

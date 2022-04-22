@@ -25,6 +25,9 @@ import org.jline.utils.InfoCmp.Capability;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+/**
+ * Command for sql execution.
+ */
 @Command(name = "sql")
 public class SqlReplCommand implements Callable<Table<String>> {
     private static final String PROMPT = "sql-cli> ";
@@ -32,7 +35,6 @@ public class SqlReplCommand implements Callable<Table<String>> {
 
     @Inject
     private Terminal terminal;
-
     @Option(names = {"--jdbc-url"}, required = true)
     private String jdbc;
     @Option(names = {"-execute", "--execute"})
@@ -40,6 +42,12 @@ public class SqlReplCommand implements Callable<Table<String>> {
     @Option(names = {"--script-file"})
     private File file;
 
+    /**
+     * Run method.
+     *
+     * @return Table with result of command.
+     * @throws Exception in any case of sql execution.
+     */
     @Override
     public Table<String> call() throws Exception {
         try (SqlManager sqlManager = new SqlManager(jdbc)) {

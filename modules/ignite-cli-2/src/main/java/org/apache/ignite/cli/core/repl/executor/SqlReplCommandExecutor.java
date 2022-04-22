@@ -6,14 +6,25 @@ import org.apache.ignite.cli.core.call.CallOutput;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
 import org.apache.ignite.cli.sql.table.Table;
 
+/**
+ * Call implementation for SQL command execution.
+ */
 public class SqlReplCommandExecutor implements Call<ReplCallInput, String> {
 
     private final SqlExecutor sqlExecutor;
 
+    /**
+     * Constructor.
+     *
+     * @param sqlExecutor sql executor.
+     */
     public SqlReplCommandExecutor(SqlExecutor sqlExecutor) {
         this.sqlExecutor = sqlExecutor;
     }
 
+    /**
+     * Cleanup system registry.
+     */
     @Override
     public CallOutput<String> execute(ReplCallInput input) {
         try {

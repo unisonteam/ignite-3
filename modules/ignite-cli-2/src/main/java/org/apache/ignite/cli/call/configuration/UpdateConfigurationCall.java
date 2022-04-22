@@ -13,8 +13,8 @@ public class UpdateConfigurationCall implements Call<UpdateConfigurationCallInpu
     @Override
     public DefaultCallOutput execute(UpdateConfigurationCallInput updateConfigurationCallInput) {
         return DefaultCallOutput.success(
-                "Update " + updateConfigurationCallInput.getClusterUrl() + "\n" +
-                        updateConfigurationCallInput.getConfig()
+                "Update " + updateConfigurationCallInput.getClusterUrl() + "\n"
+                    + updateConfigurationCallInput.getConfig()
         ); //todo: implement
     }
 }

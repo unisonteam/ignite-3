@@ -10,9 +10,19 @@ import org.jline.reader.LineReader;
 import org.jline.widget.TailTipWidgets;
 import picocli.shell.jline3.PicocliCommands;
 
+/**
+ * Command executor based on {@link SystemRegistry}.
+ */
 public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
     private final SystemRegistry systemRegistry;
 
+    /**
+     * Constructor.
+     *
+     * @param systemRegistry {@link SystemRegistry} instance.
+     * @param picocliCommands {@link PicocliCommands} instance.
+     * @param reader {@link LineReader} instance.
+     */
     public RegistryCommandExecutor(SystemRegistry systemRegistry, PicocliCommands picocliCommands, LineReader reader) {
         this.systemRegistry = systemRegistry;
         systemRegistry.register("help", picocliCommands);
@@ -22,6 +32,12 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
         widgets.enable();
     }
 
+    /**
+     * Executor method.
+     *
+     * @param input processed command line.
+     * @return Command output.
+     */
     @Override
     public CallOutput<String> execute(ReplCallInput input) {
         try {
@@ -32,10 +48,18 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
         }
     }
 
+    /**
+     * Clean up {@link SystemRegistry}.
+     */
     public void cleanUp() {
         systemRegistry.cleanUp();
     }
 
+    /**
+     * Trace exception.
+     *
+     * @param e exception instance.
+     */
     public void trace(Exception e) {
         systemRegistry.trace(e);
     }

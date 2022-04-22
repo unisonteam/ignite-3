@@ -5,6 +5,7 @@ import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 
 /**
  * Default decorator that calls toString method.
+ *
  * @param <I> Input type.
  */
 public class DefaultDecorator<I> implements Decorator<I, TerminalOutput> {

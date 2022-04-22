@@ -50,17 +50,31 @@ public class DefaultCallOutput implements CallOutput<String> {
 
     @Override
     public String toString() {
-        return "DefaultCallOutput{" +
-                "status=" + status +
-                ", body='" + body + '\'' +
-                ", cause=" + cause +
-                '}';
+        return "DefaultCallOutput{"
+            + "status="
+            + status
+            + ", body='"
+            + body + '\''
+            + ", cause="
+            + cause
+            + '}';
     }
 
+    /**
+     * Builder method provider.
+     *
+     * @return new instance of {@link DefaultCallOutputBuilder}.
+     */
     public static DefaultCallOutputBuilder builder() {
         return new DefaultCallOutputBuilder();
     }
 
+    /**
+     * New successful call output with provided body.
+     *
+     * @param body for successful call output.
+     * @return Successful call output with provided body.
+     */
     public static DefaultCallOutput success(String body) {
         return DefaultCallOutput.builder()
                 .status(CallOutputStatus.SUCCESS)
@@ -68,33 +82,65 @@ public class DefaultCallOutput implements CallOutput<String> {
                 .build();
     }
 
+    /**
+     * New failed call output with provided cause.
+     *
+     * @param cause error of failed call.
+     * @return Failed call output with provided cause.
+     */
     public static DefaultCallOutput failure(Throwable cause) {
         return DefaultCallOutput.builder()
-                .status(CallOutputStatus.ERROR)
-                .cause(cause)
-                .build();
+            .status(CallOutputStatus.ERROR)
+            .cause(cause)
+            .build();
     }
 
+    /**
+     * Builder of {@link DefaultCallOutput}.
+     */
     public static class DefaultCallOutputBuilder {
         private CallOutputStatus status;
         private String body;
         private Throwable cause;
 
+        /**
+         * Builder setter.
+         *
+         * @param status output status.
+         * @return invoked builder instance {@link DefaultCallOutputBuilder}.
+         */
         public DefaultCallOutputBuilder status(CallOutputStatus status) {
             this.status = status;
             return this;
         }
 
+        /**
+         * Builder setter.
+         *
+         * @param body call output body.
+         * @return invoked builder instance {@link DefaultCallOutputBuilder}.
+         */
         public DefaultCallOutputBuilder body(String body) {
             this.body = body;
             return this;
         }
 
+        /**
+         * Builder setter.
+         *
+         * @param cause exception cause.
+         * @return invoked builder instance {@link DefaultCallOutputBuilder}.
+         */
         public DefaultCallOutputBuilder cause(Throwable cause) {
             this.cause = cause;
             return this;
         }
 
+        /**
+         * Build method.
+         *
+         * @return new {@link DefaultCallOutput} with field provided to builder.
+         */
         public DefaultCallOutput build() {
             return new DefaultCallOutput(status, body, cause);
         }

@@ -14,14 +14,25 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.apache.ignite.cli.commands.decorators.core.CommandOutput;
 
+/**
+ * Data class for table representation.
+ *
+ * @param <T> type of table elements.
+ */
 public class Table<T> implements Iterable<T>, CommandOutput {
     private final Map<String, TableRow<T>> content;
-    
+
+    /**
+     * Constructor.
+     *
+     * @param ids list of row ids.
+     * @param content list of row content. Size should be equals n * ids.size.
+     */
     public Table(List<String> ids, List<T> content) {
         if (content.size() % ids.size() != 0) {
             throw new RuntimeException();
         }
-        
+
         this.content = new HashMap<>();
         for (int i = 0, size = ids.size(); i < size; i++) {
             String id = ids.get(i);
@@ -29,12 +40,22 @@ public class Table<T> implements Iterable<T>, CommandOutput {
             this.content.put(id, row);
         }
     }
-    
-    
+
+    /**
+     * Row getter.
+     *
+     * @param id row id.
+     * @return Table row with {@param id}.
+     */
     public TableRow<T> getRow(String id) {
         return content.get(id);
     }
-    
+
+    /**
+     * Iterator getter.
+     *
+     * @return {@link Iterator} of table, row by row iterating.
+     */
     @Override
     public Iterator<T> iterator() {
         return content.values().stream()
@@ -42,13 +63,23 @@ public class Table<T> implements Iterable<T>, CommandOutput {
                 .collect(Collectors.toList())
                 .iterator();
     }
-    
+
+    /**
+     * Implementation of {@link CommandOutput#get()}.
+     *
+     * @return Values of table joined by ",".
+     */
     @Override
     public String get() {
         return StreamSupport.stream(spliterator(), false).map(T::toString).collect(Collectors.joining(", "));
     }
-    
-    
+
+    /**
+     * Create method.
+     *
+     * @param resultSet coming result set.
+     * @return istance of {@link Table}.
+     */
     public static Table<String> fromResultSet(ResultSet resultSet) {
         try {
             ResultSetMetaData metaData = resultSet.getMetaData();
@@ -68,6 +99,4 @@ public class Table<T> implements Iterable<T>, CommandOutput {
             return null;
         }
     }
-    
-  
 }
