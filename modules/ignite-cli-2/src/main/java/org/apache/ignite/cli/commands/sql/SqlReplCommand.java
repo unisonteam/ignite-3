@@ -65,7 +65,7 @@ public class SqlReplCommand implements Callable<Table<String>> {
             try {
                 String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null).trim();
                 if (line.startsWith(COMMAND_PREFIX)) {
-                    executeCommand(line);
+                    executeCommand(line.substring(COMMAND_PREFIX.length()));
                 } else {
                     DefaultCallExecutionPipeline.builder(executor)
                             .inputProvider(() -> new ReplCallInput(line))
