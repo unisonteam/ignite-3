@@ -8,7 +8,6 @@ import org.apache.ignite.cli.commands.topology.TopologyCommand;
 import org.apache.ignite.cli.commands.version.VersionCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.shell.jline3.PicocliCommands;
 
 /**
  * Top-level command that just prints help.
@@ -22,7 +21,6 @@ import picocli.shell.jline3.PicocliCommands;
         footer = {"", "Press Ctrl-D to exit."},
         subcommands = {
                 SqlReplCommand.class,
-                PicocliCommands.ClearScreen.class,
                 CommandLine.HelpCommand.class,
                 ConfigCommand.class,
                 VersionCommand.class,
