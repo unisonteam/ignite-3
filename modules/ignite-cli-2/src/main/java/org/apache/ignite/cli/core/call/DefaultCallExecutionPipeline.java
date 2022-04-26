@@ -12,7 +12,7 @@ import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
  * @param <I> Call input type.
  * @param <T> Call output's body type.
  */
-public class DefaultCallExecutionPipeline<I extends CallInput, T> implements CallExecutionPipeline {
+public class DefaultCallExecutionPipeline<I extends CallInput, T> {
     /**
      * Call to execute.
      */
@@ -54,7 +54,6 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> implements Cal
     }
 
     /** {@inheritDoc} */
-    @Override
     public void runPipeline() {
         I callInput = inputProvider.get();
 

@@ -9,8 +9,8 @@ import org.apache.ignite.cli.core.repl.terminal.TerminalCustomizer;
  */
 public class ReplBuilder {
     private final Map<String, String> aliases = new HashMap<>();
-    private TerminalCustomizer terminalCustomizer = terminal -> {
-    };
+    private Class<?> commandClass;
+    private TerminalCustomizer terminalCustomizer = terminal -> {};
 
     /**
      * Build methods.
@@ -18,7 +18,18 @@ public class ReplBuilder {
      * @return new instance of {@link Repl}.
      */
     public Repl build() {
-        return new Repl(aliases, terminalCustomizer);
+        return new Repl(commandClass, aliases, terminalCustomizer);
+    }
+
+    /**
+     * Builder setter of {@code commandClass} field.
+     *
+     * @param commandClass class with top level command.
+     * @return invoked builder instance {@link ReplBuilder}.
+     */
+    public ReplBuilder withCommandClass(Class<?> commandClass) {
+        this.commandClass = commandClass;
+        return this;
     }
 
     /**
