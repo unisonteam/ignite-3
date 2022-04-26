@@ -1,9 +1,11 @@
 package org.apache.ignite.cli.commands.configuration;
 
 import jakarta.inject.Inject;
-import org.apache.ignite.cli.call.configuration.ReadConfigurationCall;
 import org.apache.ignite.cli.call.configuration.ReadConfigurationCallInput;
+import org.apache.ignite.cli.commands.options.ClusterConnectivityOptions;
+import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -19,23 +21,23 @@ public class ReadConfigSubCommand implements Runnable {
      * Node ID option.
      */
     @Option(names = {"--node"})
-    private String nodeId;
+    String nodeId;
     /**
      * Configuration selector option.
      */
     @Option(names = {"--selector"})
-    private String selector;
+    String selector;
     /**
-     * Mandatory cluster url option.
+     * Mandatory cluster connectivity argument group.
      */
-    @Option(names = {"--cluster-url"}, required = true)
-    private String clusterUrl;
+    @ArgGroup(exclusive = true, multiplicity = "1")
+    ClusterConnectivityOptions connectivityOptions;
 
     @Spec
-    private CommandSpec spec;
+    CommandSpec spec;
 
     @Inject
-    private ReadConfigurationCall call;
+    Call<ReadConfigurationCallInput, String> call;
 
     /** {@inheritDoc} */
     @Override
@@ -50,7 +52,7 @@ public class ReadConfigSubCommand implements Runnable {
 
     private ReadConfigurationCallInput buildCallInput() {
         return ReadConfigurationCallInput.builder()
-                .clusterUrl(clusterUrl)
+                .clusterUrl(connectivityOptions.getUrl())
                 .selector(selector)
                 .nodeId(nodeId)
                 .build();

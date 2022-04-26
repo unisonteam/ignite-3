@@ -1,30 +1,30 @@
-package org.apache.ignite.cli.commands.configuration;
+package org.apache.ignite.cli.commands.topology;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micronaut.context.annotation.Replaces;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.TestCall;
-import org.apache.ignite.cli.call.configuration.ReadConfigurationCall;
-import org.apache.ignite.cli.call.configuration.ReadConfigurationCallInput;
+import org.apache.ignite.cli.call.topology.TopologyCall;
+import org.apache.ignite.cli.call.topology.TopologyCallInput;
 import org.apache.ignite.cli.commands.CommandLineBaseTest;
 import org.apache.ignite.cli.core.call.Call;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class ReadConfigSubCommandTest extends CommandLineBaseTest {
+class TopologyCommandTest extends CommandLineBaseTest {
 
-    Call<ReadConfigurationCallInput, String> mockCall = new TestCall<>();
+    Call<TopologyCallInput, String> mockCall = new TestCall<>();
 
     @BeforeEach
     void setUp() {
-        super.setUp(ReadConfigSubCommand.class);
+        super.setUp(TopologyCommand.class);
     }
 
     @Singleton
-    @Replaces(ReadConfigurationCall.class)
-    public Call<ReadConfigurationCallInput, String> call() {
+    @Replaces(TopologyCall.class)
+    public Call<TopologyCallInput, String> call() {
         return mockCall;
     }
 

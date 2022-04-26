@@ -1,43 +1,39 @@
 package org.apache.ignite.cli.commands.configuration;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import org.apache.ignite.cli.call.configuration.UpdateConfigurationCall;
+import java.nio.file.Path;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCallInput;
+import org.apache.ignite.cli.commands.options.ClusterConnectivityOptions;
+import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 /**
  * Command that updates configuration.
  */
 @Command(name = "update")
-@Singleton
 public class UpdateConfigSubCommand implements Runnable {
     /**
      * Node ID option.
      */
     @Option(names = {"--node"})
-    private String nodeId;
+    String nodeId;
     /**
-     * Mandatory cluster url option.
+     * Mandatory cluster connectivity argument group.
      */
-    @Option(names = {"--cluster-url"})
-    private String clusterUrl;
-    /**
-     * Configuration that will be updated.
-     */
-    @Parameters(index = "0")
-    private String config;
+    @ArgGroup(exclusive = true, multiplicity = "1")
+    ClusterConnectivityOptions connectivityOptions;
 
+    @ArgGroup(exclusive = true, multiplicity = "1")
+    ConfigOption configOption;
     @Spec
-    private CommandSpec spec;
-
+    CommandSpec spec;
     @Inject
-    UpdateConfigurationCall call;
+    Call<UpdateConfigurationCallInput, String> call;
 
     /** {@inheritDoc} */
     @Override
@@ -52,9 +48,22 @@ public class UpdateConfigSubCommand implements Runnable {
 
     private UpdateConfigurationCallInput buildCallInput() {
         return UpdateConfigurationCallInput.builder()
-                .clusterUrl(clusterUrl)
-                .config(config)
+                .clusterUrl(connectivityOptions.getUrl())
+                .config(configOption.config)
                 .nodeId(nodeId)
                 .build();
+    }
+
+    static class ConfigOption {
+        /**
+         * Plain configuration that will be updated.
+         */
+        @Option(names = {"--config"}, required = true)
+        String config;
+        /**
+         * Path to configuration file.
+         */
+        @Option(names = {"--config-file"}, required = true)
+        Path configPath;
     }
 }

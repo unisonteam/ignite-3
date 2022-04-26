@@ -1,6 +1,5 @@
 package org.apache.ignite.cli.commands;
 
-import jakarta.inject.Singleton;
 import org.apache.ignite.cli.commands.configuration.ConfigCommand;
 import org.apache.ignite.cli.commands.sql.SqlReplCommand;
 import org.apache.ignite.cli.commands.status.StatusCommand;
@@ -27,7 +26,6 @@ import picocli.CommandLine.Command;
                 StatusCommand.class,
                 TopologyCommand.class
         })
-@Singleton
 public class TopLevelCliCommand implements Runnable {
     @Override
     public void run() {

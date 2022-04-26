@@ -35,9 +35,6 @@ public class CliCommandTestIntegrationBase extends IntegrationTestBase {
     /** Correct ignite jdbc url. */
     protected static final String JDBC_URL = "jdbc:ignite:thin://127.0.0.1:10800";
 
-    @Inject
-    TopLevelCliCommand topLevelCliCommand;
-
     private CommandLine cmd;
 
     private StringWriter sout;
