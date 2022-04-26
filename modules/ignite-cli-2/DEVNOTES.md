@@ -5,7 +5,7 @@
 Cd to module directory and build the module:
 ```bash
 cd modules/ignite-cli-2
-mvn clean install
+mvn clean package
 ```
 
 Install autocompletion script to your shell:
