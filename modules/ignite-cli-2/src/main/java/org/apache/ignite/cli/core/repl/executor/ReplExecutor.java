@@ -1,13 +1,13 @@
 package org.apache.ignite.cli.core.repl.executor;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
+import jakarta.inject.Singleton;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
-import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.fusesource.jansi.AnsiConsole;
@@ -28,21 +28,21 @@ import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 /**
  * Executor of {@link Repl}.
  */
+@Singleton
 public class ReplExecutor {
     private static final String PROMPT = "ignite-cli> ";
 
-    private final Terminal terminal;
-
-    private final PicocliCommandsFactory factory;
     private final Parser parser = new DefaultParser();
     private final Supplier<Path> workDirProvider = () -> Paths.get(System.getProperty("user.dir"));
+    private PicocliCommandsFactory factory;
+    private Terminal terminal;
 
     /**
-     * Constructor.
+     * Secondary constructor.
      *
      * @param micronautFactory command factory instance {@link MicronautFactory}.
      */
-    public ReplExecutor(MicronautFactory micronautFactory) throws Exception {
+    public void injectFactory(MicronautFactory micronautFactory) throws Exception {
         factory = new PicocliCommandsFactory(micronautFactory);
         terminal = micronautFactory.create(Terminal.class);
         factory.setTerminal(terminal);
@@ -59,7 +59,7 @@ public class ReplExecutor {
             repl.customizeTerminal(terminal);
 
             Builtins builtins = createBuiltins(repl);
-            PicocliCommands picocliCommands = createPicocliCommands();
+            PicocliCommands picocliCommands = createPicocliCommands(repl.commandClass());
             SystemRegistryImpl registry = createRegistry();
             registry.setCommandRegistries(builtins, picocliCommands);
 
@@ -70,7 +70,7 @@ public class ReplExecutor {
                     .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
                     .build();
             builtins.setLineReader(reader);
-            RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader);
+            RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader, true);
 
             // start the shell and process input until the user quits with Ctrl-D
             while (true) {
@@ -107,12 +107,11 @@ public class ReplExecutor {
         return builtins;
     }
 
-    private SystemRegistryImpl createRegistry() {
+    public SystemRegistryImpl createRegistry() {
         return new SystemRegistryImpl(parser, terminal, workDirProvider, null);
     }
 
-    private PicocliCommands createPicocliCommands() {
-        CommandLine cmd = new CommandLine(TopLevelCliCommand.class, factory);
-        return new PicocliCommands(cmd);
+    public PicocliCommands createPicocliCommands(Class<?> commandClass) {
+        return new PicocliCommands(new CommandLine(commandClass, factory));
     }
 }

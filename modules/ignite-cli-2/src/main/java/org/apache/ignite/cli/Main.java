@@ -48,13 +48,15 @@ public class Main {
     }
 
     private static void enterRepl(MicronautFactory micronautFactory) throws Exception {
-        ReplExecutor replExecutor = new ReplExecutor(micronautFactory);
+        ReplExecutor replExecutor = micronautFactory.create(ReplExecutor.class);
+        replExecutor.injectFactory(micronautFactory);
         HashMap<String, String> aliases = new HashMap<>();
         aliases.put("zle", "widget");
         aliases.put("bindkey", "keymap");
 
         replExecutor.execute(Repl.builder()
                 .withAliases(aliases)
+                .withCommandClass(TopLevelCliCommand.class)
                 .build());
     }
 
