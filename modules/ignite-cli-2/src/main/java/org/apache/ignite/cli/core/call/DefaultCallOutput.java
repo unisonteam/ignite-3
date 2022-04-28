@@ -3,7 +3,7 @@ package org.apache.ignite.cli.core.call;
 import java.util.Objects;
 
 /**
- * Default implementation of {@link CallOutput} with {@link String} body.
+ * Default implementation of {@link CallOutput} with {@link T} body.
  */
 public class DefaultCallOutput<T> implements CallOutput<T> {
     private final CallOutputStatus status;
@@ -39,7 +39,7 @@ public class DefaultCallOutput<T> implements CallOutput<T> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DefaultCallOutput that = (DefaultCallOutput) o;
+        DefaultCallOutput<?> that = (DefaultCallOutput<?>) o;
         return status == that.status && Objects.equals(body, that.body) && Objects.equals(cause, that.cause);
     }
 

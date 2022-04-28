@@ -35,18 +35,19 @@ public class SqlReplExecutor {
      * Execute SQL REPL method.
      *
      * @param sqlExecutor SQL queries executor.
-     */public void executeRepl(SqlExecutor sqlExecutor) {
-    LineReader reader = LineReaderBuilder.builder()
-        .terminal(terminal)
-        //.completer()
-        .parser(new DefaultParser())
-        .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
-        .build();
-    SqlReplCommandExecutor executor = new SqlReplCommandExecutor(sqlExecutor);
-    RegistryCommandExecutor call =
-        new RegistryCommandExecutor(replExecutor.createRegistry(),
-                                    replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class),
-                                    reader, false);
+     */
+    public void executeRepl(SqlExecutor sqlExecutor) {
+        LineReader reader = LineReaderBuilder.builder()
+                .terminal(terminal)
+                //.completer()
+                .parser(new DefaultParser())
+                .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
+                .build();
+        SqlReplCommandExecutor executor = new SqlReplCommandExecutor(sqlExecutor);
+        RegistryCommandExecutor call =
+                new RegistryCommandExecutor(replExecutor.createRegistry(),
+                                            replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class),
+                                            reader, false);
         // start the shell and process input until the user quits with Ctrl-D
         while (true) {
             try {
