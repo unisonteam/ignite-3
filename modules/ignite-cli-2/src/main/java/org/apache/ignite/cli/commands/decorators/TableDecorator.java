@@ -13,11 +13,11 @@ public class TableDecorator implements Decorator<Table<String>, TerminalOutput> 
     /**
      * Transform {@link Table} to {@link TerminalOutput}.
      *
-     * @param data incoming {@link Table}.
+     * @param table incoming {@link Table}.
      * @return User friendly interpretation of {@link Table} in {@link TerminalOutput}.
      */
     @Override
-    public TerminalOutput decorate(Table<String> data) {
-        return () -> FlipTableConverters.fromIterable(data, String.class);
+    public TerminalOutput decorate(Table<String> table) {
+        return () -> FlipTableConverters.fromObjects(table.header(), table.content());
     }
 }

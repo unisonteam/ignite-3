@@ -5,12 +5,12 @@ import java.util.Objects;
 /**
  * Default implementation of {@link CallOutput} with {@link String} body.
  */
-public class DefaultCallOutput implements CallOutput<String> {
+public class DefaultCallOutput<T> implements CallOutput<T> {
     private final CallOutputStatus status;
-    private final String body;
+    private final T body;
     private final Throwable cause;
 
-    private DefaultCallOutput(CallOutputStatus status, String body, Throwable cause) {
+    private DefaultCallOutput(CallOutputStatus status, T body, Throwable cause) {
         this.status = status;
         this.body = body;
         this.cause = cause;
@@ -27,7 +27,7 @@ public class DefaultCallOutput implements CallOutput<String> {
     }
 
     @Override
-    public String body() {
+    public T body() {
         return body;
     }
 
@@ -65,8 +65,8 @@ public class DefaultCallOutput implements CallOutput<String> {
      *
      * @return new instance of {@link DefaultCallOutputBuilder}.
      */
-    public static DefaultCallOutputBuilder builder() {
-        return new DefaultCallOutputBuilder();
+    public static <T> DefaultCallOutputBuilder<T> builder() {
+        return new DefaultCallOutputBuilder<T>();
     }
 
     /**
@@ -75,8 +75,8 @@ public class DefaultCallOutput implements CallOutput<String> {
      * @param body for successful call output.
      * @return Successful call output with provided body.
      */
-    public static DefaultCallOutput success(String body) {
-        return DefaultCallOutput.builder()
+    public static <T> DefaultCallOutput<T> success(T body) {
+        return DefaultCallOutput.<T>builder()
                 .status(CallOutputStatus.SUCCESS)
                 .body(body)
                 .build();
@@ -88,8 +88,8 @@ public class DefaultCallOutput implements CallOutput<String> {
      * @param cause error of failed call.
      * @return Failed call output with provided cause.
      */
-    public static DefaultCallOutput failure(Throwable cause) {
-        return DefaultCallOutput.builder()
+    public static <T> DefaultCallOutput<T> failure(Throwable cause) {
+        return DefaultCallOutput.<T>builder()
             .status(CallOutputStatus.ERROR)
             .cause(cause)
             .build();
@@ -98,9 +98,9 @@ public class DefaultCallOutput implements CallOutput<String> {
     /**
      * Builder of {@link DefaultCallOutput}.
      */
-    public static class DefaultCallOutputBuilder {
+    public static class DefaultCallOutputBuilder<T> {
         private CallOutputStatus status;
-        private String body;
+        private T body;
         private Throwable cause;
 
         /**
@@ -109,7 +109,7 @@ public class DefaultCallOutput implements CallOutput<String> {
          * @param status output status.
          * @return invoked builder instance {@link DefaultCallOutputBuilder}.
          */
-        public DefaultCallOutputBuilder status(CallOutputStatus status) {
+        public DefaultCallOutputBuilder<T> status(CallOutputStatus status) {
             this.status = status;
             return this;
         }
@@ -120,7 +120,7 @@ public class DefaultCallOutput implements CallOutput<String> {
          * @param body call output body.
          * @return invoked builder instance {@link DefaultCallOutputBuilder}.
          */
-        public DefaultCallOutputBuilder body(String body) {
+        public DefaultCallOutputBuilder<T> body(T body) {
             this.body = body;
             return this;
         }
@@ -131,7 +131,7 @@ public class DefaultCallOutput implements CallOutput<String> {
          * @param cause exception cause.
          * @return invoked builder instance {@link DefaultCallOutputBuilder}.
          */
-        public DefaultCallOutputBuilder cause(Throwable cause) {
+        public DefaultCallOutputBuilder<T> cause(Throwable cause) {
             this.cause = cause;
             return this;
         }
@@ -141,8 +141,8 @@ public class DefaultCallOutput implements CallOutput<String> {
          *
          * @return new {@link DefaultCallOutput} with field provided to builder.
          */
-        public DefaultCallOutput build() {
-            return new DefaultCallOutput(status, body, cause);
+        public DefaultCallOutput<T> build() {
+            return new DefaultCallOutput<>(status, body, cause);
         }
     }
 }

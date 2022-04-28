@@ -5,10 +5,15 @@ import picocli.CommandLine;
 import picocli.shell.jline3.PicocliCommands;
 
 /**
- * SQL REPL top level command.
+ * Top level SQL REPL command.
  */
-@CommandLine.Command(name = "", description = {""}, footer = {"", "Press Ctrl-D to exit."}, subcommands = {CommandLine.HelpCommand.class,
-        PicocliCommands.ClearScreen.class})
+@CommandLine.Command(name = "",
+        description = {""},
+        footer = {"", "Press Ctrl-D to exit."},
+        subcommands = {
+            CommandLine.HelpCommand.class,
+            PicocliCommands.ClearScreen.class
+        })
 @Singleton
 public class SqlReplTopLevelCliCommand {
 }
