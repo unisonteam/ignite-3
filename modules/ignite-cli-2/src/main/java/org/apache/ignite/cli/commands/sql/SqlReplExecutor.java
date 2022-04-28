@@ -36,7 +36,9 @@ public class SqlReplExecutor {
         .build();
     SqlReplCommandExecutor executor = new SqlReplCommandExecutor(sqlExecutor);
     RegistryCommandExecutor call =
-        new RegistryCommandExecutor(replExecutor.createRegistry(), replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class), reader);
+        new RegistryCommandExecutor(replExecutor.createRegistry(),
+                                    replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class),
+                                    reader, false);
     // start the shell and process input until the user quits with Ctrl-D
     while (true) {
       try {

@@ -23,13 +23,18 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
      * @param picocliCommands {@link PicocliCommands} instance.
      * @param reader {@link LineReader} instance.
      */
-    public RegistryCommandExecutor(SystemRegistry systemRegistry, PicocliCommands picocliCommands, LineReader reader) {
+    public RegistryCommandExecutor(SystemRegistry systemRegistry,
+                                   PicocliCommands picocliCommands,
+                                   LineReader reader,
+                                   boolean withWidget) {
         this.systemRegistry = systemRegistry;
         systemRegistry.register("help", picocliCommands);
 
-        TailTipWidgets widgets = new TailTipWidgets(reader, systemRegistry::commandDescription, 5,
-                TailTipWidgets.TipType.COMPLETER);
-        widgets.enable();
+        if (withWidget) {
+            TailTipWidgets widgets = new TailTipWidgets(reader, systemRegistry::commandDescription, 5,
+                                                        TailTipWidgets.TipType.COMPLETER);
+            widgets.enable();
+        }
     }
 
     /**

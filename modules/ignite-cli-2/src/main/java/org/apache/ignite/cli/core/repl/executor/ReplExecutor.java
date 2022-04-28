@@ -70,7 +70,7 @@ public class ReplExecutor {
                     .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
                     .build();
             builtins.setLineReader(reader);
-            RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader);
+            RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader, true);
 
             // start the shell and process input until the user quits with Ctrl-D
             while (true) {
