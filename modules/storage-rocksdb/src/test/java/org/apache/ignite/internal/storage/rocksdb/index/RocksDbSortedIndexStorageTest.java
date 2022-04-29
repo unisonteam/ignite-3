@@ -35,7 +35,6 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -48,6 +47,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.apache.ignite.configuration.schemas.store.UnknownDataStorageConfigurationSchema;
 import org.apache.ignite.configuration.schemas.table.HashIndexConfigurationSchema;
 import org.apache.ignite.configuration.schemas.table.SortedIndexConfigurationSchema;
 import org.apache.ignite.configuration.schemas.table.TableConfiguration;
@@ -62,7 +62,7 @@ import org.apache.ignite.internal.storage.index.IndexRowPrefix;
 import org.apache.ignite.internal.storage.index.SortedIndexDescriptor.ColumnDescriptor;
 import org.apache.ignite.internal.storage.index.SortedIndexStorage;
 import org.apache.ignite.internal.storage.rocksdb.RocksDbStorageEngine;
-import org.apache.ignite.internal.storage.rocksdb.configuration.schema.RocksDbDataStorageConfiguration;
+import org.apache.ignite.internal.storage.rocksdb.configuration.schema.RocksDbDataStorageChange;
 import org.apache.ignite.internal.storage.rocksdb.configuration.schema.RocksDbDataStorageConfigurationSchema;
 import org.apache.ignite.internal.storage.rocksdb.configuration.schema.RocksDbDataStorageView;
 import org.apache.ignite.internal.storage.rocksdb.configuration.schema.RocksDbStorageEngineConfiguration;
@@ -106,6 +106,7 @@ public class RocksDbSortedIndexStorageTest {
     @InjectConfiguration(polymorphicExtensions = {
             HashIndexConfigurationSchema.class,
             SortedIndexConfigurationSchema.class,
+            UnknownDataStorageConfigurationSchema.class,
             RocksDbDataStorageConfigurationSchema.class
     }, name = "table")
     private TableConfiguration tableCfg;
@@ -119,7 +120,7 @@ public class RocksDbSortedIndexStorageTest {
     void setUp(
             @WorkDirectory Path workDir,
             @InjectConfiguration RocksDbStorageEngineConfiguration rocksDbEngineConfig
-    ) {
+    ) throws Exception {
         long seed = System.currentTimeMillis();
 
         log.info("Using random seed: " + seed);
@@ -144,7 +145,7 @@ public class RocksDbSortedIndexStorageTest {
     /**
      * Configures a test table with columns of all supported types.
      */
-    private void createTestConfiguration(RocksDbStorageEngineConfiguration rocksDbEngineConfig) {
+    private void createTestConfiguration(RocksDbStorageEngineConfiguration rocksDbEngineConfig) throws Exception {
         CompletableFuture<Void> dataRegionChangeFuture = rocksDbEngineConfig.defaultRegion()
                 .change(c -> c.changeSize(16 * 1024).changeWriteBufferSize(16 * 1024));
 
@@ -155,7 +156,9 @@ public class RocksDbSortedIndexStorageTest {
                 .withPrimaryKey(ALL_TYPES_COLUMN_DEFINITIONS.get(0).name())
                 .build();
 
-        assertThat(tableCfg.dataStorage(), is(instanceOf(RocksDbDataStorageConfiguration.class)));
+        CompletableFuture<Void> dataStorageChangeFuture = tableCfg.dataStorage().change(c -> c.convert(RocksDbDataStorageChange.class));
+
+        assertThat(dataStorageChangeFuture, willBe(nullValue(Void.class)));
 
         assertThat(((RocksDbDataStorageView) tableCfg.dataStorage().value()).dataRegion(), equalTo(DEFAULT_DATA_REGION_NAME));
 
@@ -264,16 +267,17 @@ public class RocksDbSortedIndexStorageTest {
         IndexRowPrefix first = entries.get(firstIndex).prefix(3);
         IndexRowPrefix last = entries.get(lastIndex).prefix(5);
 
-        List<byte[]> actual = cursorToList(indexStorage.range(first, last))
-                .stream()
-                .map(IndexRow::primaryKey)
-                .map(SearchRow::keyBytes)
-                .collect(toList());
+        try (Cursor<IndexRow> cursor = indexStorage.range(first, last)) {
+            List<byte[]> actual = cursor.stream()
+                    .map(IndexRow::primaryKey)
+                    .map(SearchRow::keyBytes)
+                    .collect(toList());
 
-        assertThat(actual, hasSize(lastIndex - firstIndex + 1));
+            assertThat(actual, hasSize(lastIndex - firstIndex + 1));
 
-        for (int i = firstIndex; i < actual.size(); ++i) {
-            assertThat(actual.get(i), is(equalTo(expected.get(i))));
+            for (int i = firstIndex; i < actual.size(); ++i) {
+                assertThat(actual.get(i), is(equalTo(expected.get(i))));
+            }
         }
     }
 
@@ -298,9 +302,9 @@ public class RocksDbSortedIndexStorageTest {
         indexStorage.put(entry1.row());
         indexStorage.put(entry2.row());
 
-        List<IndexRow> actual = cursorToList(indexStorage.range(entry2::columns, entry1::columns));
-
-        assertThat(actual, is(empty()));
+        try (Cursor<IndexRow> cursor = indexStorage.range(entry2::columns, entry1::columns)) {
+            assertThat(cursor.stream().collect(toList()), is(empty()));
+        }
     }
 
     /**
@@ -375,9 +379,9 @@ public class RocksDbSortedIndexStorageTest {
             entry1 = t;
         }
 
-        List<IndexRow> rows = cursorToList(storage.range(entry1::columns, entry2::columns));
-
-        assertThat(rows, contains(entry1.row(), entry2.row()));
+        try (Cursor<IndexRow> cursor = storage.range(entry1::columns, entry2::columns)) {
+            assertThat(cursor.stream().collect(toList()), contains(entry1.row(), entry2.row()));
+        }
     }
 
     private List<ColumnDefinition> shuffledRandomDefinitions() {
@@ -478,29 +482,18 @@ public class RocksDbSortedIndexStorageTest {
     }
 
     /**
-     * Extracts all data from a given cursor and closes it.
-     */
-    private static <T> List<T> cursorToList(Cursor<T> cursor) throws Exception {
-        try (cursor) {
-            var list = new ArrayList<T>();
-
-            cursor.forEachRemaining(list::add);
-
-            return list;
-        }
-    }
-
-    /**
      * Extracts a single value by a given key or {@code null} if it does not exist.
      */
     @Nullable
     private static IndexRow getSingle(SortedIndexStorage indexStorage, IndexRowWrapper entry) throws Exception {
         IndexRowPrefix fullPrefix = entry::columns;
 
-        List<IndexRow> values = cursorToList(indexStorage.range(fullPrefix, fullPrefix));
+        try (Cursor<IndexRow> cursor = indexStorage.range(fullPrefix, fullPrefix)) {
+            List<IndexRow> values = cursor.stream().collect(toList());
 
-        assertThat(values, anyOf(empty(), hasSize(1)));
+            assertThat(values, anyOf(empty(), hasSize(1)));
 
-        return values.isEmpty() ? null : values.get(0);
+            return values.isEmpty() ? null : values.get(0);
+        }
     }
 }
