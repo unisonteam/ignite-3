@@ -110,6 +110,7 @@
         <dependency>
             <groupId>io.micronaut.test</groupId>
             <artifactId>micronaut-test-junit5</artifactId>
+            <version>${micronaut3.test.junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
