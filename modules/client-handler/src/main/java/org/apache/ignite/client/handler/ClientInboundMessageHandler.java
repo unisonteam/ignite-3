@@ -71,7 +71,9 @@ import org.apache.ignite.internal.client.proto.ProtocolVersion;
 import org.apache.ignite.internal.client.proto.ServerMessageType;
 import org.apache.ignite.internal.sql.engine.QueryProcessor;
 import org.apache.ignite.lang.IgniteException;
+import org.apache.ignite.lang.IgniteInternalCheckedException;
 import org.apache.ignite.lang.IgniteLogger;
+import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.network.ClusterService;
 import org.apache.ignite.table.manager.IgniteTables;
 import org.apache.ignite.tx.IgniteTransactions;
@@ -160,7 +162,7 @@ public class ClientInboundMessageHandler extends ChannelInboundHandlerAdapter {
     /** {@inheritDoc} */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        resources.clean();
+        resources.close();
 
         super.channelInactive(ctx);
     }
@@ -188,11 +190,16 @@ public class ClientInboundMessageHandler extends ChannelInboundHandlerAdapter {
 
             // Response.
             ProtocolVersion.LATEST_VER.pack(packer);
-
             packer.packInt(ClientErrorCode.SUCCESS);
+
+            packer.packLong(configuration.idleTimeout());
+
+            ClusterNode localMember = clusterService.topologyService().localMember();
+            packer.packString(localMember.id());
+            packer.packString(localMember.name());
+
             packer.packBinaryHeader(0); // Features.
             packer.packMapHeader(0); // Extensions.
-            packer.packLong(configuration.idleTimeout());
 
             write(packer, ctx);
         } catch (Throwable t) {
@@ -306,7 +313,7 @@ public class ClientInboundMessageHandler extends ChannelInboundHandlerAdapter {
             ClientMessageUnpacker in,
             ClientMessagePacker out,
             int opCode
-    ) {
+    ) throws IgniteInternalCheckedException {
         switch (opCode) {
             case ClientOp.HEARTBEAT:
                 return null;

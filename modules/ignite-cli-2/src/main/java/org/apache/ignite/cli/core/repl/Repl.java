@@ -14,7 +14,8 @@ public class Repl {
 
     /**
      * Constructor.
-     * @param commandClass
+     *
+     * @param commandClass command class
      * @param aliases map of aliases for commands.
      * @param terminalCustomizer customizer of terminal.
      */

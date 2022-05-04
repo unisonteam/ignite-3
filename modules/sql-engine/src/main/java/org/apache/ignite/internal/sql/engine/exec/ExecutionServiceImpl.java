@@ -71,6 +71,7 @@ import org.apache.ignite.internal.sql.engine.util.Commons;
 import org.apache.ignite.internal.sql.engine.util.NodeLeaveHandler;
 import org.apache.ignite.internal.sql.engine.util.TransformingIterator;
 import org.apache.ignite.internal.sql.engine.util.TypeUtils;
+import org.apache.ignite.internal.storage.DataStorageManager;
 import org.apache.ignite.internal.table.distributed.TableManager;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.lang.IgniteInternalCheckedException;
@@ -129,7 +130,8 @@ public class ExecutionServiceImpl<RowT> implements ExecutionService<RowT> {
             RowHandler<RowT> handler,
             MailboxRegistry mailboxRegistry,
             ExchangeService exchangeSrvc,
-            QueryRegistry queryRegistry
+            QueryRegistry queryRegistry,
+            DataStorageManager dataStorageManager
     ) {
         this.topSrvc = topSrvc;
         this.handler = handler;
@@ -140,7 +142,7 @@ public class ExecutionServiceImpl<RowT> implements ExecutionService<RowT> {
         this.exchangeSrvc = exchangeSrvc;
         this.queryRegistry = queryRegistry;
 
-        ddlCmdHnd = new DdlCommandHandler(tblManager);
+        ddlCmdHnd = new DdlCommandHandler(tblManager, dataStorageManager);
 
         locNodeId = topSrvc.localMember().id();
         qryPlanCache = planCache;
