@@ -76,12 +76,7 @@
 
         <dependency>
             <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-cli</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-cli-common</artifactId>
+            <artifactId>ignite-cli-2</artifactId>
         </dependency>
 
         <dependency>

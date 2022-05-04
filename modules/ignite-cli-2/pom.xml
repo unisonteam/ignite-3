@@ -15,11 +15,13 @@
 
     <properties>
         <picocli.version>4.6.2</picocli.version>
+        <micronaut3.test.junit5.version>3.1.1</micronaut3.test.junit5.version>
         <jansi.version>1.18</jansi.version>
         <fliptables.version>1.1.0</fliptables.version>
         <h2.version>2.1.210</h2.version>
         <ignite.version>3.0.0-SNAPSHOT</ignite.version>
         <assertj-core.version>3.22.0</assertj-core.version>
+        <micronaut-test-core.version>3.1.1</micronaut-test-core.version>
     </properties>
 
     <dependencies>
@@ -111,6 +113,12 @@
             <groupId>io.micronaut.test</groupId>
             <artifactId>micronaut-test-junit5</artifactId>
             <version>${micronaut3.test.junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.test</groupId>
+            <artifactId>micronaut-test-core</artifactId>
+            <version>${micronaut-test-core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -292,7 +300,7 @@
                         <argument>${project.build.directory}/ignite_completion.sh</argument>
                         <argument>-n</argument>
                         <argument>ignite</argument>
-                        <argument>org.apache.ignite.cli.commands.TopLevelCliCommand</argument>
+                        <argument>org.apache.ignite.cli.commands.TopLevelCliCommand</argument><!-- replace with your class -->
                     </arguments>
                 </configuration>
             </plugin>

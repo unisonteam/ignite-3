@@ -43,8 +43,6 @@
         <module>modules/api</module>
         <module>modules/baseline</module>
         <module>modules/bytecode</module>
-        <module>modules/cli</module>
-        <module>modules/cli-common</module>
         <module>modules/client</module>
         <module>modules/client-common</module>
         <module>modules/client-handler</module>

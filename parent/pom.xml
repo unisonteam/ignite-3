@@ -62,7 +62,7 @@
         <jline.version>3.21.0</jline.version>
         <jmh.framework.version>1.35</jmh.framework.version>
         <junit.version>5.8.1</junit.version>
-        <micronaut.version>3.2.7</micronaut.version>
+        <micronaut.version>3.4.1</micronaut.version>
         <micronaunt-picocli.version>4.1.0</micronaunt-picocli.version>
         <micronaut3.version>3.4.1</micronaut3.version>
         <micronaut3.serde.version>1.0.1</micronaut3.serde.version>
@@ -198,13 +198,7 @@
 
             <dependency>
                 <groupId>org.apache.ignite</groupId>
-                <artifactId>ignite-cli</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.ignite</groupId>
-                <artifactId>ignite-cli-common</artifactId>
+                <artifactId>ignite-cli-2</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
