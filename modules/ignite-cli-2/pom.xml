@@ -20,7 +20,6 @@
         <h2.version>2.1.210</h2.version>
         <ignite.version>3.0.0-SNAPSHOT</ignite.version>
         <assertj-core.version>3.22.0</assertj-core.version>
-        <micronaut3-test-core.version>3.1.1</micronaut3-test-core.version>
     </properties>
 
     <dependencies>
@@ -111,13 +110,13 @@
         <dependency>
             <groupId>io.micronaut.test</groupId>
             <artifactId>micronaut-test-junit5</artifactId>
-            <version>${micronaut3-test-core.version}</version>
+            <version>${micronaut3.test.junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.micronaut.test</groupId>
             <artifactId>micronaut-test-core</artifactId>
-            <version>${micronaut3-test-core.version}</version>
+            <version>${micronaut3.test.junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
