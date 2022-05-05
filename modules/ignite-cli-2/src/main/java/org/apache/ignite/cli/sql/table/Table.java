@@ -4,9 +4,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -15,35 +13,27 @@ import java.util.stream.Collectors;
  * @param <T> type of table elements.
  */
 public class Table<T> {
-    private final Map<String, TableRow<T>> content;
+    private final String[] header;
+    private final List<TableRow<T>> content;
 
     /**
      * Constructor.
      *
-     * @param ids     list of row ids.
+     * @param ids list of column names.
      * @param content list of row content. Size should be equals n * ids.size.
      */
     public Table(List<String> ids, List<T> content) {
         if (content.size() % ids.size() != 0) {
-            throw new RuntimeException();
+            throw new IllegalArgumentException("Content size should be divisible by columns count");
         }
 
-        this.content = new HashMap<>();
-        for (int i = 0, size = ids.size(); i < size; i++) {
-            String id = ids.get(i);
-            TableRow<T> row = new TableRow<>(id, content.subList(i * size, (i + 1) * size));
-            this.content.put(id, row);
+        this.header = ids.toArray(new String[0]);
+        this.content = new ArrayList<>();
+        int columnsCount = ids.size();
+        for (int i = 0; i < content.size() / columnsCount; i++) {
+            List<T> elements = content.subList(i * columnsCount, (i + 1) * columnsCount);
+            this.content.add(new TableRow<>(elements));
         }
-    }
-
-    /**
-     * Row getter.
-     *
-     * @param id row id.
-     * @return Table row with {@param id}.
-     */
-    public TableRow<T> getRow(String id) {
-        return content.get(id);
     }
 
     /**
@@ -52,7 +42,7 @@ public class Table<T> {
      * @return array of table's columns name.
      */
     public String[] header() {
-        return content.keySet().toArray(new String[0]);
+        return header;
     }
 
     /**
@@ -61,8 +51,8 @@ public class Table<T> {
      * @return content of table without header.
      */
     public Object[][] content() {
-        List<Object[]> collect = content.values().stream()
-                .map(ts -> new ArrayList<>(ts.getValues()))
+        List<Object[]> collect = content.stream()
+                .map(row -> new ArrayList<>(row.getValues()))
                 .map(strings -> strings.toArray(new Object[0]))
                 .collect(Collectors.toList());
 

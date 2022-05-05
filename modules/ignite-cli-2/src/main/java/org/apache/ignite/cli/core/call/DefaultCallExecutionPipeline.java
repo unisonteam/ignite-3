@@ -1,6 +1,8 @@
 package org.apache.ignite.cli.core.call;
 
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.function.Supplier;
 import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
 import org.apache.ignite.cli.commands.decorators.core.Decorator;
@@ -92,9 +94,17 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> {
             return this;
         }
 
+        public DefaultCommandExecutionPipelineBuilder<I, T> output(OutputStream output) {
+            return output(wrapOutputStream(output));
+        }
+
         public DefaultCommandExecutionPipelineBuilder<I, T> errOutput(PrintWriter errOutput) {
             this.errOutput = errOutput;
             return this;
+        }
+
+        public DefaultCommandExecutionPipelineBuilder<I, T> errOutput(OutputStream output) {
+            return errOutput(wrapOutputStream(output));
         }
 
         public DefaultCommandExecutionPipelineBuilder<I, T> decorator(Decorator<T, TerminalOutput> decorator) {
@@ -104,6 +114,15 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> {
 
         public DefaultCallExecutionPipeline<I, T> build() {
             return new DefaultCallExecutionPipeline<>(call, output, errOutput, decorator, inputProvider);
+        }
+
+        private static PrintWriter wrapOutputStream(OutputStream output) {
+            return new PrintWriter(output, true, getStdoutEncoding());
+        }
+
+        private static Charset getStdoutEncoding() {
+            String encoding = System.getProperty("sun.stdout.encoding");
+            return encoding != null ? Charset.forName(encoding) : Charset.defaultCharset();
         }
     }
 }

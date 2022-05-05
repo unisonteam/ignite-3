@@ -12,17 +12,14 @@ import java.util.List;
  * @param <T> type of table row elements.
  */
 public class TableRow<T> implements Iterable<T> {
-    public final String id;
     private final List<T> content;
 
     /**
      * Constructor.
      *
-     * @param id row id.
      * @param elements row elements.
      */
-    public TableRow(String id, Collection<T> elements) {
-        this.id = id;
+    public TableRow(Collection<T> elements) {
         content = new ArrayList<>(elements);
     }
 
