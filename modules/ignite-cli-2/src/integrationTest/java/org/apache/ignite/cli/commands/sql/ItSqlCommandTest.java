@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
 /**
- * Tests for {@link SqlReplCommand}.
+ * Tests for {@link SqlCommand}.
  */
-class ItSqlReplCommandTest extends CliCommandTestIntegrationBase {
+class ItSqlCommandTest extends CliCommandTestIntegrationBase {
 
     @BeforeEach
     public void setUp(TestInfo testInfo) throws Exception {

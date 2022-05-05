@@ -22,13 +22,12 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.apache.ignite.cli.core.repl.executor.SqlExecutor;
 import org.apache.ignite.cli.sql.table.Table;
 
 /**
  * Manager to work with any sql operation.
  */
-public class SqlManager implements AutoCloseable, SqlExecutor {
+public class SqlManager implements AutoCloseable {
     private final Connection connection;
 
     public SqlManager(String jdbcUrl) throws SQLException {
@@ -36,13 +35,13 @@ public class SqlManager implements AutoCloseable, SqlExecutor {
     }
 
     /**
-     * Execute provided sql command and return.
+     * Execute provided string as SQL request.
      *
-     * @param sql provided sql command.
-     * @throws SQLException when occurs any problem with sql database.
+     * @param sql incoming string representation of SQL command.
+     * @return result of provided SQL command in terms of {@link Table}.
+     * @throws SQLException in any case when SQL command can't be executed.
      */
-    @Override
-    public Table<String> execute(String sql) throws Exception {
+    public Table<String> execute(String sql) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.execute(sql);
             ResultSet resultSet = statement.getResultSet();

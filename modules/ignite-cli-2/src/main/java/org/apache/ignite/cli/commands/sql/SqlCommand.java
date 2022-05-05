@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.commands.decorators.TableDecorator;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
-import org.apache.ignite.cli.core.repl.executor.SqlReplCommandExecutor;
+import org.apache.ignite.cli.core.repl.executor.SqlQueryCall;
 import org.apache.ignite.cli.sql.SqlManager;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -19,7 +19,7 @@ import picocli.CommandLine.Spec;
  * Command for sql execution.
  */
 @Command(name = "sql")
-public class SqlReplCommand implements Runnable {
+public class SqlCommand implements Runnable {
     @Option(names = {"--jdbc-url"}, required = true)
     private String jdbc;
     @Option(names = {"-execute", "--execute"})
@@ -41,7 +41,7 @@ public class SqlReplCommand implements Runnable {
                 sqlReplExecutor.executeRepl(sqlManager);
             } else {
                 String executeCommand = file != null ? extract(file) : command;
-                SqlReplCommandExecutor call = new SqlReplCommandExecutor(sqlManager);
+                SqlQueryCall call = new SqlQueryCall(sqlManager);
                 DefaultCallExecutionPipeline.builder(call)
                         .inputProvider(() -> new ReplCallInput(executeCommand))
                         .output(spec.commandLine().getOut())
