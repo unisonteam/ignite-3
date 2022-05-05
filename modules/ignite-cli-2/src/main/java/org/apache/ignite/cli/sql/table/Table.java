@@ -5,27 +5,22 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import org.apache.ignite.cli.commands.decorators.core.CommandOutput;
 
 /**
  * Data class for table representation.
  *
  * @param <T> type of table elements.
  */
-public class Table<T> implements Iterable<T>, CommandOutput {
+public class Table<T> {
     private final Map<String, TableRow<T>> content;
 
     /**
      * Constructor.
      *
-     * @param ids list of row ids.
+     * @param ids     list of row ids.
      * @param content list of row content. Size should be equals n * ids.size.
      */
     public Table(List<String> ids, List<T> content) {
@@ -52,26 +47,26 @@ public class Table<T> implements Iterable<T>, CommandOutput {
     }
 
     /**
-     * Iterator getter.
+     * Table header getter.
      *
-     * @return {@link Iterator} of table, row by row iterating.
+     * @return array of table's columns name.
      */
-    @Override
-    public Iterator<T> iterator() {
-        return content.values().stream()
-                .flatMap((Function<TableRow<T>, Stream<T>>) ts -> StreamSupport.stream(ts.spliterator(), false))
-                .collect(Collectors.toList())
-                .iterator();
+    public String[] header() {
+        return content.keySet().toArray(new String[0]);
     }
 
     /**
-     * Implementation of {@link CommandOutput#get()}.
+     * Table content getter.
      *
-     * @return Values of table joined by ",".
+     * @return content of table without header.
      */
-    @Override
-    public String get() {
-        return StreamSupport.stream(spliterator(), false).map(T::toString).collect(Collectors.joining(", "));
+    public Object[][] content() {
+        List<Object[]> collect = content.values().stream()
+                .map(ts -> new ArrayList<>(ts.getValues()))
+                .map(strings -> strings.toArray(new Object[0]))
+                .collect(Collectors.toList());
+
+        return collect.toArray(new Object[0][0]);
     }
 
     /**

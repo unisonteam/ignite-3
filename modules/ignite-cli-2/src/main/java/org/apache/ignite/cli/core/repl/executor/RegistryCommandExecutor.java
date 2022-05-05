@@ -22,6 +22,7 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
      * @param systemRegistry {@link SystemRegistry} instance.
      * @param picocliCommands {@link PicocliCommands} instance.
      * @param reader {@link LineReader} instance.
+     * @param withWidget enable or not tail widget {@link TailTipWidgets}.
      */
     public RegistryCommandExecutor(SystemRegistry systemRegistry,
                                    PicocliCommands picocliCommands,
