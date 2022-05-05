@@ -14,7 +14,7 @@ class ItStatusCommandTest extends CliCommandTestIntegrationBase {
     @Test
     @DisplayName("Should print status when valid cluster url is given")
     void printStatus() {
-        execute("status", "--cluster-url", CLUSTER_URL);
+        execute("status", "--cluster-url", NODE_URL);
 
         assertAll(
                 this::assertExitCodeIsZero,

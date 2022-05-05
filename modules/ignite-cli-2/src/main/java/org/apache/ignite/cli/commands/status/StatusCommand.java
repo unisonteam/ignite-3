@@ -16,7 +16,7 @@ public class StatusCommand implements Runnable {
     /**
      * Mandatory cluster url option.
      */
-    @Option(names = {"--cluster-url"})
+    @Option(names = {"--cluster-url"}, descriptionKey = "ignite.cluster-url", required = true)
     private String clusterUrl;
 
     @Spec

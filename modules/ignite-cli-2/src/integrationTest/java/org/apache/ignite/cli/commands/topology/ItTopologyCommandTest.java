@@ -15,7 +15,7 @@ class ItTopologyCommandTest extends CliCommandTestIntegrationBase {
     @DisplayName("Should print topology when valid cluster url is provided")
     void printTopology() {
         // When
-        execute("topology", "--cluster-url", CLUSTER_URL);
+        execute("topology", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(

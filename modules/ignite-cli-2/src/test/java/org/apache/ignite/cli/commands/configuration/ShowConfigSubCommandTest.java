@@ -7,11 +7,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class ReadConfigSubCommandTest extends CliCommandTestBase {
+class ShowConfigSubCommandTest extends CliCommandTestBase {
 
     @BeforeEach
     void setUp() {
-        setUp(ReadConfigSubCommand.class);
+        setUp(ShowConfigSubCommand.class);
     }
 
     @Test

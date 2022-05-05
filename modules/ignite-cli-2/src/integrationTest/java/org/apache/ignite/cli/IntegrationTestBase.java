@@ -68,7 +68,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class IntegrationTestBase extends BaseIgniteAbstractTest {
     public static final int DEFAULT_NODES_COUNT = 3;
     /** Correct ignite cluster url. */
-    protected static final String CLUSTER_URL = "https://127.0.0.1:3344";
+    protected static final String NODE_URL = "http://localhost:10300";
     /** Cluster nodes. */
     protected static final List<Ignite> CLUSTER_NODES = new ArrayList<>();
     private static final IgniteLogger LOG = IgniteLogger.forClass(IntegrationTestBase.class);

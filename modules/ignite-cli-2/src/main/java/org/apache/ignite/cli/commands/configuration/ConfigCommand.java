@@ -6,14 +6,12 @@ import picocli.CommandLine.Command;
 /**
  * Parent command for configuration commands.
  */
-@Command(name = "config", subcommands = {
-        ReadConfigSubCommand.class,
+@Command(name = "config",
+        description = "Cluster/node configuration operations.",
+        subcommands = {
+        ShowConfigSubCommand.class,
         UpdateConfigSubCommand.class
 })
 @Singleton
-public class ConfigCommand implements Runnable {
-    @Override
-    public void run() {
-        // no-op
-    }
+public class ConfigCommand {
 }

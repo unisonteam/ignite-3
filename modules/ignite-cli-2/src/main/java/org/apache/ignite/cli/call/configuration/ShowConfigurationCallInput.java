@@ -3,9 +3,9 @@ package org.apache.ignite.cli.call.configuration;
 import org.apache.ignite.cli.core.call.CallInput;
 
 /**
- * Input for {@link ReadConfigurationCall}.
+ * Input for {@link ShowConfigurationCall}.
  */
-public class ReadConfigurationCallInput implements CallInput {
+public class ShowConfigurationCallInput implements CallInput {
     /**
      * Node ID.
      */
@@ -19,7 +19,7 @@ public class ReadConfigurationCallInput implements CallInput {
      */
     private final String clusterUrl;
 
-    private ReadConfigurationCallInput(String nodeId, String selector, String clusterUrl) {
+    private ShowConfigurationCallInput(String nodeId, String selector, String clusterUrl) {
         this.nodeId = nodeId;
         this.selector = selector;
         this.clusterUrl = clusterUrl;
@@ -53,37 +53,37 @@ public class ReadConfigurationCallInput implements CallInput {
     }
 
     /**
-     * Builder for {@link ReadConfigurationCallInput}.
+     * Builder for {@link ShowConfigurationCallInput}.
      */
-    public static ReadConfigurationCallInputBuilder builder() {
-        return new ReadConfigurationCallInputBuilder();
+    public static ShowConfigurationCallInputBuilder builder() {
+        return new ShowConfigurationCallInputBuilder();
     }
 
     /**
-     * Builder for {@link ReadConfigurationCallInput}.
+     * Builder for {@link ShowConfigurationCallInput}.
      */
-    public static class ReadConfigurationCallInputBuilder {
+    public static class ShowConfigurationCallInputBuilder {
         private String nodeId;
         private String selector;
         private String clusterUrl;
 
-        public ReadConfigurationCallInputBuilder nodeId(String nodeId) {
+        public ShowConfigurationCallInputBuilder nodeId(String nodeId) {
             this.nodeId = nodeId;
             return this;
         }
 
-        public ReadConfigurationCallInputBuilder selector(String selector) {
+        public ShowConfigurationCallInputBuilder selector(String selector) {
             this.selector = selector;
             return this;
         }
 
-        public ReadConfigurationCallInputBuilder clusterUrl(String clusterUrl) {
+        public ShowConfigurationCallInputBuilder clusterUrl(String clusterUrl) {
             this.clusterUrl = clusterUrl;
             return this;
         }
 
-        public ReadConfigurationCallInput build() {
-            return new ReadConfigurationCallInput(nodeId, selector, clusterUrl);
+        public ShowConfigurationCallInput build() {
+            return new ShowConfigurationCallInput(nodeId, selector, clusterUrl);
         }
     }
 }

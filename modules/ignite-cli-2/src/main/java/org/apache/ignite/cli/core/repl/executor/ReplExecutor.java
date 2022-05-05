@@ -32,7 +32,7 @@ import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
  */
 @Singleton
 public class ReplExecutor {
-    private static final String PROMPT = "ignite-cli> ";
+    private static final String PROMPT = "ignite> ";
 
     private final Parser parser = new DefaultParser();
     private final Supplier<Path> workDirProvider = () -> Paths.get(System.getProperty("user.dir"));
