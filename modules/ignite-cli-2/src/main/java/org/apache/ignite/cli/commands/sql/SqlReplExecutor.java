@@ -39,9 +39,10 @@ public class SqlReplExecutor {
      * @param sqlManager SQL queries executor.
      */
     public void executeRepl(SqlManager sqlManager) {
+        SqlCompleter completer = new SqlCompleter(sqlManager);
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
-                //.completer()
+                .completer(completer)
                 .parser(new DefaultParser())
                 .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
                 .expander(new NoopExpander())
@@ -52,10 +53,14 @@ public class SqlReplExecutor {
         while (true) {
             try {
                 String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null).trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
                 if (line.startsWith(INTERNAL_COMMAND_PREFIX)) {
                     executeInternalCommand(call, line);
                 } else {
                     executeSqlQuery(sqlManager, line);
+                    completer.refreshSchema();
                 }
             } catch (UserInterruptException e) {
                 // Ignore
