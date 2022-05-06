@@ -2,7 +2,6 @@ package org.apache.ignite.cli.core.repl.executor;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
 import jakarta.inject.Singleton;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map.Entry;
@@ -79,8 +78,8 @@ public class ReplExecutor {
                     String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null);
                     DefaultCallExecutionPipeline.builder(executor)
                             .inputProvider(() -> new ReplCallInput(line))
-                            .output(new PrintWriter(System.out, true))
-                            .errOutput(new PrintWriter(System.err, true))
+                            .output(System.out)
+                            .errOutput(System.err)
                             .build()
                             .runPipeline();
                 } catch (UserInterruptException e) {
