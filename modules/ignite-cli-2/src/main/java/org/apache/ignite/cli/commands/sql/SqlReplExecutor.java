@@ -3,7 +3,7 @@ package org.apache.ignite.cli.commands.sql;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
-import org.apache.ignite.cli.commands.decorators.TableDecorator;
+import org.apache.ignite.cli.commands.decorators.SqlQueryResultDecorator;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
@@ -63,7 +63,7 @@ public class SqlReplExecutor {
                             .inputProvider(() -> new ReplCallInput(line))
                             .output(System.out)
                             .errOutput(System.err)
-                            .decorator(new TableDecorator())
+                            .decorator(new SqlQueryResultDecorator())
                             .build()
                             .runPipeline();
                 }
