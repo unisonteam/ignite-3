@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
 import org.apache.ignite.cli.core.repl.Repl;
+import org.apache.ignite.cli.core.repl.expander.NoopExpander;
 import org.fusesource.jansi.AnsiConsole;
 import org.jline.console.impl.Builtins;
 import org.jline.console.impl.SystemRegistryImpl;
@@ -66,10 +67,11 @@ public class ReplExecutor {
                     .terminal(terminal)
                     .completer(registry.completer())
                     .parser(parser)
+                    .expander(new NoopExpander())
                     .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
                     .build();
             builtins.setLineReader(reader);
-            RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader, true);
+            RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader);
 
             // start the shell and process input until the user quits with Ctrl-D
             while (true) {

@@ -62,7 +62,7 @@ public class DefaultCallExecutionPipeline<I extends CallInput, T> {
         CallOutput<T> callOutput = call.execute(callInput);
 
         if (callOutput.hasError()) {
-            errOutput.println("Got error during command execution: " + callOutput.errorCause().getMessage()); // fixme
+            errOutput.println("Got error during command execution: " + callOutput.errorCause()); // fixme
             return;
         }
 
