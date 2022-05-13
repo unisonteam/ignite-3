@@ -47,7 +47,8 @@ public class SqlManager implements AutoCloseable {
                 ResultSet resultSet = statement.getResultSet();
                 return new SqlQueryResult(Table.fromResultSet(resultSet));
             }
-            return new SqlQueryResult("OK!");
+            int updateCount = statement.getUpdateCount();
+            return new SqlQueryResult(updateCount >= 0 ? "Updated " + updateCount + " rows." : "OK!");
         }
     }
 
