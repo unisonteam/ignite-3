@@ -46,17 +46,11 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
                                    Function<CmdLine, CmdDesc> descFunc) {
         this.systemRegistry = systemRegistry;
         systemRegistry.register("help", picocliCommands);
-        createWidget(reader, descFunc);
-    }
-
-    private static void createWidget(LineReader reader, Function<CmdLine, CmdDesc> descFun) {
-        if (descFun == null) {
-            return;
+        if (descFunc != null) {
+            TailTipWidgets widgets = new TailTipWidgets(reader, descFunc, 5,
+                    TailTipWidgets.TipType.COMPLETER);
+            widgets.enable();
         }
-
-        TailTipWidgets widgets = new TailTipWidgets(reader, descFun, 5,
-                TailTipWidgets.TipType.COMPLETER);
-        widgets.enable();
     }
 
     /**
