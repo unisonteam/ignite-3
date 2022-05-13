@@ -20,6 +20,7 @@ package org.apache.ignite.cli;
 import io.micronaut.configuration.picocli.MicronautFactory;
 import java.util.HashMap;
 import org.apache.ignite.cli.commands.TopLevelCliCommand;
+import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import picocli.CommandLine;
@@ -56,7 +57,7 @@ public class Main {
 
         replExecutor.execute(Repl.builder()
                 .withAliases(aliases)
-                .withCommandClass(TopLevelCliCommand.class)
+                .withCommandClass(TopLevelCliReplCommand.class)
                 .build());
     }
 
