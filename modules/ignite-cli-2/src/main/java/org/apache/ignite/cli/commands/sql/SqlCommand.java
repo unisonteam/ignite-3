@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
-import org.apache.ignite.cli.commands.decorators.TableDecorator;
+import org.apache.ignite.cli.commands.decorators.SqlQueryResultDecorator;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
 import org.apache.ignite.cli.core.repl.executor.SqlQueryCall;
 import org.apache.ignite.cli.sql.SqlManager;
@@ -46,7 +46,7 @@ public class SqlCommand implements Runnable {
                         .inputProvider(() -> new ReplCallInput(executeCommand))
                         .output(spec.commandLine().getOut())
                         .errOutput(spec.commandLine().getErr())
-                        .decorator(new TableDecorator())
+                        .decorator(new SqlQueryResultDecorator())
                         .build()
                         .runPipeline();
             }

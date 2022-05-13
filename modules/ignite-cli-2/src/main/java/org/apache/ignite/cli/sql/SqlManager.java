@@ -41,11 +41,14 @@ public class SqlManager implements AutoCloseable {
      * @return result of provided SQL command in terms of {@link Table}.
      * @throws SQLException in any case when SQL command can't be executed.
      */
-    public Table<String> execute(String sql) throws SQLException {
+    public SqlQueryResult execute(String sql) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.execute(sql);
-            ResultSet resultSet = statement.getResultSet();
-            return Table.fromResultSet(resultSet);
+            if (statement.execute(sql)) {
+                ResultSet resultSet = statement.getResultSet();
+                return new SqlQueryResult(Table.fromResultSet(resultSet));
+            }
+            int updateCount = statement.getUpdateCount();
+            return new SqlQueryResult(updateCount >= 0 ? "Updated " + updateCount + " rows." : "OK!");
         }
     }
 

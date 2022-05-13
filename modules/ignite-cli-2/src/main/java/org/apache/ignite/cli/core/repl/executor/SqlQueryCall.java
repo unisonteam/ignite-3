@@ -6,12 +6,12 @@ import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.CallOutput;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
 import org.apache.ignite.cli.sql.SqlManager;
-import org.apache.ignite.cli.sql.table.Table;
+import org.apache.ignite.cli.sql.SqlQueryResult;
 
 /**
  * Call implementation for SQL command execution.
  */
-public class SqlQueryCall implements Call<ReplCallInput, Table<String>> {
+public class SqlQueryCall implements Call<ReplCallInput, SqlQueryResult> {
 
     private final SqlManager sqlManager;
 
@@ -26,9 +26,9 @@ public class SqlQueryCall implements Call<ReplCallInput, Table<String>> {
 
     /** {@inheritDoc} */
     @Override
-    public CallOutput<Table<String>> execute(ReplCallInput input) {
+    public CallOutput<SqlQueryResult> execute(ReplCallInput input) {
         try {
-            Table<String> result = sqlManager.execute(input.getLine());
+            SqlQueryResult result = sqlManager.execute(input.getLine());
             return DefaultCallOutput.success(result);
         } catch (SQLException e) {
             return DefaultCallOutput.failure(e);
