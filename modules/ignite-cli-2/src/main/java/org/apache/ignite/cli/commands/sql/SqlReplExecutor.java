@@ -2,7 +2,6 @@ package org.apache.ignite.cli.commands.sql;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import java.util.HashMap;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.commands.decorators.SqlQueryResultDecorator;
 import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
@@ -70,7 +69,7 @@ public class SqlReplExecutor {
         SystemRegistryImpl registry = replExecutor.createRegistry();
         PicocliCommands picocliCommands = replExecutor.createPicocliCommands(SqlReplTopLevelCliCommand.class);
         registry.setCommandRegistries(picocliCommands);
-        return new RegistryCommandExecutor(registry, picocliCommands, reader, new HashMap<>());
+        return new RegistryCommandExecutor(registry, picocliCommands, reader, null);
     }
 
     private void executeSqlQuery(SqlManager sqlManager, String line) {

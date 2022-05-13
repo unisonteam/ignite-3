@@ -1,7 +1,6 @@
 package org.apache.ignite.cli.core.repl.executor;
 
 
-import java.util.Map;
 import java.util.function.Function;
 import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.core.call.Call;
@@ -30,7 +29,7 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
     public RegistryCommandExecutor(SystemRegistry systemRegistry,
                                    PicocliCommands picocliCommands,
                                    LineReader reader) {
-        this(systemRegistry, picocliCommands, reader, null);
+        this(systemRegistry, picocliCommands, reader, systemRegistry::commandDescription);
     }
 
     /**
@@ -39,30 +38,25 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
      * @param systemRegistry {@link SystemRegistry} instance.
      * @param picocliCommands {@link PicocliCommands} instance.
      * @param reader {@link LineReader} instance.
-     * @param commands non default command description for widget.
+     * @param descFunc function that returns command description.
      */
     public RegistryCommandExecutor(SystemRegistry systemRegistry,
                                    PicocliCommands picocliCommands,
                                    LineReader reader,
-                                   Map<String, CmdDesc> commands) {
+                                   Function<CmdLine, CmdDesc> descFunc) {
         this.systemRegistry = systemRegistry;
         systemRegistry.register("help", picocliCommands);
-        createWidget(reader, systemRegistry::commandDescription, commands);
+        createWidget(reader, descFunc);
     }
 
-    private static void createWidget(LineReader reader, Function<CmdLine,CmdDesc> descFun, Map<String, CmdDesc> map) {
-        TailTipWidgets widgets = null;
-        if (map != null) {
-            widgets = new TailTipWidgets(reader, map, 5,
-                    TailTipWidgets.TipType.COMPLETER);
-        } else if (descFun != null) {
-            widgets = new TailTipWidgets(reader, descFun, 5,
-                    TailTipWidgets.TipType.COMPLETER);
+    private static void createWidget(LineReader reader, Function<CmdLine, CmdDesc> descFun) {
+        if (descFun == null) {
+            return;
         }
 
-        if (widgets != null) {
-            widgets.enable();
-        }
+        TailTipWidgets widgets = new TailTipWidgets(reader, descFun, 5,
+                TailTipWidgets.TipType.COMPLETER);
+        widgets.enable();
     }
 
     /**
