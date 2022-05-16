@@ -16,8 +16,8 @@ class SqlCompleter implements Completer {
     private final List<Candidate> candidates = new ArrayList<>();
 
     SqlCompleter(SqlSchemaProvider schemaProvider) {
-        fillCandidates();
         this.schemaProvider = schemaProvider;
+        fillCandidates();
     }
 
     void refreshSchema() {
