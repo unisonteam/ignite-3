@@ -39,7 +39,7 @@ public class SqlMetaData {
     };
 
     /**
-     * List of keywords which must be at the beginning of the statement, used for very basic completion
+     * List of keywords which must be at the beginning of the statement, used for very basic completion.
      */
     public static final String[] STARTING_KEYWORDS = {
             "ALTER", "SET", "CREATE", "DROP", "WITH", "SELECT", "EXPLAIN", "DESCRIBE", "INSERT", "DELETE", "UPDATE", "MERGE", "CALL"

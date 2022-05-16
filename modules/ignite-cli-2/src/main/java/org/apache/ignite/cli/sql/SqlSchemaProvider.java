@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * SQL schema cache
+ * SQL schema cache.
  */
 public class SqlSchemaProvider {
     private final Connection connection;
@@ -22,7 +22,8 @@ public class SqlSchemaProvider {
     }
 
     /**
-     * Retrieves DB schema. Initially set of column names is null, it can be populated with the {@link SqlSchemaProvider#getColumnNames(String)}
+     * Retrieves DB schema. Initially set of column names is null, it can be populated with the
+     * {@link SqlSchemaProvider#getColumnNames(String)}
      *
      * @return map from schema name to the map from table name to nullable set of column names
      */

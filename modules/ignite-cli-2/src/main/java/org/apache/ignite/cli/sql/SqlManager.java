@@ -55,7 +55,7 @@ public class SqlManager implements AutoCloseable {
     }
 
     /**
-     * Retrieves SQL schema provider
+     * Retrieves SQL schema provider.
      *
      * @return SQL schema provider
      */
