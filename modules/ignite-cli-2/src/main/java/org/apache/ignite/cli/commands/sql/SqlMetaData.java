@@ -38,6 +38,13 @@ public class SqlMetaData {
             "SUBCLASS_ORIGIN", "TABLE_NAME", "TYPE", "UNCOMMITTED", "UNNAMED"
     };
 
+    /**
+     * List of keywords which must be at the beginning of the statement, used for very basic completion
+     */
+    public static final String[] STARTING_KEYWORDS = {
+            "ALTER", "SET", "CREATE", "DROP", "WITH", "SELECT", "EXPLAIN", "DESCRIBE", "INSERT", "DELETE", "UPDATE", "MERGE", "CALL"
+    };
+
     // These lists are copied from calcite
     /**
      * SQL numeric functions.

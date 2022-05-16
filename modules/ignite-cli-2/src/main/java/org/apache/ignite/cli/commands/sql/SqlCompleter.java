@@ -27,7 +27,11 @@ class SqlCompleter implements Completer {
 
     @Override
     public void complete(LineReader reader, ParsedLine commandLine, List<Candidate> candidates) {
-        candidates.addAll(this.candidates);
+        if (commandLine.wordIndex() == 0) {
+            addCandidatesFromArray(SqlMetaData.STARTING_KEYWORDS, candidates);
+        } else {
+            candidates.addAll(this.candidates);
+        }
         //todo add columns from current schema?
     }
 
@@ -42,14 +46,14 @@ class SqlCompleter implements Completer {
     }
 
     private void addKeywords() {
-        addCandidatesFromArray(SqlMetaData.KEYWORDS);
-        addCandidatesFromArray(SqlMetaData.NUMERIC_FUNCTIONS);
-        addCandidatesFromArray(SqlMetaData.STRING_FUNCTIONS);
-        addCandidatesFromArray(SqlMetaData.TIME_DATE_FUNCTIONS);
-        addCandidatesFromArray(SqlMetaData.SYSTEM_FUNCTIONS);
+        addCandidatesFromArray(SqlMetaData.KEYWORDS, candidates);
+        addCandidatesFromArray(SqlMetaData.NUMERIC_FUNCTIONS, candidates);
+        addCandidatesFromArray(SqlMetaData.STRING_FUNCTIONS, candidates);
+        addCandidatesFromArray(SqlMetaData.TIME_DATE_FUNCTIONS, candidates);
+        addCandidatesFromArray(SqlMetaData.SYSTEM_FUNCTIONS, candidates);
     }
 
-    private void addCandidatesFromArray(String[] strings) {
+    private static void addCandidatesFromArray(String[] strings, List<Candidate> candidates) {
         for (String keyword : strings) {
             addCandidate(keyword, candidates);
         }
