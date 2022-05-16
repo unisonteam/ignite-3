@@ -1,6 +1,5 @@
 package org.apache.ignite.cli.sql;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -14,11 +13,11 @@ import java.util.Set;
  * SQL schema cache.
  */
 public class SqlSchemaProvider {
-    private final Connection connection;
+    private final MetadataSupplier metadataSupplier;
     private Map<String, Map<String, Set<String>>> schema;
 
-    public SqlSchemaProvider(Connection connection) {
-        this.connection = connection;
+    public SqlSchemaProvider(MetadataSupplier metadataSupplier) {
+        this.metadataSupplier = metadataSupplier;
     }
 
     /**
@@ -30,7 +29,7 @@ public class SqlSchemaProvider {
     public Map<String, Map<String, Set<String>>> getSchema() {
         if (schema == null) {
             schema = new HashMap<>();
-            try (ResultSet rs = connection.getMetaData().getTables(null, null, null, null)) {
+            try (ResultSet rs = metadataSupplier.getMetaData().getTables(null, null, null, null)) {
                 while (rs.next()) {
                     String tableSchema = rs.getString("TABLE_SCHEM");
                     Map<String, Set<String>> tables = schema.computeIfAbsent(tableSchema, schemaName -> new HashMap<>());
@@ -69,7 +68,7 @@ public class SqlSchemaProvider {
         Map<String, Set<String>> tables = schema.get(schemaName);
         if (tables != null) {
             if (!tables.containsKey(tableName)) {
-                try (ResultSet rs = connection.getMetaData().getColumns(null, schemaName, tableName, null)) {
+                try (ResultSet rs = metadataSupplier.getMetaData().getColumns(null, schemaName, tableName, null)) {
                     while (rs.next()) {
                         Set<String> columns = tables.computeIfAbsent(tableName, key -> new HashSet<>());
                         columns.add(rs.getString("COLUMN_NAME"));

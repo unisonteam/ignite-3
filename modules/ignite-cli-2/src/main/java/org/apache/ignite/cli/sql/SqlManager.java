@@ -33,7 +33,7 @@ public class SqlManager implements AutoCloseable {
 
     public SqlManager(String jdbcUrl) throws SQLException {
         connection = DriverManager.getConnection(jdbcUrl);
-        sqlSchemaProvider = new SqlSchemaProvider(connection);
+        sqlSchemaProvider = new SqlSchemaProvider(connection::getMetaData);
     }
 
     /**
