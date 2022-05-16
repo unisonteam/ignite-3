@@ -39,7 +39,7 @@ public class SqlReplExecutor {
      * @param sqlManager SQL queries executor.
      */
     public void executeRepl(SqlManager sqlManager) {
-        SqlCompleter completer = new SqlCompleter(sqlManager);
+        SqlCompleter completer = new SqlCompleter(sqlManager.getSqlSchemaProvider());
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .completer(completer)

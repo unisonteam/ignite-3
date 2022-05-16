@@ -5,23 +5,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.apache.ignite.cli.sql.SqlManager;
+import org.apache.ignite.cli.sql.SqlSchemaProvider;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
 class SqlCompleter implements Completer {
-    private final SqlManager sqlManager;
+    private final SqlSchemaProvider schemaProvider;
     private final List<Candidate> candidates = new ArrayList<>();
 
-    SqlCompleter(SqlManager sqlManager) {
-        this.sqlManager = sqlManager;
+    SqlCompleter(SqlSchemaProvider schemaProvider) {
         fillCandidates();
+        this.schemaProvider = schemaProvider;
     }
 
     void refreshSchema() {
-        sqlManager.invalidateSchema();
+        schemaProvider.invalidateSchema();
         fillCandidates();
     }
 
@@ -37,7 +37,7 @@ class SqlCompleter implements Completer {
 
     private void fillCandidates() {
         addKeywords();
-        for (Entry<String, Map<String, Set<String>>> schema : sqlManager.getSchema().entrySet()) {
+        for (Entry<String, Map<String, Set<String>>> schema : schemaProvider.getSchema().entrySet()) {
             addCandidate(schema.getKey(), candidates); // add schema name
             for (Entry<String, Set<String>> table : schema.getValue().entrySet()) {
                 addCandidate(table.getKey(), candidates); // add table name
