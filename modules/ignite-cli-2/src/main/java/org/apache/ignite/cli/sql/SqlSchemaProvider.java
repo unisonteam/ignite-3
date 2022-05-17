@@ -10,9 +10,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * SQL schema cache.
+ * SQL schema provider.
  */
-public class SqlSchemaProvider {
+public class SqlSchemaProvider implements SchemaProvider {
     private final MetadataSupplier metadataSupplier;
     private Map<String, Map<String, Set<String>>> schema;
 
@@ -20,12 +20,7 @@ public class SqlSchemaProvider {
         this.metadataSupplier = metadataSupplier;
     }
 
-    /**
-     * Retrieves DB schema. Initially set of column names is null, it can be populated with the
-     * {@link SqlSchemaProvider#getColumnNames(String)}
-     *
-     * @return map from schema name to the map from table name to nullable set of column names
-     */
+    @Override
     public Map<String, Map<String, Set<String>>> getSchema() {
         if (schema == null) {
             schema = new HashMap<>();
@@ -42,12 +37,7 @@ public class SqlSchemaProvider {
         return schema;
     }
 
-    /**
-     * Retrieves column names and stores it in the schema cache.
-     *
-     * @param tableName name of the table.
-     * @return set of column names.
-     */
+    @Override
     public Set<String> getColumnNames(String tableName) {
         Entry<String, Map<String, Set<String>>> schema = findSchema(tableName);
         if (schema != null) {
@@ -98,9 +88,7 @@ public class SqlSchemaProvider {
         return null;
     }
 
-    /**
-     * Resets stored DB schema so the next {@link SqlSchemaProvider#getSchema()} call will retrieve it to accommodate possible changes.
-     */
+    @Override
     public void invalidateSchema() {
         schema = null;
     }

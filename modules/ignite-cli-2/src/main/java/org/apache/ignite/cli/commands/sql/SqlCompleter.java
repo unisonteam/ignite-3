@@ -5,17 +5,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.apache.ignite.cli.sql.SqlSchemaProvider;
+import org.apache.ignite.cli.sql.SchemaProvider;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
 class SqlCompleter implements Completer {
-    private final SqlSchemaProvider schemaProvider;
+    private final SchemaProvider schemaProvider;
     private final List<Candidate> candidates = new ArrayList<>();
 
-    SqlCompleter(SqlSchemaProvider schemaProvider) {
+    SqlCompleter(SchemaProvider schemaProvider) {
         this.schemaProvider = schemaProvider;
         fillCandidates();
     }
