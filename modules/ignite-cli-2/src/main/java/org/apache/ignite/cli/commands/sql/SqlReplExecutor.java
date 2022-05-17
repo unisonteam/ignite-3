@@ -13,6 +13,7 @@ import org.apache.ignite.cli.sql.SqlManager;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
+import org.jline.reader.LineReader.SuggestionType;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.MaskingCallback;
 import org.jline.reader.UserInterruptException;
@@ -47,6 +48,7 @@ public class SqlReplExecutor {
                 .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
                 .expander(new NoopExpander())
                 .build();
+        reader.setAutosuggestion(SuggestionType.COMPLETER);
 
         RegistryCommandExecutor call = createCall(reader);
         // start the shell and process input until the user quits with Ctrl-D
