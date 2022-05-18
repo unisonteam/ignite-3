@@ -29,9 +29,11 @@ import org.apache.ignite.cli.sql.table.Table;
  */
 public class SqlManager implements AutoCloseable {
     private final Connection connection;
+    private final SqlSchemaProvider sqlSchemaProvider;
 
     public SqlManager(String jdbcUrl) throws SQLException {
         connection = DriverManager.getConnection(jdbcUrl);
+        sqlSchemaProvider = new SqlSchemaProvider(connection::getMetaData);
     }
 
     /**
@@ -50,6 +52,15 @@ public class SqlManager implements AutoCloseable {
             int updateCount = statement.getUpdateCount();
             return new SqlQueryResult(updateCount >= 0 ? "Updated " + updateCount + " rows." : "OK!");
         }
+    }
+
+    /**
+     * Retrieves SQL schema provider.
+     *
+     * @return SQL schema provider
+     */
+    public SqlSchemaProvider getSqlSchemaProvider() {
+        return sqlSchemaProvider;
     }
 
     @Override
