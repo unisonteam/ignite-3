@@ -18,6 +18,9 @@ public class TableDecorator implements Decorator<Table<String>, TerminalOutput> 
      */
     @Override
     public TerminalOutput decorate(Table<String> table) {
+        if (table.isEmpty()) {
+            return () -> FlipTableConverters.fromObjects(new String[] {"Empty"}, new String[0][0]);
+        }
         return () -> FlipTableConverters.fromObjects(table.header(), table.content());
     }
 }
