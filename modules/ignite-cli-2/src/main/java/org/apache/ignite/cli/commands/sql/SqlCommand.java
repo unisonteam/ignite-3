@@ -5,9 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.commands.decorators.SqlQueryResultDecorator;
-import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.executor.SqlQueryCall;
 import org.apache.ignite.cli.sql.SqlManager;
 import picocli.CommandLine.Command;
@@ -42,8 +42,8 @@ public class SqlCommand implements Runnable {
             } else {
                 String executeCommand = file != null ? extract(file) : command;
                 SqlQueryCall call = new SqlQueryCall(sqlManager);
-                DefaultCallExecutionPipeline.builder(call)
-                        .inputProvider(() -> new ReplCallInput(executeCommand))
+                CallExecutionPipeline.builder(call)
+                        .inputProvider(() -> new StringCallInput(executeCommand))
                         .output(spec.commandLine().getOut())
                         .errOutput(spec.commandLine().getErr())
                         .decorator(new SqlQueryResultDecorator())

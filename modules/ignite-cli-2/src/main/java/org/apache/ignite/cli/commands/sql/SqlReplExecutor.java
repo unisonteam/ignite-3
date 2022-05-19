@@ -2,9 +2,9 @@ package org.apache.ignite.cli.commands.sql;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.commands.decorators.SqlQueryResultDecorator;
-import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import org.apache.ignite.cli.core.repl.executor.SqlQueryCall;
@@ -80,8 +80,8 @@ public class SqlReplExecutor {
     }
 
     private void executeSqlQuery(SqlManager sqlManager, String line) {
-        DefaultCallExecutionPipeline.builder(new SqlQueryCall(sqlManager))
-                .inputProvider(() -> new ReplCallInput(line))
+        CallExecutionPipeline.builder(new SqlQueryCall(sqlManager))
+                .inputProvider(() -> new StringCallInput(line))
                 .output(System.out)
                 .errOutput(System.err)
                 .decorator(new SqlQueryResultDecorator())
@@ -90,8 +90,8 @@ public class SqlReplExecutor {
     }
 
     private void executeInternalCommand(RegistryCommandExecutor call, String line) {
-        DefaultCallExecutionPipeline.builder(call)
-                .inputProvider(() -> new ReplCallInput(line.substring(INTERNAL_COMMAND_PREFIX.length())))
+        CallExecutionPipeline.builder(call)
+                .inputProvider(() -> new StringCallInput(line.substring(INTERNAL_COMMAND_PREFIX.length())))
                 .output(System.out)
                 .errOutput(System.err)
                 .build()
