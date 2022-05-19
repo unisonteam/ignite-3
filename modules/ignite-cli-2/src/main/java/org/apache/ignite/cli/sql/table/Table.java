@@ -43,6 +43,9 @@ public class Table<T> {
      * @return array of table's columns name.
      */
     public String[] header() {
+        if (header.length == 0) {
+            return new String[] { "EMPTY" };
+        }
         return header;
     }
 
@@ -84,9 +87,5 @@ public class Table<T> {
         } catch (SQLException e) {
             return null;
         }
-    }
-
-    public boolean isEmpty() {
-        return header.length == 0;
     }
 }
