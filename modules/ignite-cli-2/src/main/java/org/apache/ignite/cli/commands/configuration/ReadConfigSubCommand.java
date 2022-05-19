@@ -28,7 +28,7 @@ public class ReadConfigSubCommand implements Runnable {
     /**
      * Mandatory cluster url option.
      */
-    @Option(names = {"--cluster-url"}, required = true)
+    @Option(names = {"--cluster-url"}, descriptionKey = "ignite.cluster-url", required = true)
     private String clusterUrl;
 
     @Spec

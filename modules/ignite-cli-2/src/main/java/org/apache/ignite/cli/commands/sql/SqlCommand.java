@@ -20,7 +20,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "sql")
 public class SqlCommand implements Runnable {
-    @Option(names = {"--jdbc-url"}, required = true)
+    @Option(names = {"--jdbc-url"}, descriptionKey = "ignite.jdbc-url", required = true)
     private String jdbc;
     @Option(names = {"-execute", "--execute"})
     private String command;

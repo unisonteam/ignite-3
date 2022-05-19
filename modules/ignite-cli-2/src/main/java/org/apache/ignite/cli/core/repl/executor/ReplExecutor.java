@@ -1,11 +1,13 @@
 package org.apache.ignite.cli.core.repl.executor;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
+import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.Repl;
@@ -37,6 +39,8 @@ public class ReplExecutor {
     private PicocliCommandsFactory factory;
     private Terminal terminal;
 
+    @Inject
+    private Config config;
     /**
      * Secondary constructor.
      *
@@ -113,6 +117,8 @@ public class ReplExecutor {
     }
 
     public PicocliCommands createPicocliCommands(Class<?> commandClass) {
-        return new PicocliCommands(new CommandLine(commandClass, factory));
+        CommandLine cmd = new CommandLine(commandClass, factory);
+        cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));
+        return new PicocliCommands(cmd);
     }
 }
