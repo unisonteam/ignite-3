@@ -23,16 +23,25 @@ public class Table<T> {
      * @param content list of row content. Size should be equals n * ids.size.
      */
     public Table(List<String> ids, List<T> content) {
-        if (content.size() % ids.size() != 0) {
+        if (content.size() != 0 && ids.size() != 0 && content.size() % ids.size() != 0) {
             throw new IllegalArgumentException("Content size should be divisible by columns count");
         }
 
-        this.header = ids.toArray(new String[0]);
+        this.header = parseHeader(ids);
         this.content = new ArrayList<>();
         int columnsCount = ids.size();
-        for (int i = 0; i < content.size() / columnsCount; i++) {
+        int n = columnsCount != 0 ? content.size() / columnsCount : 0;
+        for (int i = 0; i < n; i++) {
             List<T> elements = content.subList(i * columnsCount, (i + 1) * columnsCount);
             this.content.add(new TableRow<>(elements));
+        }
+    }
+
+    private static String[] parseHeader(List<String> header) {
+        if (header.size() > 0) {
+            return header.toArray(new String[0]);
+        } else {
+            return new String[] { "EMPTY" };
         }
     }
 
