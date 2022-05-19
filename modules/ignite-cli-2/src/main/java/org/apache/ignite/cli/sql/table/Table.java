@@ -27,7 +27,7 @@ public class Table<T> {
             throw new IllegalArgumentException("Content size should be divisible by columns count");
         }
 
-        this.header = ids.toArray(new String[0]);
+        this.header = parseHeader(ids);
         this.content = new ArrayList<>();
         int columnsCount = ids.size();
         int n = columnsCount != 0 ? content.size() / columnsCount : 0;
@@ -37,15 +37,20 @@ public class Table<T> {
         }
     }
 
+    private static String[] parseHeader(List<String> header) {
+        if (header.size() > 0) {
+            return header.toArray(new String[0]);
+        } else {
+            return new String[] { "EMPTY" };
+        }
+    }
+
     /**
      * Table header getter.
      *
      * @return array of table's columns name.
      */
     public String[] header() {
-        if (header.length == 0) {
-            return new String[] { "EMPTY" };
-        }
         return header;
     }
 
