@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
-import org.apache.ignite.cli.call.configuration.ReplCallInput;
-import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
 import org.fusesource.jansi.AnsiConsole;
@@ -78,8 +78,8 @@ public class ReplExecutor {
                 try {
                     executor.cleanUp();
                     String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null);
-                    DefaultCallExecutionPipeline.builder(executor)
-                            .inputProvider(() -> new ReplCallInput(line))
+                    CallExecutionPipeline.builder(executor)
+                            .inputProvider(() -> new StringCallInput(line))
                             .output(System.out)
                             .errOutput(System.err)
                             .build()
