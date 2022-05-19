@@ -1,6 +1,7 @@
 package org.apache.ignite.cli.core.call;
 
 import java.util.Objects;
+import java.util.concurrent.Callable;
 
 /**
  * Default implementation of {@link CallOutput} with {@link T} body.
@@ -93,6 +94,21 @@ public class DefaultCallOutput<T> implements CallOutput<T> {
             .status(CallOutputStatus.ERROR)
             .cause(cause)
             .build();
+    }
+
+    /**
+     * Convenience method for wrapping result of the callable into the callable output.
+     *
+     * @param callable {@code Callable} for executing the call.
+     * @return result of the call.
+     * @param <OT> type of the call output.
+     */
+    public static <OT> CallOutput<OT> wrapCall(Callable<OT> callable) {
+        try {
+            return DefaultCallOutput.success(callable.call());
+        } catch (Exception e) {
+            return DefaultCallOutput.failure(e);
+        }
     }
 
     /**

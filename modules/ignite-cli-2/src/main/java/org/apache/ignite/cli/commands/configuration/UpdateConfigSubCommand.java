@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCall;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCallInput;
-import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -42,12 +42,7 @@ public class UpdateConfigSubCommand implements Runnable {
     /** {@inheritDoc} */
     @Override
     public void run() {
-        DefaultCallExecutionPipeline.builder(call)
-                .inputProvider(this::buildCallInput)
-                .output(spec.commandLine().getOut())
-                .errOutput(spec.commandLine().getErr())
-                .build()
-                .runPipeline();
+        CallExecutionPipeline.runPipeline(call, spec, this::buildCallInput);
     }
 
     private UpdateConfigurationCallInput buildCallInput() {

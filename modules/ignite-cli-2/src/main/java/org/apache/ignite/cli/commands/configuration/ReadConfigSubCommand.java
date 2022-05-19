@@ -3,7 +3,7 @@ package org.apache.ignite.cli.commands.configuration;
 import jakarta.inject.Inject;
 import org.apache.ignite.cli.call.configuration.ReadConfigurationCall;
 import org.apache.ignite.cli.call.configuration.ReadConfigurationCallInput;
-import org.apache.ignite.cli.core.call.DefaultCallExecutionPipeline;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -40,12 +40,7 @@ public class ReadConfigSubCommand implements Runnable {
     /** {@inheritDoc} */
     @Override
     public void run() {
-        DefaultCallExecutionPipeline.builder(call)
-                .inputProvider(this::buildCallInput)
-                .output(spec.commandLine().getOut())
-                .errOutput(spec.commandLine().getErr())
-                .build()
-                .runPipeline();
+        CallExecutionPipeline.runPipeline(call, spec, this::buildCallInput);
     }
 
     private ReadConfigurationCallInput buildCallInput() {

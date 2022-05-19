@@ -2,10 +2,10 @@ package org.apache.ignite.cli.core.repl.executor;
 
 
 import java.util.function.Function;
-import org.apache.ignite.cli.call.configuration.ReplCallInput;
 import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.CallOutput;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
+import org.apache.ignite.cli.core.call.StringCallInput;
 import org.jline.console.CmdDesc;
 import org.jline.console.CmdLine;
 import org.jline.console.SystemRegistry;
@@ -16,7 +16,7 @@ import picocli.shell.jline3.PicocliCommands;
 /**
  * Command executor based on {@link SystemRegistry}.
  */
-public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
+public class RegistryCommandExecutor implements Call<StringCallInput, String> {
     private final SystemRegistry systemRegistry;
 
     /**
@@ -60,13 +60,8 @@ public class RegistryCommandExecutor implements Call<ReplCallInput, String> {
      * @return Command output.
      */
     @Override
-    public CallOutput<String> execute(ReplCallInput input) {
-        try {
-            Object execute = systemRegistry.execute(input.getLine());
-            return DefaultCallOutput.success(String.valueOf(execute));
-        } catch (Exception e) {
-            return DefaultCallOutput.failure(e);
-        }
+    public CallOutput<String> execute(StringCallInput input) {
+        return DefaultCallOutput.wrapCall(() -> String.valueOf(systemRegistry.execute(input.getString())));
     }
 
     /**
