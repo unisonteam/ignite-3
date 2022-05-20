@@ -7,7 +7,7 @@ import picocli.CommandLine.Command;
  * Parent command for CLI configuration commands.
  */
 @Command(name = "cli", subcommands = {
-        ConfigSubCommand.class
+        CliConfigSubCommand.class
 })
 @Singleton
 public class CliCommand implements Runnable {

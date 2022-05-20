@@ -17,10 +17,15 @@ public class CliConfigGetCall implements Call<StringCallInput, String> {
 
     @Override
     public DefaultCallOutput<String> execute(StringCallInput input) {
-        String property = config.getProperty(input.getString());
-        String body = property != null
-                ? property
-                : "Property " + input.getString() + " is not defined";
-        return DefaultCallOutput.success(body);
+        String key = input.getString();
+        if (key != null) {
+            String property = config.getProperty(key);
+            String body = property != null
+                    ? property
+                    : "Property " + key + " is not defined";
+            return DefaultCallOutput.success(body);
+        } else {
+            return DefaultCallOutput.success(config.printConfig());
+        }
     }
 }

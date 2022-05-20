@@ -15,7 +15,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "set")
 public class CliConfigSetSubCommand implements Runnable {
-    @Parameters
+    @Parameters(arity = "1..*")
     private Map<String, String> parameters;
 
     @Spec
