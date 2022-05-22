@@ -29,7 +29,14 @@ public class ShowConfigurationCall implements Call<ShowConfigurationCallInput, S
     }
 
     private DefaultCallOutput<String> readNodeConfig(NodeConfigurationApi api, ShowConfigurationCallInput input) {
-        return null;
+        try {
+            if (input.getSelector() != null) {
+                return DefaultCallOutput.success(api.getNodeConfigurationByPath(input.getSelector()));
+            }
+            return DefaultCallOutput.success(api.getNodeConfiguration());
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private DefaultCallOutput<String> readClusterConfig(ClusterConfigurationApi api, ShowConfigurationCallInput input) {

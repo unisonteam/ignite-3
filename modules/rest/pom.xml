@@ -35,7 +35,17 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-rest-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-configuration</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-cluster-management</artifactId>
         </dependency>
 
         <dependency>
@@ -58,6 +68,7 @@
             <version>${micronaut3.version}</version>
         </dependency>
 
+<!--        todo: move to dependency management-->
         <dependency>
             <groupId>io.micronaut</groupId>
             <artifactId>micronaut-runtime</artifactId>
@@ -70,24 +81,11 @@
             <version>${micronaut3.version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>io.micronaut.serde</groupId>
-            <artifactId>micronaut-serde-jackson</artifactId>
-            <version>${micronaut3.serde.version}</version>
-            <scope>compile</scope>
-        </dependency>
 
         <dependency>
-            <groupId>jakarta.annotation</groupId>
-            <artifactId>jakarta.annotation-api</artifactId>
-            <scope>compile</scope>
-            <version>${jakarta.annotations.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>${swagger.annotations.version}</version>
+            <groupId>io.micronaut.openapi</groupId>
+            <artifactId>micronaut-openapi</artifactId>
+            <version>${maven.micronaut.openapi.plugin.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
@@ -109,21 +107,6 @@
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
-
-        <dependency>
-            <groupId>io.micronaut.test</groupId>
-            <artifactId>micronaut-test-junit5</artifactId>
-            <version>${micronaut3.test.junit5.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.micronaut</groupId>
-            <artifactId>micronaut-http-client</artifactId>
-            <scope>test</scope>
-            <version>${micronaut3.version}</version>
-        </dependency>
-
 
         <!-- Logging in tests -->
         <dependency>

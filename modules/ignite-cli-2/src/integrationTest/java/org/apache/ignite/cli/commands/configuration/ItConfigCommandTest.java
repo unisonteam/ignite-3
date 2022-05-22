@@ -16,7 +16,7 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
     @DisplayName("Should read config when valid cluster-url is given")
     void readDefaultConfig() {
         // When read cluster config with valid url
-        execute("config", "read", "--cluster-url", NODE_URL);
+        execute("config", "show", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(
@@ -40,13 +40,13 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
         );
 
         // When read the updated cluster configuration
-        execute("config", "read", "--cluster-url", NODE_URL);
+        execute("config", "show", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(
                 this::assertExitCodeIsZero,
                 this::assertErrOutputIsEmpty,
-                () -> assertOutputContains("\"defaultDataStorage\":\"rocksdb\"")
+                () -> assertOutputContains("\"defaultDataStorage\" : \"rocksdb\"")
         );
     }
 
@@ -64,13 +64,13 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
         );
 
         // When read the updated cluster configuration
-        execute("config", "read", "--cluster-url", NODE_URL);
+        execute("config", "show", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(
                 this::assertExitCodeIsZero,
                 this::assertErrOutputIsEmpty,
-                () -> assertOutputContains("\"defaultDataStorage\":\"rocksdb\"")
+                () -> assertOutputContains("\"defaultDataStorage\" : \"rocksdb\"")
         );
     }
 }

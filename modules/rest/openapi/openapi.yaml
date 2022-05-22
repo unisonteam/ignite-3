@@ -12,8 +12,6 @@ paths:
     get:
       tags:
       - clusterConfiguration
-      summary: Returns cluster configuration in HOCON format.
-      description: Returns cluster configuration in HOCON format.
       operationId: getClusterConfiguration
       parameters: []
       responses:
@@ -23,19 +21,12 @@ paths:
             text/plain:
               schema:
                 type: string
-        "400":
-          description: Incorrect configuration
-        "500":
-          description: Internal error
     patch:
       tags:
       - clusterConfiguration
-      summary: Updates cluster configuration in HOCON format.
-      description: Updates cluster configuration in HOCON format.
       operationId: updateClusterConfiguration
       parameters: []
       requestBody:
-        description: the cluster configuration to update.
         content:
           text/plain:
             schema:
@@ -44,21 +35,14 @@ paths:
       responses:
         "200":
           description: Configuration updated
-        "400":
-          description: Incorrect configuration
-        "500":
-          description: Internal error
   /management/v1/configuration/cluster/{path}:
     get:
       tags:
       - clusterConfiguration
-      summary: Returns configuration in HOCON format represented by path.
-      description: Returns configuration in HOCON format represented by path.
       operationId: getClusterConfigurationByPath
       parameters:
       - name: path
         in: path
-        description: to represent a cluster configuration.
         required: true
         schema:
           type: string
@@ -69,16 +53,27 @@ paths:
             text/plain:
               schema:
                 type: string
-        "400":
-          description: Incorrect configuration
-        "500":
-          description: Internal error
+  /management/v1/configuration/init:
+    post:
+      tags:
+      - clusterManagement
+      operationId: init
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitCommand'
+        required: true
+      responses:
+        "200":
+          description: Cluster initialized
+        "409":
+          description: Cluster already initialized with another nodes
   /management/v1/configuration/node:
     get:
       tags:
       - nodeConfiguration
-      summary: Returns node configuration in HOCON format.
-      description: Returns node configuration in HOCON format.
       operationId: getNodeConfiguration
       parameters: []
       responses:
@@ -88,19 +83,12 @@ paths:
             text/plain:
               schema:
                 type: string
-        "400":
-          description: Incorrect configuration
-        "500":
-          description: Internal error
     patch:
       tags:
       - nodeConfiguration
-      summary: Updates node configuration in HOCON format.
-      description: Updates node configuration in HOCON format.
       operationId: updateNodeConfiguration
       parameters: []
       requestBody:
-        description: the node configuration to update.
         content:
           text/plain:
             schema:
@@ -109,21 +97,14 @@ paths:
       responses:
         "200":
           description: Configuration updated
-        "400":
-          description: Incorrect configuration
-        "500":
-          description: Internal error
   /management/v1/configuration/node/{path}:
     get:
       tags:
       - nodeConfiguration
-      summary: Returns configuration in HOCON format represented by path.
-      description: Returns configuration in HOCON format represented by path.
       operationId: getNodeConfigurationByPath
       parameters:
       - name: path
         in: path
-        description: to represent a node configuration.
         required: true
         schema:
           type: string
@@ -134,7 +115,19 @@ paths:
             text/plain:
               schema:
                 type: string
-        "400":
-          description: Incorrect configuration
-        "500":
-          description: Internal error
+components:
+  schemas:
+    InitCommand:
+      required:
+      - cmgNodes
+      - metaStorageNodes
+      type: object
+      properties:
+        metaStorageNodes:
+          type: array
+          items:
+            type: string
+        cmgNodes:
+          type: array
+          items:
+            type: string

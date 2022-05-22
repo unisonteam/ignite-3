@@ -50,4 +50,57 @@ class ItShowConfigurationCallTest extends CallIntegrationTestBase {
         // And
         assertThat(output.body()).isEqualTo("\"lru\"");
     }
+
+    @Test
+    @DisplayName("Should show node configuration when cluster up and running")
+    void readNodeConfiguration() {
+        // Given
+        var input = ShowConfigurationCallInput.builder()
+                .clusterUrl(NODE_URL)
+                .nodeId(CLUSTER_NODES.get(0).name())
+                .build();
+
+        // When
+        DefaultCallOutput<String> output = call.execute(input);
+
+        // Then
+        assertThat(output.hasError()).isFalse();
+        // And
+        assertThat(output.body()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Should show node configuration by path when cluster up and running")
+    void readNodeConfigurationByPath() {
+        // Given
+        var input = ShowConfigurationCallInput.builder()
+                .clusterUrl(NODE_URL)
+                .nodeId(CLUSTER_NODES.get(0).name())
+                .selector("clientConnector.connectTimeout")
+                .build();
+
+        // When
+        DefaultCallOutput<String> output = call.execute(input);
+
+        // Then
+        assertThat(output.hasError()).isFalse();
+        // And
+        assertThat(output.body()).isEqualTo("5000");
+    }
+
+    @Test
+    @DisplayName("Should return error if wrong nodename is given")
+    void readNodeConfigurationWithWrongNodename() { //todo
+        // Given
+        var input = ShowConfigurationCallInput.builder()
+                .clusterUrl(NODE_URL)
+                .nodeId("no-such-node")
+                .build();
+
+        // When
+        DefaultCallOutput<String> output = call.execute(input);
+
+        // Then
+        assertThat(output.hasError()).isTrue();
+    }
 }

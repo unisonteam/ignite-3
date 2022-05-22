@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.ServiceLoader;
@@ -42,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 import org.apache.ignite.Ignite;
@@ -66,9 +68,11 @@ import org.apache.ignite.internal.metastorage.server.persistence.RocksDbKeyValue
 import org.apache.ignite.internal.raft.Loza;
 import org.apache.ignite.internal.recovery.ConfigurationCatchUpListener;
 import org.apache.ignite.internal.recovery.RecoveryCompletionFutureFactory;
+import org.apache.ignite.internal.schema.SchemaManager;
 import org.apache.ignite.internal.storage.DataStorageManager;
 import org.apache.ignite.internal.storage.DataStorageModule;
 import org.apache.ignite.internal.storage.DataStorageModules;
+import org.apache.ignite.internal.table.TableImpl;
 import org.apache.ignite.internal.table.distributed.TableManager;
 import org.apache.ignite.internal.table.distributed.TableTxManagerImpl;
 import org.apache.ignite.internal.testframework.IgniteAbstractTest;
@@ -89,7 +93,6 @@ import org.apache.ignite.network.MessageSerializationRegistryImpl;
 import org.apache.ignite.network.NettyBootstrapFactory;
 import org.apache.ignite.network.scalecube.ScaleCubeClusterServiceFactory;
 import org.apache.ignite.raft.jraft.RaftMessagesSerializationRegistryInitializer;
-import org.apache.ignite.rest.RestComponent;
 import org.apache.ignite.schema.SchemaBuilders;
 import org.apache.ignite.schema.definition.ColumnType;
 import org.apache.ignite.schema.definition.TableDefinition;
@@ -224,7 +227,6 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
                 vault,
                 clusterSvc,
                 raftMgr,
-                mock(RestComponent.class),
                 new RocksDbClusterStateStorage(dir.resolve("cmg"))
         );
 
@@ -246,13 +248,8 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
                 modules.distributed().polymorphicSchemaExtensions()
         );
 
-        Consumer<Consumer<Long>> registry = (c) -> {
-            clusterCfgMgr.configurationRegistry().listenUpdateStorageRevision(newStorageRevision -> {
-                c.accept(newStorageRevision);
-
-                return CompletableFuture.completedFuture(null);
-            });
-        };
+        Consumer<Function<Long, CompletableFuture<?>>> registry = (c) -> clusterCfgMgr.configurationRegistry()
+                .listenUpdateStorageRevision(newStorageRevision -> c.apply(newStorageRevision));
 
         DataStorageModules dataStorageModules = new DataStorageModules(ServiceLoader.load(DataStorageModule.class));
 
@@ -264,14 +261,19 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
                 )
         );
 
+        TablesConfiguration tblCfg = clusterCfgMgr.configurationRegistry().getConfiguration(TablesConfiguration.KEY);
+
+        SchemaManager schemaManager = new SchemaManager(registry, tblCfg);
+
         TableManager tableManager = new TableManager(
                 registry,
-                clusterCfgMgr.configurationRegistry().getConfiguration(TablesConfiguration.KEY),
+                tblCfg,
                 raftMgr,
                 mock(BaselineManager.class),
                 clusterSvc.topologyService(),
                 txManager,
-                dataStorageManager
+                dataStorageManager,
+                schemaManager
         );
 
         // Preparing the result map.
@@ -307,6 +309,7 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
                 metaStorageMgr,
                 clusterCfgMgr,
                 dataStorageManager,
+                schemaManager,
                 tableManager
         );
 
@@ -337,7 +340,7 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
         // Deploy all registered watches because all components are ready and have registered their listeners.
         metaStorageMgr.deployWatches();
 
-        configurationCatchUpFuture.join();
+        assertThat(configurationCatchUpFuture, willCompleteSuccessfully());
 
         log.info("Completed recovery on partially started node, last revision applied: " + lastRevision.get()
                 + ", acceptableDifference: " + IgniteSystemProperties.getInteger(CONFIGURATION_CATCH_UP_DIFFERENCE_PROPERTY, 100)
@@ -707,6 +710,28 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
     }
 
     /**
+     * Check that the table with given name is present in TableManager.
+     *
+     * @param tableManager Table manager.
+     * @param tableName Table name.
+     */
+    private void assertTablePresent(TableManager tableManager, String tableName) {
+        Collection<TableImpl> tables = tableManager.latestTables().values();
+
+        boolean isPresent = false;
+
+        for (TableImpl table : tables) {
+            if (table.name().equals(tableName)) {
+                isPresent = true;
+
+                break;
+            }
+        }
+
+        assertTrue(isPresent, "tableName=" + tableName + ", tables=" + tables);
+    }
+
+    /**
      * Checks that one node in a cluster of 2 nodes is able to restart and recover a table that was created when this node was absent. Also
      * checks that the table created before node stop, is not available when majority if lost.
      *
@@ -738,8 +763,8 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
 
         assertNotNull(tableManager);
 
-        assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + TABLE_NAME.toUpperCase()));
-        assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + TABLE_NAME_2.toUpperCase()));
+        assertTablePresent(tableManager, SCHEMA_PREFIX + TABLE_NAME.toUpperCase());
+        assertTablePresent(tableManager, SCHEMA_PREFIX + TABLE_NAME_2.toUpperCase());
     }
 
     /**
@@ -765,7 +790,7 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
 
         assertNotNull(tableManager);
 
-        assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + TABLE_NAME.toUpperCase()));
+        assertTablePresent(tableManager, SCHEMA_PREFIX + TABLE_NAME.toUpperCase());
     }
 
     /**
@@ -797,7 +822,7 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
 
         TableManager tableManager = findComponent(components, TableManager.class);
 
-        assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + TABLE_NAME.toUpperCase()));
+        assertTablePresent(tableManager, SCHEMA_PREFIX + TABLE_NAME.toUpperCase());
     }
 
     /**
@@ -838,8 +863,8 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
 
         TableManager tableManager = findComponent(components, TableManager.class);
 
-        assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + TABLE_NAME.toUpperCase()));
-        assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + TABLE_NAME_2.toUpperCase()));
+        assertTablePresent(tableManager, SCHEMA_PREFIX + TABLE_NAME.toUpperCase());
+        assertTablePresent(tableManager, SCHEMA_PREFIX + TABLE_NAME_2.toUpperCase());
     }
 
     /**
@@ -892,7 +917,7 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
         TableManager tableManager = findComponent(components, TableManager.class);
 
         for (int i = 0; i < cfgGap; i++) {
-            assertNotNull(tableManager.latestTables().get(SCHEMA_PREFIX + "T" + i), SCHEMA_PREFIX + "T" + i);
+            assertTablePresent(tableManager, SCHEMA_PREFIX + "T" + i);
         }
     }
 
@@ -902,12 +927,17 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
      * @param testInfo Test info.
      */
     @Test
-    @Disabled("IGNITE-16718")
     public void testCfgGap(TestInfo testInfo) {
         final int nodes = 4;
 
+        String nodeFinderConfig = IntStream.range(0, nodes)
+                .mapToObj(i -> "\"localhost:" + (DEFAULT_NODE_PORT + i) + "\"")
+                .collect(joining(",", "[", "]"));
+
         for (int i = 0; i < nodes; i++) {
-            startNode(testInfo, i);
+            String cfg = IgniteStringFormatter.format(NODE_BOOTSTRAP_CFG, DEFAULT_NODE_PORT + i, nodeFinderConfig);
+
+            startNode(testInfo, i, null, null, cfg);
         }
 
         createTableWithData(CLUSTER_NODES.get(0), "t1", nodes);
@@ -924,7 +954,9 @@ public class ItIgniteNodeRestartTest extends IgniteAbstractTest {
 
         log.info("Starting the node.");
 
-        Ignite newNode = startNode(nodes - 1, igniteName, null, workDir);
+        String nodeCfg = IgniteStringFormatter.format(NODE_BOOTSTRAP_CFG, DEFAULT_NODE_PORT + nodes - 1, nodeFinderConfig);
+
+        startNode(nodes - 1, igniteName, nodeCfg, workDir);
 
         checkTableWithData(CLUSTER_NODES.get(0), "t1");
         checkTableWithData(CLUSTER_NODES.get(0), "t2");

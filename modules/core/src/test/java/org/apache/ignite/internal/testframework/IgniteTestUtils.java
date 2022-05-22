@@ -32,7 +32,11 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import org.apache.ignite.internal.thread.NamedThreadFactory;
 import org.apache.ignite.lang.IgniteInternalException;
@@ -45,6 +49,8 @@ import org.junit.jupiter.api.TestInfo;
  * Utility class for tests.
  */
 public final class IgniteTestUtils {
+    private static final int TIMEOUT_SEC = 5000;
+
     /**
      * Set object field value via reflection.
      *
@@ -415,13 +421,26 @@ public final class IgniteTestUtils {
     /**
      * Waits for the condition.
      *
-     * @param cond          Condition.
+     * @param cond Condition.
+     * @param timeoutMillis Timeout in milliseconds.
+     * @return {@code True} if the condition was satisfied within the timeout.
+     * @throws InterruptedException If waiting was interrupted.
+     */
+    public static boolean waitForCondition(BooleanSupplier cond, long timeoutMillis) throws InterruptedException {
+        return waitForCondition(cond, 50, timeoutMillis);
+    }
+
+    /**
+     * Waits for the condition.
+     *
+     * @param cond Condition.
+     * @param sleepMillis Sleep im milliseconds.
      * @param timeoutMillis Timeout in milliseconds.
      * @return {@code True} if the condition was satisfied within the timeout.
      * @throws InterruptedException If waiting was interrupted.
      */
     @SuppressWarnings("BusyWait")
-    public static boolean waitForCondition(BooleanSupplier cond, long timeoutMillis) throws InterruptedException {
+    public static boolean waitForCondition(BooleanSupplier cond, long sleepMillis, long timeoutMillis) throws InterruptedException {
         long stop = System.currentTimeMillis() + timeoutMillis;
 
         while (System.currentTimeMillis() < stop) {
@@ -429,7 +448,7 @@ public final class IgniteTestUtils {
                 return true;
             }
 
-            sleep(50);
+            sleep(sleepMillis);
         }
 
         return false;
@@ -551,5 +570,42 @@ public final class IgniteTestUtils {
         }
 
         return sb.toString().toLowerCase();
+    }
+
+    /**
+     * Throw an exception as if it were unchecked.
+     *
+     * <p>This method erases type of the exception in the thrown clause, so checked exception could be thrown without need to wrap it with
+     * unchecked one or adding a similar throws clause to the upstream methods.
+     */
+    @SuppressWarnings("unchecked")
+    public static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+        throw (E) e;
+    }
+
+    /**
+     * Awaits completion of the given stage and returns its result.
+     *
+     * @param stage The stage.
+     * @param <T> Type of the result returned by the stage.
+     * @return A result of the stage.
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public static <T> T await(CompletionStage<T> stage) {
+        try {
+            return stage.toCompletableFuture().get(TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (Throwable e) {
+            if (e instanceof ExecutionException) {
+                e = e.getCause();
+            } else if (e instanceof CompletionException) {
+                e = e.getCause();
+            }
+
+            sneakyThrow(e);
+        }
+
+        assert false;
+
+        return null;
     }
 }

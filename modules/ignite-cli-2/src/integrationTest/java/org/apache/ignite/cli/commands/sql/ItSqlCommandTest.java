@@ -28,6 +28,7 @@ class ItSqlCommandTest extends CliCommandTestIntegrationBase {
     @Test
     @DisplayName("Should execute select * from table and display table when jdbc-url is correct")
     void selectFromTable() {
+        String nodeName = CLUSTER_NODES.get(0).name();
         execute("sql", "--execute", "select * from person", "--jdbc-url", JDBC_URL);
 
         assertAll(

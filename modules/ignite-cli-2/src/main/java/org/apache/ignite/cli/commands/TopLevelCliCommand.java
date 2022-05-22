@@ -19,7 +19,6 @@ import picocli.CommandLine.Command;
                 "Use @|bold,fg(81) <TAB>|@ to see available commands.",
                 "Run @|bold,red ignite|@ to enter the shell.",
                 ""},
-        footer = {"", "Press Ctrl-D to exit."},
         subcommands = {
                 SqlCommand.class,
                 CommandLine.HelpCommand.class,

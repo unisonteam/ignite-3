@@ -38,10 +38,12 @@ import org.apache.ignite.internal.testframework.WorkDirectory;
 import org.apache.ignite.internal.testframework.WorkDirectoryExtension;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.rest.client.api.ClusterConfigurationApi;
+import org.apache.ignite.rest.client.api.ClusterManagementApi;
 import org.apache.ignite.rest.client.api.NodeConfigurationApi;
 import org.apache.ignite.rest.client.invoker.ApiClient;
 import org.apache.ignite.rest.client.invoker.ApiException;
 import org.apache.ignite.rest.client.invoker.Configuration;
+import org.apache.ignite.rest.client.model.InitCommand;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,7 @@ public class ItGeneratedRestClientTest {
 
     private ClusterConfigurationApi clusterConfigurationApi;
     private NodeConfigurationApi nodeConfigurationApi;
+    private ClusterManagementApi clusterManagementApi;
 
     @BeforeEach
     void setUp(TestInfo testInfo) {
@@ -92,6 +95,7 @@ public class ItGeneratedRestClientTest {
 
         clusterConfigurationApi = new ClusterConfigurationApi(client);
         nodeConfigurationApi = new NodeConfigurationApi(client);
+        clusterManagementApi = new ClusterManagementApi(client);
     }
 
     @AfterEach
@@ -187,6 +191,24 @@ public class ItGeneratedRestClientTest {
             assertNotNull(updatedConfiguration);
             assertEquals(originalConfiguration, updatedConfiguration);
         });
+    }
+
+    @Test
+    void testInitCluster() {
+        assertDoesNotThrow(() -> {
+            String nodeName = clusterNodes.get(0).name();
+            clusterManagementApi.init(new InitCommand().metaStorageNodes(List.of(nodeName)).cmgNodes(List.of()));
+        });
+    }
+
+    @Test
+    void testInitClusterNoSuchNode() {
+        try {
+            clusterManagementApi.init(new InitCommand().metaStorageNodes(List.of("no-such-node")).cmgNodes(List.of()));
+            fail("Expected ApiException to be thrown");
+        } catch (ApiException e) {
+            assertEquals(400, e.getCode());
+        }
     }
 
     private static String buildConfig(int nodeIdx) {
