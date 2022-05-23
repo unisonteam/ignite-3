@@ -21,6 +21,7 @@ import io.micronaut.configuration.picocli.MicronautFactory;
 import java.util.HashMap;
 import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
+import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import picocli.CommandLine;
@@ -37,7 +38,11 @@ public class Main {
     public static void main(String[] args) {
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
             if (args.length != 0) {
-                executeCommand(args, micronautFactory);
+                try {
+                    executeCommand(args, micronautFactory);
+                } catch (Exception e) {
+                    System.err.println("Error occurred during command execution");
+                }
             } else {
                 try {
                     enterRepl(micronautFactory);
@@ -61,7 +66,10 @@ public class Main {
                 .build());
     }
 
-    private static void executeCommand(String[] args, MicronautFactory micronautFactory) {
-        new CommandLine(TopLevelCliCommand.class, micronautFactory).execute(args);
+    private static void executeCommand(String[] args, MicronautFactory micronautFactory) throws Exception {
+        CommandLine cmd = new CommandLine(TopLevelCliCommand.class, micronautFactory);
+        Config config = micronautFactory.create(Config.class);
+        cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));
+        cmd.execute(args);
     }
 }
