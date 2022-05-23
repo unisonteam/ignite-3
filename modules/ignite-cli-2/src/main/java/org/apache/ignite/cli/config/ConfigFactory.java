@@ -6,7 +6,7 @@ import jakarta.inject.Singleton;
 @Factory
 public class ConfigFactory {
     @Singleton
-    public Config createConfigFromFile() {
+    public Config fileConfig() {
         return new Config();
     }
 }

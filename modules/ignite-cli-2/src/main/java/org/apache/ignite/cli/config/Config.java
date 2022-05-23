@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -43,7 +44,7 @@ public class Config {
     private static Properties loadConfig() {
         File configFile = getConfigFile();
         if (configFile.canRead()) {
-            try (InputStream is = new FileInputStream(configFile)){
+            try (InputStream is = new FileInputStream(configFile)) {
                 Properties p = new Properties();
                 p.load(is);
                 return p;
@@ -67,8 +68,12 @@ public class Config {
 
     public String printConfig() {
         StringBuilder builder = new StringBuilder();
-        for (Entry<Object, Object> entry : props.entrySet()) {
+        for (Iterator<Entry<Object, Object>> iterator = props.entrySet().iterator(); iterator.hasNext(); ) {
+            Entry<Object, Object> entry = iterator.next();
             builder.append(entry.getKey()).append("=").append(entry.getValue());
+            if (iterator.hasNext()) {
+                builder.append(System.lineSeparator());
+            }
         }
         return builder.toString();
     }

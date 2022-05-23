@@ -38,7 +38,7 @@ class CliConfigSetSubCommandTest extends CliCommandTestBase {
         execute("ignite.cluster-url");
 
         // Then
-        assertThat(err.toString()).contains("should be in KEY=VALUE format");
+        assertThat(err.toString()).contains("should be in KEY=VALUE format but was ignite.cluster-url");
         // And
         assertThat(out.toString()).isEmpty();
     }

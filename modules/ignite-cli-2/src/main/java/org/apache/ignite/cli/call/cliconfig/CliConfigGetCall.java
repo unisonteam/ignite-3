@@ -20,10 +20,11 @@ public class CliConfigGetCall implements Call<StringCallInput, String> {
         String key = input.getString();
         if (key != null) {
             String property = config.getProperty(key);
-            String body = property != null
-                    ? property
-                    : "Property " + key + " is not defined";
-            return DefaultCallOutput.success(body);
+            if (property != null) {
+                return DefaultCallOutput.success(property);
+            } else {
+                return DefaultCallOutput.failure(new IllegalArgumentException("Property " + key + " is not defined"));
+            }
         } else {
             return DefaultCallOutput.success(config.printConfig());
         }

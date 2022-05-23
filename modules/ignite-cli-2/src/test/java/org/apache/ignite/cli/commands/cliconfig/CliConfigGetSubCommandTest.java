@@ -21,7 +21,9 @@ class CliConfigGetSubCommandTest extends CliCommandTestBase {
         execute();
 
         // Then
-        assertThat(out.toString()).isEqualTo(TestConfigFactory.createTestConfig().printConfig() + System.lineSeparator());
+        assertThat(out.toString()).isEqualTo(
+                "ignite.cluster-url=test_cluster_url" + System.lineSeparator()
+                + "ignite.jdbc-url=test_jdbc_url" + System.lineSeparator());
         // And
         assertThat(err.toString()).isEmpty();
     }
@@ -45,9 +47,9 @@ class CliConfigGetSubCommandTest extends CliCommandTestBase {
         execute("nonexistentKey");
 
         // Then
-        assertThat(out.toString()).isEqualTo("Property nonexistentKey is not defined" + System.lineSeparator());
+        assertThat(err.toString()).contains("Property nonexistentKey is not defined");
         // And
-        assertThat(err.toString()).isEmpty();
+        assertThat(out.toString()).isEmpty();
     }
 
     @Test
