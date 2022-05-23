@@ -57,7 +57,8 @@ public class Config {
 
     public void saveConfig() {
         File configFile = getConfigFile();
-        if (configFile.getParentFile().mkdirs()) {
+        configFile.getParentFile().mkdirs();
+        if (configFile.canWrite()) {
             try (OutputStream os = new FileOutputStream(configFile)) {
                 props.store(os, null);
             } catch (IOException e) {
