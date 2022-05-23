@@ -15,17 +15,15 @@ class CliConfigGetSubCommandTest extends CliCommandTestBase {
     }
 
     @Test
-    @DisplayName("Displays all keys by default")
+    @DisplayName("Key is mandatory")
     void noKey() {
         // When executed without arguments
         execute();
 
         // Then
-        assertThat(out.toString()).isEqualTo(
-                "ignite.cluster-url=test_cluster_url" + System.lineSeparator()
-                + "ignite.jdbc-url=test_jdbc_url" + System.lineSeparator());
+        assertThat(err.toString()).contains("Missing required parameter: '<key>'");
         // And
-        assertThat(err.toString()).isEmpty();
+        assertThat(out.toString()).isEmpty();
     }
 
     @Test

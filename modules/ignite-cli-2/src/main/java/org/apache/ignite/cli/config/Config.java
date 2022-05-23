@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
@@ -65,18 +63,6 @@ public class Config {
                 // todo report error?
             }
         }
-    }
-
-    public String printConfig() {
-        StringBuilder builder = new StringBuilder();
-        for (Iterator<Entry<Object, Object>> iterator = props.entrySet().iterator(); iterator.hasNext(); ) {
-            Entry<Object, Object> entry = iterator.next();
-            builder.append(entry.getKey()).append("=").append(entry.getValue());
-            if (iterator.hasNext()) {
-                builder.append(System.lineSeparator());
-            }
-        }
-        return builder.toString();
     }
 
     private static File getConfigFile() {

@@ -3,6 +3,7 @@ package org.apache.ignite.cli.commands.cliconfig;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.ignite.cli.commands.CliCommandTestBase;
+import org.apache.ignite.cli.commands.decorators.ConfigDecorator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,8 @@ class CliConfigSubCommandTest extends CliCommandTestBase {
         execute();
 
         // Then
-        assertThat(out.toString()).isEqualTo(TestConfigFactory.createTestConfig().printConfig() + System.lineSeparator());
+        String expectedResult = new ConfigDecorator().decorate(TestConfigFactory.createTestConfig()).toTerminalString();
+        assertThat(out.toString()).isEqualTo(expectedResult + System.lineSeparator());
         // And
         assertThat(err.toString()).isEmpty();
     }
