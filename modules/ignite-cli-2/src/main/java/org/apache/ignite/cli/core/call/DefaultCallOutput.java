@@ -22,6 +22,11 @@ public class DefaultCallOutput<T> implements CallOutput<T> {
     }
 
     @Override
+    public boolean isEmpty() {
+        return CallOutputStatus.EMPTY.equals(status);
+    }
+
+    @Override
     public Throwable errorCause() {
         return cause;
     }
@@ -93,6 +98,17 @@ public class DefaultCallOutput<T> implements CallOutput<T> {
             .status(CallOutputStatus.ERROR)
             .cause(cause)
             .build();
+    }
+
+    /**
+     * New empty coll output.
+     *
+     * @return Empty call output.
+     */
+    public static <T> DefaultCallOutput<T> empty() {
+        return DefaultCallOutput.<T>builder()
+                .status(CallOutputStatus.EMPTY)
+                .build();
     }
 
     /**

@@ -28,17 +28,20 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgnitionManager;
 import org.apache.ignite.client.handler.ClientHandlerModule;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.configuration.schemas.compute.ComputeConfiguration;
 import org.apache.ignite.configuration.schemas.network.NetworkConfiguration;
+import org.apache.ignite.configuration.schemas.rest.RestConfiguration;
 import org.apache.ignite.configuration.schemas.table.TablesConfiguration;
 import org.apache.ignite.internal.baseline.BaselineManager;
 import org.apache.ignite.internal.cluster.management.ClusterManagementGroupManager;
 import org.apache.ignite.internal.cluster.management.network.messages.CmgMessagesSerializationRegistryInitializer;
 import org.apache.ignite.internal.cluster.management.raft.RocksDbClusterStateStorage;
+import org.apache.ignite.internal.cluster.management.rest.ClusterManagementRestFactory;
 import org.apache.ignite.internal.components.LongJvmPauseDetector;
 import org.apache.ignite.internal.compute.ComputeComponent;
 import org.apache.ignite.internal.compute.ComputeComponentImpl;
@@ -57,6 +60,10 @@ import org.apache.ignite.internal.metastorage.server.persistence.RocksDbKeyValue
 import org.apache.ignite.internal.raft.Loza;
 import org.apache.ignite.internal.recovery.ConfigurationCatchUpListener;
 import org.apache.ignite.internal.recovery.RecoveryCompletionFutureFactory;
+import org.apache.ignite.internal.rest.RestComponent;
+import org.apache.ignite.internal.rest.api.RestFactory;
+import org.apache.ignite.internal.rest.configuration.PresentationsFactory;
+import org.apache.ignite.internal.schema.SchemaManager;
 import org.apache.ignite.internal.sql.engine.QueryProcessor;
 import org.apache.ignite.internal.sql.engine.SqlQueryProcessor;
 import org.apache.ignite.internal.sql.engine.message.SqlQueryMessagesSerializationRegistryInitializer;
@@ -84,7 +91,6 @@ import org.apache.ignite.network.NettyBootstrapFactory;
 import org.apache.ignite.network.NetworkAddress;
 import org.apache.ignite.network.scalecube.ScaleCubeClusterServiceFactory;
 import org.apache.ignite.raft.jraft.RaftMessagesSerializationRegistryInitializer;
-import org.apache.ignite.rest.RestComponent;
 import org.apache.ignite.sql.IgniteSql;
 import org.apache.ignite.table.manager.IgniteTables;
 import org.apache.ignite.tx.IgniteTransactions;
@@ -181,6 +187,9 @@ public class IgniteImpl implements Ignite {
     /** Data storage manager. */
     private final DataStorageManager dataStorageMgr;
 
+    /** Schema manager. */
+    private final SchemaManager schemaManager;
+
     /**
      * The Constructor.
      *
@@ -240,7 +249,6 @@ public class IgniteImpl implements Ignite {
                 vaultMgr,
                 clusterSvc,
                 raftMgr,
-                null,
                 new RocksDbClusterStateStorage(workDir.resolve(CMG_DB_PATH))
         );
 
@@ -262,7 +270,10 @@ public class IgniteImpl implements Ignite {
                 modules.distributed().polymorphicSchemaExtensions()
         );
 
-        restComponent = new RestComponent(nodeCfgMgr, clusterCfgMgr);
+        RestFactory factory = new PresentationsFactory(nodeCfgMgr, clusterCfgMgr);
+        RestFactory clusterManagementRestFactory = new ClusterManagementRestFactory(clusterSvc);
+        RestConfiguration restConfiguration = nodeCfgMgr.configurationRegistry().getConfiguration(RestConfiguration.KEY);
+        restComponent = new RestComponent(List.of(factory, clusterManagementRestFactory), restConfiguration);
 
         baselineMgr = new BaselineManager(
                 clusterCfgMgr,
@@ -270,13 +281,8 @@ public class IgniteImpl implements Ignite {
                 clusterSvc
         );
 
-        Consumer<Consumer<Long>> registry = (c) -> {
-            clusterCfgMgr.configurationRegistry().listenUpdateStorageRevision(newStorageRevision -> {
-                c.accept(newStorageRevision);
-
-                return CompletableFuture.completedFuture(null);
-            });
-        };
+        Consumer<Function<Long, CompletableFuture<?>>> registry =
+                c -> clusterCfgMgr.configurationRegistry().listenUpdateStorageRevision(c::apply);
 
         DataStorageModules dataStorageModules = new DataStorageModules(
                 ServiceLoader.load(DataStorageModule.class, serviceProviderClassLoader)
@@ -290,6 +296,11 @@ public class IgniteImpl implements Ignite {
                 )
         );
 
+        schemaManager = new SchemaManager(
+            registry,
+            clusterCfgMgr.configurationRegistry().getConfiguration(TablesConfiguration.KEY)
+        );
+
         distributedTblMgr = new TableManager(
                 registry,
                 clusterCfgMgr.configurationRegistry().getConfiguration(TablesConfiguration.KEY),
@@ -297,7 +308,8 @@ public class IgniteImpl implements Ignite {
                 baselineMgr,
                 clusterSvc.topologyService(),
                 txManager,
-                dataStorageMgr
+                dataStorageMgr,
+                schemaManager
         );
 
         qryEngine = new SqlQueryProcessor(
@@ -348,6 +360,9 @@ public class IgniteImpl implements Ignite {
 
     /**
      * Starts ignite node.
+     *
+     * <p>When this method returns, the node is partially started and ready to accept the init command (that is, its
+     * REST endpoint is functional).
      *
      * @param cfg Optional node configuration based on
      *         {@link org.apache.ignite.configuration.schemas.network.NetworkConfigurationSchema}. Following rules are used for applying the
@@ -409,6 +424,7 @@ public class IgniteImpl implements Ignite {
                                     txManager,
                                     baselineMgr,
                                     dataStorageMgr,
+                                    schemaManager,
                                     distributedTblMgr,
                                     qryEngine,
                                     clientHandlerModule
@@ -576,7 +592,7 @@ public class IgniteImpl implements Ignite {
      * Initializes the cluster that this node is present in.
      *
      * @param metaStorageNodeNames names of nodes that will host the Meta Storage.
-     * @param cmgNodeNames names of nodes that will host the CMG.
+     * @param cmgNodeNames         names of nodes that will host the CMG.
      * @throws NodeStoppingException If node stopping intention was detected.
      */
     public void init(Collection<String> metaStorageNodeNames, Collection<String> cmgNodeNames) throws NodeStoppingException {

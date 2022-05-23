@@ -18,6 +18,7 @@ package org.apache.ignite.cli;
  */
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.ignite.internal.testframework.IgniteTestUtils.await;
 import static org.apache.ignite.internal.testframework.IgniteTestUtils.testNodeName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
@@ -37,6 +39,8 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgnitionManager;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.internal.schema.configuration.SchemaConfigurationConverter;
+import org.apache.ignite.internal.sql.engine.AsyncCursor;
+import org.apache.ignite.internal.sql.engine.AsyncCursor.BatchedResult;
 import org.apache.ignite.internal.testframework.BaseIgniteAbstractTest;
 import org.apache.ignite.internal.testframework.WorkDirectory;
 import org.apache.ignite.internal.testframework.WorkDirectoryExtension;
@@ -68,7 +72,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class IntegrationTestBase extends BaseIgniteAbstractTest {
     public static final int DEFAULT_NODES_COUNT = 3;
     /** Correct ignite cluster url. */
-    protected static final String CLUSTER_URL = "https://127.0.0.1:3344";
+    protected static final String NODE_URL = "http://localhost:10300";
     /** Cluster nodes. */
     protected static final List<Ignite> CLUSTER_NODES = new ArrayList<>();
     private static final IgniteLogger LOG = IgniteLogger.forClass(IntegrationTestBase.class);
@@ -186,9 +190,9 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
         }
     }
 
-    protected static List<List<?>> sql(String sql, Object... args) {
+    protected static List<List<Object>> sql(String sql, Object... args) {
         return getAllFromCursor(
-                ((IgniteImpl) CLUSTER_NODES.get(0)).queryEngine().query("PUBLIC", sql, args).get(0)
+                ((IgniteImpl) CLUSTER_NODES.get(0)).queryEngine().queryAsync("PUBLIC", sql, args).get(0).join()
         );
     }
 
@@ -200,8 +204,25 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
         return res;
     }
 
-    private static List<List<?>> getAllFromCursor(Cursor<List<?>> cur) {
-        return StreamSupport.stream(cur.spliterator(), false).collect(Collectors.toList());
+    public static <T> List<T> getAllFromCursor(AsyncCursor<T> cur) {
+        List<T> res = new ArrayList<>();
+        int batchSize = 256;
+
+        var consumer = new Consumer<BatchedResult<T>>() {
+            @Override
+            public void accept(BatchedResult<T> br) {
+                res.addAll(br.items());
+
+                if (br.hasMore()) {
+                    cur.requestNextAsync(batchSize).thenAccept(this);
+                }
+            }
+        };
+
+        await(cur.requestNextAsync(batchSize).thenAccept(consumer));
+        await(cur.closeAsync());
+
+        return res;
     }
 
     /**

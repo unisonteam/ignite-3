@@ -20,7 +20,6 @@ package org.apache.ignite.cli.commands;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
-import jakarta.inject.Inject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.apache.ignite.cli.IntegrationTestBase;
@@ -34,9 +33,6 @@ import picocli.CommandLine;
 public class CliCommandTestIntegrationBase extends IntegrationTestBase {
     /** Correct ignite jdbc url. */
     protected static final String JDBC_URL = "jdbc:ignite:thin://127.0.0.1:10800";
-
-    @Inject
-    TopLevelCliCommand topLevelCliCommand;
 
     private CommandLine cmd;
 

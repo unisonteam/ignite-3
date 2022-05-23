@@ -18,12 +18,15 @@
 package org.apache.ignite.cli;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import picocli.CommandLine;
+import picocli.CommandLine.Help.Ansi;
 
 /**
  * Ignite cli entry point.
@@ -55,6 +58,8 @@ public class Main {
         aliases.put("zle", "widget");
         aliases.put("bindkey", "keymap");
 
+        System.out.println(banner());
+
         replExecutor.execute(Repl.builder()
                 .withAliases(aliases)
                 .withCommandClass(TopLevelCliReplCommand.class)
@@ -63,5 +68,30 @@ public class Main {
 
     private static void executeCommand(String[] args, MicronautFactory micronautFactory) {
         new CommandLine(TopLevelCliCommand.class, micronautFactory).execute(args);
+    }
+
+    private static final String[] BANNER = new String[] {
+            "",
+            "  @|red,bold          #|@              ___                         __",
+            "  @|red,bold        ###|@             /   |   ____   ____ _ _____ / /_   ___",
+            "  @|red,bold    #  #####|@           / /| |  / __ \\ / __ `// ___// __ \\ / _ \\",
+            "  @|red,bold  ###  ######|@         / ___ | / /_/ // /_/ // /__ / / / // ___/",
+            "  @|red,bold #####  #######|@      /_/  |_|/ .___/ \\__,_/ \\___//_/ /_/ \\___/",
+            "  @|red,bold #######  ######|@            /_/",
+            "  @|red,bold   ########  ####|@        ____               _  __           @|red,bold _____|@",
+            "  @|red,bold  #  ########  ##|@       /  _/____ _ ____   (_)/ /_ ___     @|red,bold |__  /|@",
+            "  @|red,bold ####  #######  #|@       / / / __ `// __ \\ / // __// _ \\     @|red,bold /_ <|@",
+            "  @|red,bold  #####  #####|@        _/ / / /_/ // / / // // /_ / ___/   @|red,bold ___/ /|@",
+            "  @|red,bold    ####  ##|@         /___/ \\__, //_/ /_//_/ \\__/ \\___/   @|red,bold /____/|@",
+            "  @|red,bold      ##|@                  /____/\n"
+    };
+
+    public static String banner() {
+        String banner = Arrays
+                .stream(BANNER)
+                .map(Ansi.AUTO::string)
+                .collect(Collectors.joining("\n"));
+
+        return '\n' + banner + '\n' + " ".repeat(22) + "IGnite Shell alpha. \n\n";
     }
 }

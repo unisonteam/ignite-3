@@ -56,7 +56,6 @@ import org.apache.ignite.network.ClusterService;
 import org.apache.ignite.network.NetworkAddress;
 import org.apache.ignite.network.NetworkMessage;
 import org.apache.ignite.network.TopologyEventHandler;
-import org.apache.ignite.rest.RestComponent;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -74,9 +73,6 @@ public class ClusterManagementGroupManager implements IgniteComponent {
 
     /** CMG Raft group name. */
     private static final String CMG_RAFT_GROUP_NAME = "cmg_raft_group";
-
-    /** Init REST endpoint path. */
-    private static final String REST_ENDPOINT = "/management/v1/cluster/init";
 
     /** Busy lock to stop synchronously. */
     private final IgniteSpinBusyLock busyLock = new IgniteSpinBusyLock();
@@ -117,7 +113,6 @@ public class ClusterManagementGroupManager implements IgniteComponent {
             VaultManager vault,
             ClusterService clusterService,
             Loza raftManager,
-            RestComponent restComponent,
             ClusterStateStorage clusterStateStorage
     ) {
         this.clusterService = clusterService;

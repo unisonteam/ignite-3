@@ -62,8 +62,12 @@ public class RegistryCommandExecutor implements Call<StringCallInput, String> {
     @Override
     public CallOutput<String> execute(StringCallInput input) {
         try {
-            Object execute = systemRegistry.execute(input.getString());
-            return DefaultCallOutput.success(String.valueOf(execute));
+            Object executionResult = systemRegistry.execute(input.getString());
+            if (executionResult == null) {
+                return DefaultCallOutput.empty();
+            }
+
+            return DefaultCallOutput.success(String.valueOf(executionResult));
         } catch (Exception e) {
             return DefaultCallOutput.failure(e);
         }

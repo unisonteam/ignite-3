@@ -40,6 +40,11 @@
             <version>${ignite.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-rest-client</artifactId>
+            <version>${ignite.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.micronaut</groupId>
             <artifactId>micronaut-inject</artifactId>
             <scope>compile</scope>

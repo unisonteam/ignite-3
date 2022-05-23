@@ -16,7 +16,7 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
     @DisplayName("Should read config when valid cluster-url is given")
     void readDefaultConfig() {
         // When read cluster config with valid url
-        execute("config", "read", "--cluster-url", CLUSTER_URL);
+        execute("config", "show", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(
@@ -27,10 +27,10 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
     }
 
     @Test
-    @DisplayName("Should update config when valid cluster-url is given")
-    void updateWholeConfig() {
-        // When update the whole cluster configuration
-        execute("config", "update", "--cluster-url", CLUSTER_URL, "{root: {new-config-key: new-config-value}}");
+    @DisplayName("Should update config with hocon format when valid cluster-url is given")
+    void addConfigKeyValue() {
+        // When update default data storage to rocksdb
+        execute("config", "update", "--cluster-url", NODE_URL, "{table: {defaultDataStorage: rocksdb}}");
 
         // Then
         assertAll(
@@ -40,21 +40,21 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
         );
 
         // When read the updated cluster configuration
-        execute("config", "read", "--cluster-url", CLUSTER_URL);
+        execute("config", "show", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(
                 this::assertExitCodeIsZero,
                 this::assertErrOutputIsEmpty,
-                () -> assertOutputIs("{root: {new-config-key: new-config-value}}")
+                () -> assertOutputContains("\"defaultDataStorage\" : \"rocksdb\"")
         );
     }
 
     @Test
-    @DisplayName("Should update config with specified path when valid cluster-url is given")
+    @DisplayName("Should update config with key-value format when valid cluster-url is given")
     void updateConfigWithSpecifiedPath() {
-        // When update the whole cluster configuration
-        execute("config", "update", "--cluster-url", CLUSTER_URL, "root.new-config-key=updated-config-value");
+        // When update default data storage to rocksdb
+        execute("config", "update", "--cluster-url", NODE_URL, "table.defaultDataStorage=rocksdb");
 
         // Then
         assertAll(
@@ -64,13 +64,13 @@ class ItConfigCommandTest extends CliCommandTestIntegrationBase {
         );
 
         // When read the updated cluster configuration
-        execute("config", "read", "--cluster-url", CLUSTER_URL);
+        execute("config", "show", "--cluster-url", NODE_URL);
 
         // Then
         assertAll(
                 this::assertExitCodeIsZero,
                 this::assertErrOutputIsEmpty,
-                () -> assertOutputContains("updated-config-value")
+                () -> assertOutputContains("\"defaultDataStorage\" : \"rocksdb\"")
         );
     }
 }
