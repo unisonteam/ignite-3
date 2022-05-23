@@ -2,6 +2,7 @@ package org.apache.ignite.cli.commands.cliconfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import org.apache.ignite.cli.commands.CliCommandTestBase;
 import org.apache.ignite.cli.commands.decorators.ConfigDecorator;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,7 @@ class CliConfigSubCommandTest extends CliCommandTestBase {
 
     @Test
     @DisplayName("Displays all keys")
-    void noKey() {
+    void noKey() throws IOException {
         // When executed without arguments
         execute();
 
