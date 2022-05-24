@@ -15,7 +15,7 @@ public class ConfigTest {
         config.setProperty("ignite.cluster-url", "test");
         config.saveConfig();
 
-        Config config2 = new Config(tempFile);
-        assertThat(config2.getProperty("ignite.cluster-url")).isEqualTo("test");
+        Config configAfterSave = new Config(tempFile);
+        assertThat(configAfterSave.getProperty("ignite.cluster-url")).isEqualTo("test");
     }
 }

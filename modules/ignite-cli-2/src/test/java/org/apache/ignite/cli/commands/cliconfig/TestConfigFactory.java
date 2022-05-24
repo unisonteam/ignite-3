@@ -13,10 +13,6 @@ import org.apache.ignite.cli.config.ConfigFactory;
 public class TestConfigFactory {
     @Singleton
     public Config createConfig() throws IOException {
-        return createTestConfig();
-    }
-
-    static Config createTestConfig() throws IOException {
         File tempFile = File.createTempFile("cli", null);
         tempFile.deleteOnExit();
         Config config = new Config(tempFile);

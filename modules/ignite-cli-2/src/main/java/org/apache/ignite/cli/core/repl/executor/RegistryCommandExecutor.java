@@ -16,7 +16,7 @@ import picocli.shell.jline3.PicocliCommands;
 /**
  * Command executor based on {@link SystemRegistry}.
  */
-public class RegistryCommandExecutor implements Call<StringCallInput, String> {
+public class RegistryCommandExecutor implements Call<StringCallInput, Object> {
     private final SystemRegistry systemRegistry;
 
     /**
@@ -60,14 +60,14 @@ public class RegistryCommandExecutor implements Call<StringCallInput, String> {
      * @return Command output.
      */
     @Override
-    public CallOutput<String> execute(StringCallInput input) {
+    public CallOutput<Object> execute(StringCallInput input) {
         try {
             Object executionResult = systemRegistry.execute(input.getString());
             if (executionResult == null) {
                 return DefaultCallOutput.empty();
             }
 
-            return DefaultCallOutput.success(String.valueOf(executionResult));
+            return DefaultCallOutput.success(executionResult);
         } catch (Exception e) {
             return DefaultCallOutput.failure(e);
         }

@@ -2,9 +2,7 @@ package org.apache.ignite.cli.commands.cliconfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import org.apache.ignite.cli.commands.CliCommandTestBase;
-import org.apache.ignite.cli.commands.decorators.ConfigDecorator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,13 +16,14 @@ class CliConfigSubCommandTest extends CliCommandTestBase {
 
     @Test
     @DisplayName("Displays all keys")
-    void noKey() throws IOException {
+    void noKey() {
         // When executed without arguments
         execute();
 
         // Then
-        String expectedResult = new ConfigDecorator().decorate(TestConfigFactory.createTestConfig()).toTerminalString();
-        assertThat(out.toString()).isEqualTo(expectedResult + System.lineSeparator());
+        String expectedResult = "ignite.cluster-url=test_cluster_url" + System.lineSeparator() +
+                "ignite.jdbc-url=test_jdbc_url" + System.lineSeparator();
+        assertThat(out.toString()).isEqualTo(expectedResult);
         // And
         assertThat(err.toString()).isEmpty();
     }
