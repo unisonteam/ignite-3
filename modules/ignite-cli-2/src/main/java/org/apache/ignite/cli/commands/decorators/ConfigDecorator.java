@@ -6,6 +6,9 @@ import org.apache.ignite.cli.commands.decorators.core.Decorator;
 import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 import org.apache.ignite.cli.config.Config;
 
+/**
+ * Decorator for printing {@link Config}.
+ */
 public class ConfigDecorator implements Decorator<Config, TerminalOutput> {
     @Override
     public TerminalOutput decorate(Config data) {

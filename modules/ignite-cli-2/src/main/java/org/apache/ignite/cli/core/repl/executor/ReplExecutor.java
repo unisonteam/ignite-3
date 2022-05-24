@@ -41,6 +41,7 @@ public class ReplExecutor {
 
     @Inject
     private Config config;
+
     /**
      * Secondary constructor.
      *
@@ -116,6 +117,12 @@ public class ReplExecutor {
         return new SystemRegistryImpl(parser, terminal, workDirProvider, null);
     }
 
+    /**
+     * Creates {@link PicocliCommands} instance for the command with default values taken from config.
+     *
+     * @param commandClass Class of the command.
+     * @return {@link PicocliCommands} for the command.
+     */
     public PicocliCommands createPicocliCommands(Class<?> commandClass) {
         CommandLine cmd = new CommandLine(commandClass, factory);
         cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));

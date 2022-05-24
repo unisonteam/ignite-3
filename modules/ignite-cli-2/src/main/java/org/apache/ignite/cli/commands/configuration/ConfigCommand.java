@@ -9,9 +9,9 @@ import picocli.CommandLine.Command;
 @Command(name = "config",
         description = "Cluster/node configuration operations.",
         subcommands = {
-        ShowConfigSubCommand.class,
-        UpdateConfigSubCommand.class
-})
+                ShowConfigSubCommand.class,
+                UpdateConfigSubCommand.class
+        })
 @Singleton
 public class ConfigCommand {
 }

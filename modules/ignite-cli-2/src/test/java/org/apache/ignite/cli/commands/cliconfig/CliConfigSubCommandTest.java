@@ -21,8 +21,8 @@ class CliConfigSubCommandTest extends CliCommandTestBase {
         execute();
 
         // Then
-        String expectedResult = "ignite.cluster-url=test_cluster_url" + System.lineSeparator() +
-                "ignite.jdbc-url=test_jdbc_url" + System.lineSeparator();
+        String expectedResult = "ignite.cluster-url=test_cluster_url" + System.lineSeparator()
+                + "ignite.jdbc-url=test_jdbc_url" + System.lineSeparator();
         assertThat(out.toString()).isEqualTo(expectedResult);
         // And
         assertThat(err.toString()).isEmpty();

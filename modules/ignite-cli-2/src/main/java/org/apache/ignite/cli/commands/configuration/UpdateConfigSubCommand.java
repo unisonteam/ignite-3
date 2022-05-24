@@ -15,7 +15,7 @@ import picocli.CommandLine.Spec;
  * Command that updates configuration.
  */
 @Command(name = "update",
-description = "Updates configuration.")
+        description = "Updates configuration.")
 @Singleton
 public class UpdateConfigSubCommand implements Runnable {
     /**

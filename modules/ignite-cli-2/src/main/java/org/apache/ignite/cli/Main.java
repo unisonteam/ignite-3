@@ -94,7 +94,7 @@ public class Main {
             "  @|red,bold      ##|@                  /____/\n"
     };
 
-    public static String banner() {
+    private static String banner() {
         String banner = Arrays
                 .stream(BANNER)
                 .map(Ansi.AUTO::string)
