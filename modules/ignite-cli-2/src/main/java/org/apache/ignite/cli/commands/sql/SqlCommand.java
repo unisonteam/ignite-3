@@ -18,11 +18,12 @@ import picocli.CommandLine.Spec;
 /**
  * Command for sql execution.
  */
-@Command(name = "sql")
+@Command(name = "sql", description = "Executes SQL query.")
 public class SqlCommand implements Runnable {
-    @Option(names = {"--jdbc-url"}, descriptionKey = "ignite.jdbc-url", required = true)
+    @Option(names = {
+            "--jdbc-url"}, required = true, descriptionKey = "ignite.jdbc-url", description = "JDBC url to ignite cluster")
     private String jdbc;
-    @Option(names = {"-execute", "--execute"})
+    @Option(names = {"-exec", "--execute"}) //todo: can be passed as parameter, not option (see IEP-88)
     private String command;
     @Option(names = {"--script-file"})
     private File file;
@@ -33,6 +34,10 @@ public class SqlCommand implements Runnable {
     @Inject
     private SqlReplExecutor sqlReplExecutor;
 
+    private static String extract(File file) throws IOException {
+        return String.join("\n", Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
+    }
+
     /** {@inheritDoc} */
     @Override
     public void run() {
@@ -42,20 +47,12 @@ public class SqlCommand implements Runnable {
             } else {
                 String executeCommand = file != null ? extract(file) : command;
                 SqlQueryCall call = new SqlQueryCall(sqlManager);
-                CallExecutionPipeline.builder(call)
-                        .inputProvider(() -> new StringCallInput(executeCommand))
-                        .output(spec.commandLine().getOut())
-                        .errOutput(spec.commandLine().getErr())
-                        .decorator(new SqlQueryResultDecorator())
-                        .build()
-                        .runPipeline();
+                CallExecutionPipeline.builder(call).inputProvider(() -> new StringCallInput(executeCommand))
+                        .output(spec.commandLine().getOut()).errOutput(spec.commandLine().getErr()).decorator(new SqlQueryResultDecorator())
+                        .build().runPipeline();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static String extract(File file) throws IOException {
-        return String.join("\n", Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
     }
 }

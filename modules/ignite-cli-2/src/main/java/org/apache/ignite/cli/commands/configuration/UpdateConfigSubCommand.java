@@ -14,19 +14,20 @@ import picocli.CommandLine.Spec;
 /**
  * Command that updates configuration.
  */
-@Command(name = "update")
+@Command(name = "update",
+description = "Updates configuration.")
 @Singleton
 public class UpdateConfigSubCommand implements Runnable {
     /**
      * Node ID option.
      */
-    @Option(names = {"--node"})
+    @Option(names = {"--node"}, description = "Node ID to get local configuration.")
     private String nodeId;
     /**
      * Mandatory cluster url option.
      */
-    @Option(names = {"--cluster-url"})
-    private String clusterUrl;
+    @Option(names = {"--cluster-url"}, descriptionKey = "ignite.cluster-url", description = "Url to cluster node.")
+    private String clusterUrl = "http://localhost:10300";
     /**
      * Configuration that will be updated.
      */

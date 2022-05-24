@@ -19,12 +19,14 @@ package org.apache.ignite.internal.cluster.management.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.micronaut.serde.annotation.Serdeable;
 import java.util.Collection;
 import java.util.List;
 
 /**
  * REST command for initializing a cluster.
  */
+@Serdeable
 public class InitCommand {
     private final Collection<String> metaStorageNodes;
 

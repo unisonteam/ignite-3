@@ -14,11 +14,6 @@ import picocli.shell.jline3.PicocliCommands;
  * Top-level command that just prints help.
  */
 @CommandLine.Command(name = "",
-        description = {
-                "Example interactive shell with completion and autosuggestions. "
-                        + "Hit @|magenta <TAB>|@ to see available commands.",
-                "Hit @|magenta ALT-S|@ to toggle tailtips.",
-                ""},
         footer = {"", "Press Ctrl-D to exit."},
         subcommands = {
                 SqlCommand.class,
@@ -31,9 +26,5 @@ import picocli.shell.jline3.PicocliCommands;
                 CliCommand.class,
         })
 @Singleton
-public class TopLevelCliReplCommand implements Runnable {
-    @Override
-    public void run() {
-
-    }
+public class TopLevelCliReplCommand {
 }

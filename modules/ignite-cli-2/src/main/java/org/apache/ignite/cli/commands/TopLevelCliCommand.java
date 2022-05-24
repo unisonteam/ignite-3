@@ -11,15 +11,14 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 /**
- * Top-level command that just prints help.
+ * Top-level command that prints help and declares subcommands.
  */
 @Command(name = "",
         description = {
-                "Example interactive shell with completion and autosuggestions. "
-                        + "Hit @|magenta <TAB>|@ to see available commands.",
-                "Hit @|magenta ALT-S|@ to toggle tailtips.",
+                "Welcome to IGnite Shell alpha.",
+                "Use @|bold,fg(81) <TAB>|@ to see available commands.",
+                "Run @|bold,red ignite|@ to enter the shell.",
                 ""},
-        footer = {"", "Press Ctrl-D to exit."},
         subcommands = {
                 SqlCommand.class,
                 CommandLine.HelpCommand.class,

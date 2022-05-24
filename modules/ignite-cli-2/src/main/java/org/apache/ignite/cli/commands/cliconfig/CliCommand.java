@@ -6,12 +6,11 @@ import picocli.CommandLine.Command;
 /**
  * Parent command for CLI configuration commands.
  */
-@Command(name = "cli", subcommands = {
+@Command(name = "cli",
+        description = "CLI specific commands",
+        subcommands = {
         CliConfigSubCommand.class
 })
 @Singleton
-public class CliCommand implements Runnable {
-    @Override
-    public void run() {
-    }
+public class CliCommand {
 }

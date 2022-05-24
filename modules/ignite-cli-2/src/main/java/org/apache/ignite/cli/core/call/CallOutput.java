@@ -21,6 +21,13 @@ public interface CallOutput<T> {
     boolean hasError();
 
     /**
+     * Check if Call output is empty.
+     *
+     * @return true if call output is empty.
+     */
+    boolean isEmpty();
+
+    /**
      * Exception cause provider method.
      *
      * @return the cause of the error.

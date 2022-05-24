@@ -66,6 +66,10 @@ public class CallExecutionPipeline<I extends CallInput, T> {
             return;
         }
 
+        if (callOutput.isEmpty()) {
+            return;
+        }
+
         TerminalOutput decoratedOutput = decorator.decorate(callOutput.body());
 
         output.println(decoratedOutput.toTerminalString());
