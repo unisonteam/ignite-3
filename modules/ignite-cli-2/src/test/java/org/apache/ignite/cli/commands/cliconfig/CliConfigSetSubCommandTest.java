@@ -38,7 +38,7 @@ class CliConfigSetSubCommandTest extends CliCommandTestBase {
         execute("ignite.cluster-url");
 
         // Then
-        assertThat(err.toString()).contains("should be in KEY=VALUE format");
+        assertThat(err.toString()).contains("should be in KEY=VALUE format but was ignite.cluster-url");
         // And
         assertThat(out.toString()).isEmpty();
     }
@@ -50,7 +50,7 @@ class CliConfigSetSubCommandTest extends CliCommandTestBase {
         execute("ignite.cluster-url=test");
 
         // Then
-        assertThat(out.toString()).isEqualTo("OK" + System.lineSeparator());
+        assertThat(out.toString()).isEmpty();
         // And
         assertThat(err.toString()).isEmpty();
         // And
@@ -64,7 +64,7 @@ class CliConfigSetSubCommandTest extends CliCommandTestBase {
         execute("ignite.cluster-url=test", "ignite.jdbc-url=test2");
 
         // Then
-        assertThat(out.toString()).contains("OK" + System.lineSeparator());
+        assertThat(out.toString()).isEmpty();
         // And
         assertThat(err.toString()).isEmpty();
         // And

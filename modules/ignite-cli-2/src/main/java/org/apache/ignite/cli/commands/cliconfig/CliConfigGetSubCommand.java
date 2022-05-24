@@ -14,7 +14,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "get")
 public class CliConfigGetSubCommand implements Runnable {
-    @Parameters(arity = "0..1") // optional parameter, display all properties if omitted
+    @Parameters
     private String key;
 
     @Spec
