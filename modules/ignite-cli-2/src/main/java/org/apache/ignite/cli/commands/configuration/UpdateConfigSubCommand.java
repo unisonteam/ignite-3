@@ -23,11 +23,16 @@ public class UpdateConfigSubCommand implements Runnable {
      */
     @Option(names = {"--node"}, description = "Node ID to get local configuration.")
     private String nodeId;
+
     /**
-     * Mandatory cluster url option.
+     * Cluster url option.
      */
-    @Option(names = {"--cluster-url"}, descriptionKey = "ignite.cluster-url", description = "Url to cluster node.")
-    private String clusterUrl = "http://localhost:10300";
+    @Option(
+            names = {"--cluster-url"}, description = "Url to cluster node.",
+            descriptionKey = "ignite.cluster-url", defaultValue = "http://localhost:10300"
+    )
+    private String clusterUrl;
+
     /**
      * Configuration that will be updated.
      */

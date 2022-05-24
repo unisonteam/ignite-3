@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.ignite.cli.commands.CliCommandTestBase;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ class ShowConfigSubCommandTest extends CliCommandTestBase {
         setUp(ShowConfigSubCommand.class);
     }
 
+    @Disabled(value = "Cluster-url has a default value")
     @Test
     @DisplayName("Cluster-url is mandatory option")
     void mandatoryOptions() {

@@ -14,9 +14,12 @@ import picocli.CommandLine.Spec;
 public class TopologyCommand implements Runnable {
 
     /**
-     * Mandatory cluster url.
+     * Cluster url option.
      */
-    @Option(names = {"--cluster-url"}, descriptionKey = "ignite.cluster-url", required = true)
+    @Option(
+            names = {"--cluster-url"}, description = "Url to cluster node.",
+            descriptionKey = "ignite.cluster-url", defaultValue = "http://localhost:10300"
+    )
     private String clusterUrl;
 
     @Spec

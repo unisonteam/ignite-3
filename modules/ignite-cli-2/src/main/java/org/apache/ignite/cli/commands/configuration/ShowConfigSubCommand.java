@@ -27,11 +27,15 @@ public class ShowConfigSubCommand implements Runnable {
      */
     @Option(names = {"--selector"}, description = "Configuration path selector.")
     private String selector;
+
     /**
-     * Mandatory cluster url option.
+     * Cluster url option.
      */
-    @Option(names = {"--cluster-url"}, descriptionKey = "ignite.cluster-url", description = "Url to cluster node.")
-    private String clusterUrl = "http://localhost:10300";
+    @Option(
+            names = {"--cluster-url"}, description = "Url to cluster node.",
+            descriptionKey = "ignite.cluster-url", defaultValue = "http://localhost:10300"
+    )
+    private String clusterUrl;
 
     @Spec
     private CommandSpec spec;
