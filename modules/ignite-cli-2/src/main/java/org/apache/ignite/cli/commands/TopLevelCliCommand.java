@@ -7,6 +7,9 @@ import org.apache.ignite.cli.commands.sql.SqlCommand;
 import org.apache.ignite.cli.commands.status.StatusCommand;
 import org.apache.ignite.cli.commands.topology.TopologyCommand;
 import org.apache.ignite.cli.commands.version.VersionCommand;
+import org.apache.ignite.cli.deprecated.cli.spec.ClusterCommandSpec;
+import org.apache.ignite.cli.deprecated.cli.spec.InitIgniteCommandSpec;
+import org.apache.ignite.cli.deprecated.cli.spec.NodeCommandSpec;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -27,6 +30,9 @@ import picocli.CommandLine.Command;
                 StatusCommand.class,
                 TopologyCommand.class,
                 CliCommand.class,
+                InitIgniteCommandSpec.class,
+                NodeCommandSpec.class,
+                ClusterCommandSpec.class
         })
 @Singleton
 public class TopLevelCliCommand implements Runnable {

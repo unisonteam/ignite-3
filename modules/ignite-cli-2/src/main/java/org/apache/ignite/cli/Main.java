@@ -26,6 +26,7 @@ import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
 import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
+import org.apache.ignite.cli.deprecated.cli.IgniteCliApp;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 
@@ -39,6 +40,8 @@ public class Main {
      * @param args ignore.
      */
     public static void main(String[] args) {
+        IgniteCliApp.initJavaLoggerProps();
+
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
             if (args.length != 0) {
                 try {
