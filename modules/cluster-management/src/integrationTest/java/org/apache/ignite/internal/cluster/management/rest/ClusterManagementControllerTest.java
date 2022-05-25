@@ -53,7 +53,7 @@ public class ClusterManagementControllerTest {
     @Inject
     EmbeddedServer server;
     @Inject
-    @Client("/management/v1/configuration/init/")
+    @Client("/management/v1/init/")
     HttpClient client;
     @Inject
     ClusterInitializer clusterInitializer;
