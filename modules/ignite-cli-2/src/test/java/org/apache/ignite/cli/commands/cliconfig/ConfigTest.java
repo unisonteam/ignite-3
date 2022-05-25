@@ -7,7 +7,7 @@ import java.io.IOException;
 import org.apache.ignite.cli.config.Config;
 import org.junit.jupiter.api.Test;
 
-public class ConfigTest {
+class ConfigTest {
     @Test
     public void testSaveLoadConfig() throws IOException {
         File tempFile = File.createTempFile("cli", null);

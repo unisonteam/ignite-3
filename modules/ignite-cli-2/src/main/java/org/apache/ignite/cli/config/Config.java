@@ -54,6 +54,9 @@ public class Config {
         }
     }
 
+    /**
+     * Saves config to file.
+     */
     public void saveConfig() {
         configFile.getParentFile().mkdirs();
         if (configFile.canWrite()) {

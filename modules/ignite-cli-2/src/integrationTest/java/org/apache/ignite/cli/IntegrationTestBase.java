@@ -32,9 +32,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgnitionManager;
 import org.apache.ignite.internal.app.IgniteImpl;
@@ -44,7 +42,6 @@ import org.apache.ignite.internal.sql.engine.AsyncCursor.BatchedResult;
 import org.apache.ignite.internal.testframework.BaseIgniteAbstractTest;
 import org.apache.ignite.internal.testframework.WorkDirectory;
 import org.apache.ignite.internal.testframework.WorkDirectoryExtension;
-import org.apache.ignite.internal.util.Cursor;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.lang.IgniteLogger;
 import org.apache.ignite.lang.IgniteStringFormatter;
@@ -204,7 +201,7 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
         return res;
     }
 
-    public static <T> List<T> getAllFromCursor(AsyncCursor<T> cur) {
+    private static <T> List<T> getAllFromCursor(AsyncCursor<T> cur) {
         List<T> res = new ArrayList<>();
         int batchSize = 256;
 

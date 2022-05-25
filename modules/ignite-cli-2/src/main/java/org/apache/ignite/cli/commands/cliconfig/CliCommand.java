@@ -9,8 +9,8 @@ import picocli.CommandLine.Command;
 @Command(name = "cli",
         description = "CLI specific commands",
         subcommands = {
-        CliConfigSubCommand.class
-})
+                CliConfigSubCommand.class
+        })
 @Singleton
 public class CliCommand {
 }

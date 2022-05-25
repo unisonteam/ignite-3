@@ -8,6 +8,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import picocli.CommandLine;
 
+/**
+ * Base class for testing CLI commands.
+ */
 @MicronautTest
 public class CliCommandTestBase {
     @Inject
