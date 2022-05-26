@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCall;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCallInput;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -17,7 +18,7 @@ import picocli.CommandLine.Spec;
 @Command(name = "update",
         description = "Updates configuration.")
 @Singleton
-public class UpdateConfigSubCommand implements Runnable {
+public class UpdateConfigSubCommand extends BaseCommand implements Runnable {
     /**
      * Node ID option.
      */

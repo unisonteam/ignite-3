@@ -23,13 +23,13 @@ class ItVersionCommandTest extends CliCommandTestIntegrationBase {
     @DisplayName("Should print cli version that is got from pom.xml")
     void printVersion() {
         // When
-        execute("version");
+        execute("--version");
 
         // Then
         assertAll(
                 this::assertExitCodeIsZero,
                 this::assertErrOutputIsEmpty,
-                () -> assertOutputContains("Apache Ignite CLI version: ")
+                () -> assertOutputContains("Apache Ignite CLI ver")
         );
     }
 

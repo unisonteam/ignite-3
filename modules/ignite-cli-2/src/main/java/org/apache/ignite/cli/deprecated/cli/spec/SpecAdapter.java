@@ -19,7 +19,7 @@ package org.apache.ignite.cli.deprecated.cli.spec;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import org.apache.ignite.cli.deprecated.cli.VersionProvider;
+import org.apache.ignite.cli.VersionProvider;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 import picocli.CommandLine.Model.CommandSpec;

@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
-import org.apache.ignite.cli.deprecated.cli.CliVersionInfo;
+import org.apache.ignite.cli.CliVersionInfo;
 import org.apache.ignite.cli.deprecated.cli.IgniteCliException;
 import org.apache.ignite.cli.deprecated.cli.IgnitePaths;
 import picocli.CommandLine.Help.ColorScheme;

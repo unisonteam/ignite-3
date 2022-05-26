@@ -1,6 +1,7 @@
 package org.apache.ignite.cli.commands.configuration;
 
 import jakarta.inject.Singleton;
+import org.apache.ignite.cli.commands.BaseCommand;
 import picocli.CommandLine.Command;
 
 /**
@@ -13,5 +14,5 @@ import picocli.CommandLine.Command;
                 UpdateConfigSubCommand.class
         })
 @Singleton
-public class ConfigCommand {
+public class ConfigCommand extends BaseCommand {
 }
