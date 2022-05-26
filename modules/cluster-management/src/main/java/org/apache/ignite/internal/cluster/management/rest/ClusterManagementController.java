@@ -18,7 +18,7 @@ import org.apache.ignite.lang.IgniteLogger;
 /**
  * Cluster management controller.
  */
-@Controller("/management/v1/configuration/init")
+@Controller("/management/v1/init")
 @ApiResponse(responseCode = "400", description = "Incorrect body")
 @ApiResponse(responseCode = "500", description = "Internal error")
 @Tag(name = "clusterManagement")
@@ -51,7 +51,7 @@ public class ClusterManagementController {
         }
 
         try {
-            clusterInitializer.initCluster(initCommand.metaStorageNodes(), initCommand.cmgNodes()).get();
+            clusterInitializer.initCluster(initCommand.metaStorageNodes(), initCommand.cmgNodes(), initCommand.clusterName()).get();
         } catch (ExecutionException ex) {
             Throwable cause = ex.getCause();
             handleThrowable(cause);

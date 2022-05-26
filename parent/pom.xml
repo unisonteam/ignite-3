@@ -385,7 +385,7 @@
 
             <dependency>
                 <groupId>org.apache.ignite</groupId>
-                <artifactId>ignite-rest-client</artifactId>
+                <artifactId>ignite-file-io</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

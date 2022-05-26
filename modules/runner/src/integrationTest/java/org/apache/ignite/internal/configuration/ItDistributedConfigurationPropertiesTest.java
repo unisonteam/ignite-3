@@ -226,7 +226,7 @@ public class ItDistributedConfigurationPropertiesTest {
         firstNode.start();
         secondNode.start();
 
-        firstNode.cmgManager.initCluster(List.of(firstNode.name()), List.of());
+        firstNode.cmgManager.initCluster(List.of(firstNode.name()), List.of(), "cluster");
     }
 
     /**

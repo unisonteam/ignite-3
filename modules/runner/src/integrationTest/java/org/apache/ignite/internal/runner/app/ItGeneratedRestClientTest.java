@@ -82,7 +82,7 @@ public class ItGeneratedRestClientTest {
 
         String metaStorageNode = testNodeName(testInfo, BASE_PORT);
 
-        IgnitionManager.init(metaStorageNode, List.of(metaStorageNode));
+        IgnitionManager.init(metaStorageNode, List.of(metaStorageNode), "cluster");
 
         for (CompletableFuture<Ignite> future : futures) {
             assertThat(future, willCompleteSuccessfully());

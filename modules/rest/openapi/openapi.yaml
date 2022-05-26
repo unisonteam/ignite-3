@@ -53,23 +53,6 @@ paths:
             text/plain:
               schema:
                 type: string
-  /management/v1/configuration/init:
-    post:
-      tags:
-      - clusterManagement
-      operationId: init
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InitCommand'
-        required: true
-      responses:
-        "200":
-          description: Cluster initialized
-        "409":
-          description: Cluster already initialized with another nodes
   /management/v1/configuration/node:
     get:
       tags:
@@ -115,11 +98,28 @@ paths:
             text/plain:
               schema:
                 type: string
+  /management/v1/init:
+    post:
+      tags:
+      - clusterManagement
+      operationId: init
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitCommand'
+        required: true
+      responses:
+        "200":
+          description: Cluster initialized
+        "409":
+          description: Cluster already initialized with another nodes
 components:
   schemas:
     InitCommand:
       required:
-      - cmgNodes
+      - clusterName
       - metaStorageNodes
       type: object
       properties:
@@ -131,3 +131,5 @@ components:
           type: array
           items:
             type: string
+        clusterName:
+          type: string

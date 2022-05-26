@@ -84,6 +84,7 @@ public class RestComponent implements IgniteComponent {
             try {
                 context = buildMicronautContext(portCandidate).start();
                 port = portCandidate;
+                log.info("REST protocol started successfully");
                 break;
             } catch (ApplicationStartupException e) {
                 log.error("Got exception " + e.getCause() + " during node start on port " + portCandidate + " , trying again");
