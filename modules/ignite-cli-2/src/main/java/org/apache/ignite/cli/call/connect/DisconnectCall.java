@@ -8,6 +8,9 @@ import org.apache.ignite.cli.core.call.DefaultCallOutput;
 import org.apache.ignite.cli.core.call.EmptyCallInput;
 import org.apache.ignite.cli.core.repl.Session;
 
+/**
+ * Call for disconnect.
+ */
 @Singleton
 public class DisconnectCall implements Call<EmptyCallInput, String> {
 

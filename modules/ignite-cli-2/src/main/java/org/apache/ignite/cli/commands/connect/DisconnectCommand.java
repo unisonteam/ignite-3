@@ -2,13 +2,11 @@ package org.apache.ignite.cli.commands.connect;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.ignite.cli.call.connect.ConnectCallInput;
 import org.apache.ignite.cli.call.connect.DisconnectCall;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.EmptyCallInput;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
-import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 /**

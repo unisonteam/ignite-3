@@ -2,6 +2,9 @@ package org.apache.ignite.cli.call.connect;
 
 import org.apache.ignite.cli.core.call.CallInput;
 
+/**
+ * Input for connect call to Ignite 3 node.
+ */
 public class ConnectCallInput implements CallInput {
     private final String nodeUrl;
 

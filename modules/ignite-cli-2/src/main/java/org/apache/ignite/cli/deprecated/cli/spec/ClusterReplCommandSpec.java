@@ -91,7 +91,9 @@ public class ClusterReplCommandSpec extends CategorySpec {
             } else if (nodeEndpoint != null) {
                 endpoint = nodeEndpoint;
             } else {
-                spec.commandLine().getErr().println("You are not connected to node. Run 'connect' command or use '--node-endpoint' option.");
+                spec.commandLine().getErr().println(
+                        "You are not connected to node. Run 'connect' command or use '--node-endpoint' option."
+                );
                 return;
             }
 

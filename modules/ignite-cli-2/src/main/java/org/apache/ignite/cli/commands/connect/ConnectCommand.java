@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.connect.ConnectCall;
 import org.apache.ignite.cli.call.connect.ConnectCallInput;
-import org.apache.ignite.cli.commands.decorators.JsonDecorator;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;

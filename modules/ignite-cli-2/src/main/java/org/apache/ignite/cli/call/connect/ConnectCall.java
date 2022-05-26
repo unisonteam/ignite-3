@@ -2,7 +2,6 @@ package org.apache.ignite.cli.call.connect;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.ignite.cli.call.configuration.ShowConfigurationCallInput;
 import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.CallOutput;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
@@ -13,13 +12,15 @@ import org.apache.ignite.rest.client.invoker.ApiException;
 import org.apache.ignite.rest.client.invoker.Configuration;
 import org.jetbrains.annotations.NotNull;
 
+
+/**
+ * Call for connect to Ignite 3 node.
+ */
 @Singleton
 public class ConnectCall implements Call<ConnectCallInput, String> {
 
     @Inject
     private final Session session;
-
-
 
     public ConnectCall(Session session) {
         this.session = session;
