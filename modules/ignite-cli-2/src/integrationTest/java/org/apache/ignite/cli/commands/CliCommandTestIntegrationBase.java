@@ -20,9 +20,12 @@ package org.apache.ignite.cli.commands;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
+import io.micronaut.context.ApplicationContext;
+import jakarta.inject.Inject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.apache.ignite.cli.IntegrationTestBase;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import picocli.CommandLine;
@@ -34,6 +37,9 @@ public class CliCommandTestIntegrationBase extends IntegrationTestBase {
     /** Correct ignite jdbc url. */
     protected static final String JDBC_URL = "jdbc:ignite:thin://127.0.0.1:10800";
 
+    @Inject
+    protected ApplicationContext applicationContext;
+
     private CommandLine cmd;
 
     private StringWriter sout;
@@ -41,11 +47,16 @@ public class CliCommandTestIntegrationBase extends IntegrationTestBase {
     private int exitCode = Integer.MIN_VALUE;
 
     protected void setupCmd(MicronautFactory factory) {
-        cmd = new CommandLine(TopLevelCliCommand.class, factory); //fixme: close factory
+        cmd = new CommandLine(getCommandClass(), factory);
         sout = new StringWriter();
         serr = new StringWriter();
         cmd.setOut(new PrintWriter(sout));
         cmd.setErr(new PrintWriter(serr));
+    }
+
+    @NotNull
+    protected Class getCommandClass() {
+        return TopLevelCliCommand.class;
     }
 
     protected void execute(String... args) {
@@ -113,7 +124,7 @@ public class CliCommandTestIntegrationBase extends IntegrationTestBase {
     @BeforeEach
     public void setUp(TestInfo testInfo) throws Exception {
         super.setUp(testInfo);
-        setupCmd(new MicronautFactory());
+        setupCmd(new MicronautFactory(applicationContext));
     }
 }
 

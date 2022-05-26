@@ -12,6 +12,7 @@ import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
+import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.fusesource.jansi.AnsiConsole;
 import org.jline.console.impl.Builtins;
 import org.jline.console.impl.SystemRegistryImpl;
@@ -32,8 +33,6 @@ import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
  */
 @Singleton
 public class ReplExecutor {
-    private static final String PROMPT = "ignite> ";
-
     private final Parser parser = new DefaultParser();
     private final Supplier<Path> workDirProvider = () -> Paths.get(System.getProperty("user.dir"));
     private PicocliCommandsFactory factory;
@@ -41,6 +40,9 @@ public class ReplExecutor {
 
     @Inject
     private Config config;
+
+    @Inject
+    private PromptProvider promptProvider;
 
     /**
      * Secondary constructor.
@@ -82,7 +84,7 @@ public class ReplExecutor {
             while (true) {
                 try {
                     executor.cleanUp();
-                    String line = reader.readLine(PROMPT, null, (MaskingCallback) null, null);
+                    String line = reader.readLine(promptProvider.getPrompt(), null, (MaskingCallback) null, null);
                     CallExecutionPipeline.builder(executor)
                             .inputProvider(() -> new StringCallInput(line))
                             .output(System.out)
