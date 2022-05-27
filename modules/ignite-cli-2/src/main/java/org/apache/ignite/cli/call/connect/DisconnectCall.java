@@ -28,7 +28,7 @@ public class DisconnectCall implements Call<EmptyCallInput, String> {
             session.setNodeUrl(null);
             session.setConnectedToNode(false);
 
-            return DefaultCallOutput.success("disconnected from " + nodeUrl);
+            return DefaultCallOutput.success("Disconnected from " + nodeUrl);
         }
 
         return DefaultCallOutput.empty();

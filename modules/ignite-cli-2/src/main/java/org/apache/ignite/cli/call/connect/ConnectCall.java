@@ -1,6 +1,5 @@
 package org.apache.ignite.cli.call.connect;
 
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.CallOutput;
@@ -19,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 public class ConnectCall implements Call<ConnectCallInput, String> {
 
-    @Inject
     private final Session session;
 
     public ConnectCall(Session session) {
@@ -37,7 +35,7 @@ public class ConnectCall implements Call<ConnectCallInput, String> {
 
         session.setNodeUrl(input.getNodeUrl());
         session.setConnectedToNode(true);
-        return DefaultCallOutput.success("connected to " + input.getNodeUrl());
+        return DefaultCallOutput.success("Connected to " + input.getNodeUrl());
     }
 
     @NotNull

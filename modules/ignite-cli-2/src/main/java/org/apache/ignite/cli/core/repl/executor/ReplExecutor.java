@@ -25,6 +25,7 @@ import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import picocli.CommandLine;
+import picocli.CommandLine.Help.Ansi;
 import picocli.shell.jline3.PicocliCommands;
 import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 
@@ -84,7 +85,7 @@ public class ReplExecutor {
             while (true) {
                 try {
                     executor.cleanUp();
-                    String line = reader.readLine(promptProvider.getPrompt(), null, (MaskingCallback) null, null);
+                    String line = reader.readLine(Ansi.AUTO.string(promptProvider.getPrompt()), null, (MaskingCallback) null, null);
                     CallExecutionPipeline.builder(executor)
                             .inputProvider(() -> new StringCallInput(line))
                             .output(System.out)

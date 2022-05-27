@@ -20,6 +20,9 @@ public class ConnectCallInput implements CallInput {
         return new ConnectCallInputBuilder();
     }
 
+    /**
+     * Builder for {@link ConnectCall}.
+     */
     public static class ConnectCallInputBuilder {
         private String nodeUrl;
 

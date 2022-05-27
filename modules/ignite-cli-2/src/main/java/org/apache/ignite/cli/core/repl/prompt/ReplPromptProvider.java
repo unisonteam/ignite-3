@@ -20,7 +20,7 @@ public class ReplPromptProvider implements PromptProvider {
     @Override
     public String getPrompt() {
         return session.isConnectedToNode()
-                ? "[" + session.getNodeUrl() + "]> "
-                : "[disconnected]> ";
+                ? "@|fg(10) [" + session.getNodeUrl() + "]|@> "
+                : "@|fg(9) [disconnected]|@> ";
     }
 }
