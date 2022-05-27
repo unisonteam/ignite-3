@@ -12,9 +12,7 @@ import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.executor.SqlQueryCall;
 import org.apache.ignite.cli.sql.SqlManager;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Spec;
 
 /**
  * Command for sql execution.
@@ -28,9 +26,6 @@ public class SqlCommand extends BaseCommand implements Runnable {
     private String command;
     @Option(names = {"--script-file"})
     private File file;
-
-    @Spec
-    private CommandSpec spec;
 
     @Inject
     private SqlReplExecutor sqlReplExecutor;

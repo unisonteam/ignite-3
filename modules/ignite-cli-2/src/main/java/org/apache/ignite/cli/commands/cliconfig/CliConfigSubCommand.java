@@ -8,8 +8,6 @@ import org.apache.ignite.cli.commands.decorators.ConfigDecorator;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.EmptyCallInput;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Model.CommandSpec;
-import picocli.CommandLine.Spec;
 
 /**
  * Parent command for CLI configuration commands.
@@ -20,8 +18,6 @@ import picocli.CommandLine.Spec;
 })
 @Singleton
 public class CliConfigSubCommand extends BaseCommand implements Runnable {
-    @Spec
-    private CommandSpec spec;
 
     @Inject
     private CliConfigCall call;

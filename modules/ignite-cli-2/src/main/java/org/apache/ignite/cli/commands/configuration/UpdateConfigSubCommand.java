@@ -7,10 +7,8 @@ import org.apache.ignite.cli.call.configuration.UpdateConfigurationCallInput;
 import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Spec;
 
 /**
  * Command that updates configuration.
@@ -39,9 +37,6 @@ public class UpdateConfigSubCommand extends BaseCommand implements Runnable {
      */
     @Parameters(index = "0")
     private String config;
-
-    @Spec
-    private CommandSpec spec;
 
     @Inject
     UpdateConfigurationCall call;

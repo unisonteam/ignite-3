@@ -6,9 +6,7 @@ import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.StringCallInput;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Spec;
 
 /**
  * Command to get CLI configuration parameters.
@@ -17,9 +15,6 @@ import picocli.CommandLine.Spec;
 public class CliConfigGetSubCommand extends BaseCommand implements Runnable {
     @Parameters
     private String key;
-
-    @Spec
-    private CommandSpec spec;
 
     @Inject
     private CliConfigGetCall call;

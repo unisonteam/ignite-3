@@ -18,6 +18,8 @@
 package org.apache.ignite.cli.commands;
 
 import picocli.CommandLine;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Spec;
 
 /**
  * Base class for commands.
@@ -26,4 +28,7 @@ public abstract class BaseCommand {
     /** Help option specification. */
     @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true, description = "Show this help message and exit.")
     protected boolean usageHelpRequested;
+
+    @Spec
+    protected CommandSpec spec;
 }
