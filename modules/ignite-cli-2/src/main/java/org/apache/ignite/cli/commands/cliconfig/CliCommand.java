@@ -1,6 +1,7 @@
 package org.apache.ignite.cli.commands.cliconfig;
 
 import jakarta.inject.Singleton;
+import org.apache.ignite.cli.commands.BaseCommand;
 import picocli.CommandLine.Command;
 
 /**
@@ -12,5 +13,5 @@ import picocli.CommandLine.Command;
                 CliConfigSubCommand.class
         })
 @Singleton
-public class CliCommand {
+public class CliCommand extends BaseCommand {
 }

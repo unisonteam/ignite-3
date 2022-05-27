@@ -1,6 +1,7 @@
 package org.apache.ignite.cli.commands.topology;
 
 import jakarta.inject.Singleton;
+import org.apache.ignite.cli.commands.BaseCommand;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -11,7 +12,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "topology", description = "Prints topology information.")
 @Singleton
-public class TopologyCommand implements Runnable {
+public class TopologyCommand extends BaseCommand implements Runnable {
 
     /**
      * Cluster url option.

@@ -3,19 +3,18 @@ package org.apache.ignite.cli.commands.configuration;
 import jakarta.inject.Inject;
 import org.apache.ignite.cli.call.configuration.ShowConfigurationCall;
 import org.apache.ignite.cli.call.configuration.ShowConfigurationCallInput;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.commands.decorators.JsonDecorator;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Spec;
 
 /**
  * Command that shows configuration from the cluster.
  */
 @Command(name = "show",
         description = "Shows configuration.")
-public class ShowConfigSubCommand implements Runnable {
+public class ShowConfigSubCommand extends BaseCommand implements Runnable {
 
     /**
      * Node ID option.
@@ -36,9 +35,6 @@ public class ShowConfigSubCommand implements Runnable {
             descriptionKey = "ignite.cluster-url", defaultValue = "http://localhost:10300"
     )
     private String clusterUrl;
-
-    @Spec
-    private CommandSpec spec;
 
     @Inject
     private ShowConfigurationCall call;

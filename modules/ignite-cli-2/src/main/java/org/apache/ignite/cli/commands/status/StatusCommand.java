@@ -1,6 +1,7 @@
 package org.apache.ignite.cli.commands.status;
 
 import jakarta.inject.Singleton;
+import org.apache.ignite.cli.commands.BaseCommand;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -11,7 +12,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "status", description = "Prints status of the cluster.")
 @Singleton
-public class StatusCommand implements Runnable {
+public class StatusCommand extends BaseCommand implements Runnable {
 
     /**
      * Cluster url option.

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.deprecated.cli;
+package org.apache.ignite.cli;
 
 import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Inject;

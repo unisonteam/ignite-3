@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
+import org.apache.ignite.cli.CliVersionInfo;
 import org.apache.ignite.cli.deprecated.cli.builtins.SystemPathResolver;
 
 /**
