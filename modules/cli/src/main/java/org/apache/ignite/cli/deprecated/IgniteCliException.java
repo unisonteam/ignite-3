@@ -18,7 +18,7 @@
 package org.apache.ignite.cli.deprecated;
 
 /**
- * Top level runtime exception for throwing the error message to user by {@link ErrorHandler}.
+ * Top level runtime exception for throwing the error message to user.
  */
 public class IgniteCliException extends RuntimeException {
     /** Serial version uid. */

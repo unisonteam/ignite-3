@@ -18,6 +18,11 @@
 package org.apache.ignite.cli;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
@@ -26,7 +31,6 @@ import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
 import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
-import org.apache.ignite.cli.deprecated.IgniteCliApp;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 
@@ -40,7 +44,7 @@ public class Main {
      * @param args ignore.
      */
     public static void main(String[] args) {
-        IgniteCliApp.initJavaLoggerProps();
+        initJavaLoggerProps();
 
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
             if (args.length != 0) {
@@ -104,5 +108,30 @@ public class Main {
                 .collect(Collectors.joining("\n"));
 
         return '\n' + banner + '\n' + " ".repeat(22) + "IGnite Shell alpha. \n\n";
+    }
+
+    /**
+     * This is a temporary solution to hide unnecessary java util logs that are produced by ivy. ConsoleHandler.level should be set to
+     * SEVERE.
+     * TODO: https://issues.apache.org/jira/browse/IGNITE-15713
+     */
+    private static void initJavaLoggerProps() {
+        InputStream propsFile = Main.class.getResourceAsStream("/cli.java.util.logging.properties");
+
+        Path props = null;
+
+        try {
+            props = Files.createTempFile("cli.java.util.logging.properties", "");
+
+            if (propsFile != null) {
+                Files.copy(propsFile, props.toAbsolutePath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException ignored) {
+            // No-op.
+        }
+
+        if (props != null) {
+            System.setProperty("java.util.logging.config.file", props.toString());
+        }
     }
 }

@@ -20,7 +20,7 @@ package org.apache.ignite.cli.deprecated;
 import io.micronaut.context.ApplicationContext;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
-import org.apache.ignite.cli.spec.IgniteCliSpec;
+import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import picocli.CommandLine;
 
 /**
@@ -42,7 +42,7 @@ public abstract class AbstractCliIntegrationTest extends AbstractCliTest {
     protected final CommandLine cmd(ApplicationContext applicationCtx) {
         CommandLine.IFactory factory = new CommandFactory(applicationCtx);
 
-        return new CommandLine(IgniteCliSpec.class, factory)
+        return new CommandLine(TopLevelCliCommand.class, factory)
                 .setErr(new PrintWriter(err, true))
                 .setOut(new PrintWriter(out, true));
     }

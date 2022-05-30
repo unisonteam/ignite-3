@@ -22,7 +22,7 @@ import jakarta.inject.Singleton;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import org.apache.ignite.cli.deprecated.IgniteCliApp;
+import org.apache.ignite.cli.Main;
 import org.apache.ignite.cli.deprecated.IgniteCliException;
 
 /**
@@ -59,7 +59,7 @@ public interface SystemPathResolver {
         @Override
         public Path toolHomeDirectoryPath() {
             try {
-                var file = new File(IgniteCliApp.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+                var file = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
 
                 while (!file.isDirectory()) {
                     file = file.getParentFile();

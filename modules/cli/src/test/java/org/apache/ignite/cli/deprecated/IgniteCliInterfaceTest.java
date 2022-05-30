@@ -27,7 +27,6 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,10 +36,7 @@ import io.micronaut.context.env.Environment;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
@@ -49,13 +45,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import org.apache.ignite.cli.builtins.init.InitIgniteCommand;
-import org.apache.ignite.cli.builtins.module.ModuleManager;
-import org.apache.ignite.cli.builtins.module.ModuleRegistry;
-import org.apache.ignite.cli.builtins.module.StandardModuleDefinition;
-import org.apache.ignite.cli.builtins.node.NodeManager;
-import org.apache.ignite.cli.spec.IgniteCliSpec;
+import org.apache.ignite.cli.commands.TopLevelCliCommand;
+import org.apache.ignite.cli.deprecated.builtins.init.InitIgniteCommand;
+import org.apache.ignite.cli.deprecated.builtins.node.NodeManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -129,7 +121,7 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
     CommandLine cmd(ApplicationContext applicationCtx) {
         CommandLine.IFactory factory = new CommandFactory(applicationCtx);
 
-        return new CommandLine(IgniteCliSpec.class, factory)
+        return new CommandLine(TopLevelCliCommand.class, factory)
                 .setErr(new PrintWriter(err, true))
                 .setOut(new PrintWriter(out, true));
     }
@@ -151,169 +143,6 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
 
             assertEquals(0, cli.execute("init"));
             verify(initIgniteCmd).init(any(), any(), any());
-        }
-    }
-
-    /**
-     * Tests "module" command.
-     */
-    @DisplayName("module")
-    @Nested
-    class Module {
-        /** Distributive module manager. */
-        @Mock
-        ModuleManager moduleMgr;
-
-        /** registry of installed CLI or Ignite server modules. */
-        @Mock
-        ModuleRegistry moduleRegistry;
-
-        @BeforeEach
-        void setUp() {
-            ctx.registerSingleton(moduleMgr);
-            ctx.registerSingleton(moduleRegistry);
-        }
-
-        @Test
-        @DisplayName("add mvn:groupId:artifact:version")
-        void add() {
-            when(cliPathsCfgLdr.loadIgnitePathsOrThrowError()).thenReturn(ignitePaths);
-
-            int exitCode =
-                    cmd(ctx).execute("module add mvn:groupId:artifactId:version".split(" "));
-
-            verify(moduleMgr).addModule("mvn:groupId:artifactId:version", ignitePaths, Collections.emptyList());
-            assertThatExitCodeMeansSuccess(exitCode);
-        }
-
-        @Test
-        @DisplayName("add mvn:groupId:artifact:version --repo http://mvnrepo.com/repostiory --repo http://anotherrepo.com/repostiory")
-        void addWithCustomRepo() throws MalformedURLException {
-            doNothing().when(moduleMgr).addModule(any(), any(), any());
-
-            when(cliPathsCfgLdr.loadIgnitePathsOrThrowError()).thenReturn(ignitePaths);
-
-            int exitCode = cmd(ctx)
-                    .execute(
-                            ("module add mvn:groupId:artifactId:version --repo http://mvnrepo.com/repostiory "
-                                    + "--repo http://anotherrepo.com/repostiory").split(" "));
-
-            verify(moduleMgr).addModule(
-                    "mvn:groupId:artifactId:version",
-                    ignitePaths,
-                    List.of(new URL("http://mvnrepo.com/repostiory"), new URL("http://anotherrepo.com/repostiory")));
-            assertThatExitCodeMeansSuccess(exitCode);
-        }
-
-        @Test
-        @DisplayName("add test-module")
-        void addBuiltinModule() {
-            doNothing().when(moduleMgr).addModule(any(), any(), any());
-
-            when(cliPathsCfgLdr.loadIgnitePathsOrThrowError()).thenReturn(ignitePaths);
-
-            int exitCode =
-                    cmd(ctx).execute("module add test-module".split(" "));
-
-            verify(moduleMgr).addModule("test-module", ignitePaths, Collections.emptyList());
-            assertThatExitCodeMeansSuccess(exitCode);
-        }
-
-        @Test
-        @DisplayName("remove builtin-module")
-        void remove() throws UnsupportedEncodingException {
-            var moduleName = "builtin-module";
-
-            when(moduleMgr.removeModule(moduleName)).thenReturn(true);
-
-            CommandLine cmd = cmd(ctx);
-            int exitCode =
-                    cmd.execute("module remove builtin-module".split(" "));
-
-            verify(moduleMgr).removeModule(moduleName);
-            assertThatExitCodeMeansSuccess(exitCode);
-            assertOutputEqual("Module " + cmd.getColorScheme().parameterText(moduleName)
-                    + " was removed successfully.\n", out.toString(UTF_8));
-            assertThatStderrIsEmpty();
-        }
-
-        @Test
-        @DisplayName("remove unknown-module")
-        void removeUnknownModule() {
-            var moduleName = "unknown-module";
-
-            when(moduleMgr.removeModule(moduleName)).thenReturn(false);
-
-            CommandLine cmd = cmd(ctx);
-            int exitCode =
-                    cmd(ctx).execute("module remove unknown-module".split(" "));
-
-            verify(moduleMgr).removeModule(moduleName);
-            assertThatExitCodeMeansSuccess(exitCode);
-            assertOutputEqual("Nothing to do: module " + cmd.getColorScheme().parameterText(moduleName)
-                    + " is not yet added.\n", out.toString(UTF_8));
-            assertThatStderrIsEmpty();
-        }
-
-        @Test
-        @DisplayName("list")
-        void list() {
-            var module1 = new StandardModuleDefinition(
-                    "module1",
-                    "description1",
-                    Collections.singletonList("artifact1"),
-                    Collections.singletonList("cli-artifact1"));
-            var module2 = new StandardModuleDefinition(
-                    "module2",
-                    "description2",
-                    Collections.singletonList("artifact2"),
-                    Collections.singletonList("cli-artifact2"));
-
-            when(moduleMgr.builtinModules()).thenReturn(Arrays.asList(module1, module2));
-
-            var externalModule = new ModuleRegistry.ModuleDefinition(
-                    "org.apache.ignite:snapshot:2.9.0",
-                    Collections.emptyList(),
-                    Collections.emptyList(),
-                    ModuleRegistry.SourceType.Maven,
-                    "mvn:org.apache.ignite:snapshot:2.9.0");
-
-            when(moduleRegistry.listInstalled()).thenReturn(
-                    new ModuleRegistry.ModuleDefinitionsList(
-                            Arrays.asList(
-                                    new ModuleRegistry.ModuleDefinition(
-                                            module1.name,
-                                            Collections.emptyList(),
-                                            Collections.emptyList(),
-                                            ModuleRegistry.SourceType.Standard, ""), externalModule)));
-
-            CommandLine cmd = cmd(ctx);
-            int exitCode =
-                    cmd.execute("module list".split(" "));
-
-            verify(moduleMgr).builtinModules();
-            assertThatExitCodeMeansSuccess(exitCode);
-
-            String expOutput = cmd.getColorScheme().text("@|bold Optional Ignite Modules|@\n"
-                    + "+---------+--------------+------------+\n"
-                    + "| @|bold Name|@    | @|bold Description|@  | @|bold Installed?|@ |\n"
-                    + "+---------+--------------+------------+\n"
-                    + "| module1 | description1 | Yes        |\n"
-                    + "+---------+--------------+------------+\n"
-                    + "| module2 | description2 | No         |\n"
-                    + "+---------+--------------+------------+\n"
-                    + "\n" + "@|bold Additional Maven Dependencies|@\n"
-                    + "+-------------------+-------------+---------+\n"
-                    + "| @|bold Group ID|@          | @|bold Artifact ID|@ | @|bold Version|@ |\n"
-                    + "+-------------------+-------------+---------+\n"
-                    + "| org.apache.ignite | snapshot    | 2.9.0   |\n"
-                    + "+-------------------+-------------+---------+\n"
-                    + "Type " + cmd.getColorScheme().commandText("ignite module remove") + " "
-                    + cmd.getColorScheme().parameterText("<groupId>:<artifactId>:<version>")
-                    + " to remove a dependency.\n"
-            ).toString();
-            assertOutputEqual(expOutput, out.toString(UTF_8));
-            assertThatStderrIsEmpty();
         }
     }
 
@@ -493,150 +322,6 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
     }
 
     /**
-     * Tests "config" command.
-     */
-    @Nested
-    @DisplayName("config")
-    class Config {
-        /** Http client that is used for communication purposes. */
-        @Mock
-        private HttpClient httpClient;
-
-        /** HTTP response. */
-        @Mock
-        private HttpResponse<String> res;
-
-        @BeforeEach
-        void setUp() {
-            ctx.registerSingleton(httpClient);
-        }
-
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName("get --node-endpoint localhost:8081 --type node")
-        void get() throws IOException, InterruptedException {
-            when(res.statusCode()).thenReturn(HttpURLConnection.HTTP_OK);
-            when(res.body()).thenReturn("{\"baseline\":{\"autoAdjust\":{\"enabled\":true}}}");
-            when(httpClient.<String>send(any(), any())).thenReturn(res);
-
-            int exitCode =
-                    cmd(ctx).execute("config get --node-endpoint localhost:8081 --type node".split(" "));
-
-            assertThatExitCodeMeansSuccess(exitCode);
-
-            verify(httpClient).send(requestCaptor.capture(), any());
-            HttpRequest capturedRequest = requestCaptor.getValue();
-
-            assertThat(capturedRequest.uri().toString(), is("http://localhost:8081/management/v1/configuration/node/"));
-            assertThat(capturedRequest.method(), is("GET"));
-            assertThat(capturedRequest.headers().firstValue("Content-Type"), isPresentAnd(is("application/json")));
-
-            assertOutputEqual("{\n"
-                    + "  \"baseline\" : {\n"
-                    + "    \"autoAdjust\" : {\n"
-                    + "      \"enabled\" : true\n"
-                    + "    }\n"
-                    + "  }\n"
-                    + "}\n", out.toString(UTF_8));
-            assertThatStderrIsEmpty();
-        }
-
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName("get --node-endpoint localhost:8081 --selector local.baseline --type node")
-        void getSubtree() throws IOException, InterruptedException {
-            when(res.statusCode()).thenReturn(HttpURLConnection.HTTP_OK);
-            when(res.body()).thenReturn("{\"autoAdjust\":{\"enabled\":true}}");
-            when(httpClient.<String>send(any(), any())).thenReturn(res);
-
-            int exitCode =
-                    cmd(ctx).execute(("config get --node-endpoint localhost:8081 "
-                            + "--selector local.baseline --type node").split(" "));
-
-            assertThatExitCodeMeansSuccess(exitCode);
-
-            verify(httpClient).send(requestCaptor.capture(), any());
-            HttpRequest capturedRequest = requestCaptor.getValue();
-
-            assertThat(capturedRequest.uri().toString(), is("http://localhost:8081/management/v1/configuration/node/local.baseline"));
-            assertThat(capturedRequest.method(), is("GET"));
-            assertThat(capturedRequest.headers().firstValue("Content-Type"), isPresentAnd(is("application/json")));
-
-            assertOutputEqual("{\n"
-                    + "  \"autoAdjust\" : {\n"
-                    + "    \"enabled\" : true\n"
-                    + "  }\n"
-                    + "}\n", out.toString(UTF_8));
-            assertThatStderrIsEmpty();
-        }
-
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName("set --node-endpoint localhost:8081 local.baseline.autoAdjust.enabled=true --type node")
-        void setHocon() throws IOException, InterruptedException {
-            when(res.statusCode()).thenReturn(HttpURLConnection.HTTP_OK);
-            when(httpClient.<String>send(any(), any())).thenReturn(res);
-
-            var expSentContent = "{\"local\":{\"baseline\":{\"autoAdjust\":{\"enabled\":true}}}}";
-
-            CommandLine cmd = cmd(ctx);
-            int exitCode =
-                    cmd.execute(("config set --node-endpoint localhost:8081 "
-                            + "local.baseline.autoAdjust.enabled=true --type node"
-                    ).split(" "));
-
-            assertThatExitCodeMeansSuccess(exitCode);
-
-            verify(httpClient).send(requestCaptor.capture(), any());
-            HttpRequest capturedRequest = requestCaptor.getValue();
-
-            assertThat(capturedRequest.uri().toString(), is("http://localhost:8081/management/v1/configuration/node/"));
-            assertThat(capturedRequest.method(), is("PATCH"));
-            assertThat(requestBodyBytes(capturedRequest), is(expSentContent.getBytes(UTF_8)));
-            assertThat(capturedRequest.headers().firstValue("Content-Type"), isPresentAnd(is("application/json")));
-
-            assertOutputEqual("Configuration was updated successfully.\n\n"
-                    + "Use the " + cmd.getColorScheme().commandText("ignite config get")
-                    + " command to view the updated configuration.\n", out.toString(UTF_8));
-            assertThatStderrIsEmpty();
-        }
-
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName(
-                "set --node-endpoint localhost:8081 {\"local\":{\"baseline\":{\"autoAdjust\":{\"enabled\":true}}}} "
-                        + "--type node"
-        )
-        void setJson() throws IOException, InterruptedException {
-            when(res.statusCode()).thenReturn(HttpURLConnection.HTTP_OK);
-            when(httpClient.<String>send(any(), any())).thenReturn(res);
-
-            var expSentContent = "{\"local\":{\"baseline\":{\"autoAdjust\":{\"enabled\":true}}}}";
-
-            CommandLine cmd = cmd(ctx);
-            int exitCode =
-                    cmd.execute(("config set --node-endpoint localhost:8081 "
-                            + "local.baseline.autoAdjust.enabled=true --type node"
-                    ).split(" "));
-
-            assertThatExitCodeMeansSuccess(exitCode);
-
-            verify(httpClient).send(requestCaptor.capture(), any());
-            HttpRequest capturedRequest = requestCaptor.getValue();
-
-            assertThat(capturedRequest.uri().toString(), is("http://localhost:8081/management/v1/configuration/node/"));
-            assertThat(capturedRequest.method(), is("PATCH"));
-            assertThat(requestBodyBytes(capturedRequest), is(expSentContent.getBytes(UTF_8)));
-            assertThat(capturedRequest.headers().firstValue("Content-Type"), isPresentAnd(is("application/json")));
-
-            assertOutputEqual("Configuration was updated successfully.\n\n"
-                    + "Use the " + cmd.getColorScheme().commandText("ignite config get")
-                    + " command to view the updated configuration.\n", out.toString(UTF_8));
-            assertThatStderrIsEmpty();
-        }
-    }
-
-    /**
      * Tests "cluster" command.
      */
     @Nested
@@ -710,7 +395,7 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
 
             assertThatStdoutIsEmpty();
             assertThat(err.toString(UTF_8), startsWith(platformizeNewLines(
-                    "org.apache.ignite.cli.IgniteCliException: Failed to initialize cluster\n"
+                    "org.apache.ignite.cli.deprecated.IgniteCliException: Failed to initialize cluster\n"
                             + "\n"
                             + "{\n"
                             + "  \"error\" : {\n"
@@ -741,7 +426,7 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
 
             assertThatStdoutIsEmpty();
             assertThat(err.toString(UTF_8), startsWith(platformizeNewLines(
-                    "org.apache.ignite.cli.IgniteCliException: Failed to initialize cluster\n"
+                    "org.apache.ignite.cli.deprecated.IgniteCliException: Failed to initialize cluster\n"
                             + "\n"
                             + "Oops")));
         }
