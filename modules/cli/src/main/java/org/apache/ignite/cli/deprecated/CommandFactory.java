@@ -15,43 +15,32 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli;
+package org.apache.ignite.cli.deprecated;
 
-import io.micronaut.core.annotation.Introspected;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import io.micronaut.context.ApplicationContext;
+import java.util.Optional;
 import picocli.CommandLine;
 
 /**
- * Version provider for Picocli interactions.
+ * Picocli command factory for initialize commands and DI dependencies.
  */
-@Singleton
-@Introspected
-public class VersionProvider implements CommandLine.IVersionProvider {
-
-    /** Actual Ignite CLI version info. */
-    private final CliVersionInfo cliVerInfo;
+public class CommandFactory implements CommandLine.IFactory {
+    /** DI application context. */
+    private final ApplicationContext applicationCtx;
 
     /**
-     * Default constructor needed for bash-autocompletion.
-     */
-    public VersionProvider() {
-        cliVerInfo = null;
-    }
-
-    /**
-     * Creates version provider.
+     * Creates new command factory.
      *
-     * @param cliVerInfo Actual Ignite CLI version container.
+     * @param applicationCtx DI application context.
      */
-    @Inject
-    public VersionProvider(CliVersionInfo cliVerInfo) {
-        this.cliVerInfo = cliVerInfo;
+    public CommandFactory(ApplicationContext applicationCtx) {
+        this.applicationCtx = applicationCtx;
     }
 
     /** {@inheritDoc} */
     @Override
-    public String[] getVersion() {
-        return new String[]{"Apache Ignite CLI ver. " + cliVerInfo.ver};
+    public <K> K create(Class<K> cls) throws Exception {
+        Optional<K> bean = applicationCtx.findOrInstantiateBean(cls);
+        return bean.isPresent() ? bean.get() : CommandLine.defaultFactory().create(cls);
     }
 }
