@@ -6,7 +6,7 @@ import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 import picocli.CommandLine.Help.Ansi;
 
 /**
- * Pretty json decorator.
+ * Decorator for {@link Status}.
  */
 public class StatusDecorator implements Decorator<Status, TerminalOutput> {
 

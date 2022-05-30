@@ -2,8 +2,8 @@ package org.apache.ignite.cli.commands.status;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.call.status.StatusCall;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.commands.decorators.StatusDecorator;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.EmptyCallInput;
