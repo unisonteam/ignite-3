@@ -1,7 +1,12 @@
 package org.apache.ignite.cli.commands.status;
 
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.apache.ignite.cli.call.status.StatusCall;
 import org.apache.ignite.cli.commands.BaseCommand;
+import org.apache.ignite.cli.commands.decorators.StatusDecorator;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.call.EmptyCallInput;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -26,9 +31,18 @@ public class StatusCommand extends BaseCommand implements Runnable {
     @Spec
     private CommandSpec commandSpec;
 
+    @Inject
+    private StatusCall statusCall;
+
     /** {@inheritDoc} */
     @Override
     public void run() {
-        commandSpec.commandLine().getOut().println("TODO: print status");
+        CallExecutionPipeline.builder(statusCall)
+                .inputProvider(EmptyCallInput::new)
+                .output(commandSpec.commandLine().getOut())
+                .errOutput(commandSpec.commandLine().getErr())
+                .decorator(new StatusDecorator())
+                .build()
+                .runPipeline();
     }
 }
