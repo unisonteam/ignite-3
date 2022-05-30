@@ -4,7 +4,7 @@
 
 Cd to module directory and build the module:
 ```bash
-cd modules/ignite-cli-2
+cd modules/cli
 mvn clean package
 ```
 
