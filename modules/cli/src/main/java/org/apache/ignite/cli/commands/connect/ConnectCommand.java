@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.connect.ConnectCall;
 import org.apache.ignite.cli.call.connect.ConnectCallInput;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -15,7 +16,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "connect", description = "Connect to Ignite 3 node.")
 @Singleton
-public class ConnectCommand implements Runnable {
+public class ConnectCommand extends BaseCommand implements Runnable {
 
     /**
      * Cluster url option.
