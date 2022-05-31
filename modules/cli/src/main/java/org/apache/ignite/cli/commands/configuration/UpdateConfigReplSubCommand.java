@@ -5,6 +5,7 @@ import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCall;
 import org.apache.ignite.cli.call.configuration.UpdateConfigurationCallInput;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.repl.Session;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -45,22 +46,27 @@ public class UpdateConfigReplSubCommand implements Runnable {
     @Inject
     UpdateConfigurationCall call;
 
+    @Inject
+    private Session session;
+
     /** {@inheritDoc} */
     @Override
     public void run() {
-        CallExecutionPipeline.builder(call)
-                .inputProvider(this::buildCallInput)
+        var input = UpdateConfigurationCallInput.builder().config(config).nodeId(nodeId);
+        if (session.isConnectedToNode()) {
+            input.clusterUrl(session.getNodeUrl());
+        } else if (clusterUrl != null) {
+            input.clusterUrl(clusterUrl);
+        } else {
+            spec.commandLine().getErr().println("You are not connected to node. Run 'connect' command or use '--cluster-url' option.");
+            return;
+        }
+
+        CallExecutionPipeline.builder(this.call)
+                .inputProvider(input::build)
                 .output(spec.commandLine().getOut())
                 .errOutput(spec.commandLine().getErr())
                 .build()
                 .runPipeline();
-    }
-
-    private UpdateConfigurationCallInput buildCallInput() {
-        return UpdateConfigurationCallInput.builder()
-                .clusterUrl(clusterUrl)
-                .config(config)
-                .nodeId(nodeId)
-                .build();
     }
 }
