@@ -47,7 +47,7 @@ public class Main {
         initJavaLoggerProps();
 
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
-            if (args.length != 0) {
+            if (args.length != 0 || !isatty()) { // do not enter REPL if input or output is redirected
                 try {
                     executeCommand(args, micronautFactory);
                 } catch (Exception e) {
@@ -61,6 +61,10 @@ public class Main {
                 }
             }
         }
+    }
+
+    private static boolean isatty() {
+        return System.console() != null;
     }
 
     private static void enterRepl(MicronautFactory micronautFactory) throws Exception {
