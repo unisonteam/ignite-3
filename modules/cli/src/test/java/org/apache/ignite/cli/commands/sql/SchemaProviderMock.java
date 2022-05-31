@@ -1,22 +1,13 @@
 package org.apache.ignite.cli.commands.sql;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import org.apache.ignite.cli.sql.SchemaProvider;
+import org.apache.ignite.cli.sql.SqlSchema;
 
 class SchemaProviderMock implements SchemaProvider {
     @Override
-    public Map<String, Map<String, Set<String>>> getSchema() {
-        return Map.of("PUBLIC", Map.of("PERSON", Set.of("ID", "NAME", "SALARY")));
-    }
-
-    @Override
-    public Set<String> getColumnNames(String tableName) {
-        return Collections.emptySet();
-    }
-
-    @Override
-    public void invalidateSchema() {
+    public SqlSchema getSchema() {
+        return new SqlSchema(Map.of("PUBLIC", Map.of("PERSON", Set.of("ID", "NAME", "SALARY"))));
     }
 }

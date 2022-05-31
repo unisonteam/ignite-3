@@ -1,10 +1,6 @@
 package org.apache.ignite.cli.commands.sql;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import org.apache.ignite.cli.sql.SchemaProvider;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
@@ -13,16 +9,9 @@ import org.jline.reader.ParsedLine;
 
 class SqlCompleter implements Completer {
     private final SchemaProvider schemaProvider;
-    private final List<Candidate> candidates = new ArrayList<>();
 
     SqlCompleter(SchemaProvider schemaProvider) {
         this.schemaProvider = schemaProvider;
-        fillCandidates();
-    }
-
-    void refreshSchema() {
-        schemaProvider.invalidateSchema();
-        fillCandidates();
     }
 
     @Override
@@ -30,22 +19,22 @@ class SqlCompleter implements Completer {
         if (commandLine.wordIndex() == 0) {
             addCandidatesFromArray(SqlMetaData.STARTING_KEYWORDS, candidates);
         } else {
-            candidates.addAll(this.candidates);
+            fillCandidates(candidates);
         }
-        //todo add columns from current schema?
     }
 
-    private void fillCandidates() {
-        addKeywords();
-        for (Entry<String, Map<String, Set<String>>> schema : schemaProvider.getSchema().entrySet()) {
-            addCandidate(schema.getKey(), candidates); // add schema name
-            for (Entry<String, Set<String>> table : schema.getValue().entrySet()) {
-                addCandidate(table.getKey(), candidates); // add table name
+    private void fillCandidates(List<Candidate> candidates) {
+        addKeywords(candidates);
+        for (String schema : schemaProvider.getSchema().schemas()) {
+            addCandidate(schema, candidates);
+            for (String table : schemaProvider.getSchema().tables(schema)) {
+                addCandidate(table, candidates);
+                //TODO: add columns from current schema?
             }
         }
     }
 
-    private void addKeywords() {
+    private void addKeywords(List<Candidate> candidates) {
         addCandidatesFromArray(SqlMetaData.KEYWORDS, candidates);
         addCandidatesFromArray(SqlMetaData.NUMERIC_FUNCTIONS, candidates);
         addCandidatesFromArray(SqlMetaData.STRING_FUNCTIONS, candidates);
