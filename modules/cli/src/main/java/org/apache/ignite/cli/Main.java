@@ -29,8 +29,11 @@ import java.util.stream.Collectors;
 import org.apache.ignite.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
 import org.apache.ignite.cli.config.Config;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
+import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 
@@ -73,8 +76,14 @@ public class Main {
         System.out.println(banner());
 
         replExecutor.execute(Repl.builder()
+                .withPromptProvider(micronautFactory.create(PromptProvider.class))
                 .withAliases(aliases)
                 .withCommandClass(TopLevelCliReplCommand.class)
+                .withCallExecutionPipelineBuilderProvider((executor, line) ->
+                        CallExecutionPipeline.builder(executor)
+                                .inputProvider(() -> new StringCallInput(line))
+                                .output(System.out)
+                                .errOutput(System.err).build())
                 .build());
     }
 
@@ -85,7 +94,7 @@ public class Main {
         cmd.execute(args);
     }
 
-    private static final String[] BANNER = new String[] {
+    private static final String[] BANNER = new String[]{
             "",
             "  @|red,bold          #|@              ___                         __",
             "  @|red,bold        ###|@             /   |   ____   ____ _ _____ / /_   ___",
@@ -115,6 +124,7 @@ public class Main {
      * SEVERE.
      * TODO: https://issues.apache.org/jira/browse/IGNITE-15713
      */
+    @Deprecated
     private static void initJavaLoggerProps() {
         InputStream propsFile = Main.class.getResourceAsStream("/cli.java.util.logging.properties");
 

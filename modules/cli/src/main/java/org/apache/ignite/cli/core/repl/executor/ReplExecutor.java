@@ -5,23 +5,20 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.apache.ignite.cli.config.Config;
-import org.apache.ignite.cli.core.call.CallExecutionPipeline;
-import org.apache.ignite.cli.core.call.StringCallInput;
+import org.apache.ignite.cli.core.exception.handler.ReplExceptionHandlers;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
-import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.fusesource.jansi.AnsiConsole;
-import org.jline.console.impl.Builtins;
 import org.jline.console.impl.SystemRegistryImpl;
-import org.jline.reader.EndOfFileException;
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
+import org.jline.reader.LineReader.SuggestionType;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.MaskingCallback;
 import org.jline.reader.Parser;
-import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import picocli.CommandLine;
@@ -36,14 +33,13 @@ import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 public class ReplExecutor {
     private final Parser parser = new DefaultParser();
     private final Supplier<Path> workDirProvider = () -> Paths.get(System.getProperty("user.dir"));
+    private final AtomicBoolean interrupted = new AtomicBoolean();
+    private final ReplExceptionHandlers exceptionHandlers = new ReplExceptionHandlers(interrupted::set);
     private PicocliCommandsFactory factory;
     private Terminal terminal;
 
     @Inject
     private Config config;
-
-    @Inject
-    private PromptProvider promptProvider;
 
     /**
      * Secondary constructor.
@@ -66,54 +62,47 @@ public class ReplExecutor {
         try {
             repl.customizeTerminal(terminal);
 
-            Builtins builtins = createBuiltins(repl);
             PicocliCommands picocliCommands = createPicocliCommands(repl.commandClass());
             SystemRegistryImpl registry = createRegistry();
-            registry.setCommandRegistries(builtins, picocliCommands);
+            registry.setCommandRegistries(picocliCommands);
 
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .completer(registry.completer())
-                    .parser(parser)
-                    .expander(new NoopExpander())
-                    .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
-                    .build();
-            builtins.setLineReader(reader);
+            LineReader reader = createReader(repl.getCompleter() != null
+                    ? repl.getCompleter()
+                    : registry.completer());
+
             RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader);
 
-            // start the shell and process input until the user quits with Ctrl-D
-            while (true) {
+            while (!interrupted.get()) {
                 try {
                     executor.cleanUp();
-                    String line = reader.readLine(Ansi.AUTO.string(promptProvider.getPrompt()), null, (MaskingCallback) null, null);
-                    CallExecutionPipeline.builder(executor)
-                            .inputProvider(() -> new StringCallInput(line))
-                            .output(System.out)
-                            .errOutput(System.err)
-                            .build()
-                            .runPipeline();
-                } catch (UserInterruptException e) {
-                    // Ignore
-                } catch (EndOfFileException e) {
-                    return;
-                } catch (Exception e) {
-                    executor.trace(e);
+                    String prompt = Ansi.AUTO.string(repl.getPromptProvider().getPrompt());
+                    String line = reader.readLine(prompt, null, (MaskingCallback) null, null);
+                    if (line.isEmpty()) {
+                        continue;
+                    }
+
+                    repl.getPipeline(executor, line).runPipeline();
+                } catch (Throwable t) {
+                    exceptionHandlers.handleException(System.err::print, t);
                 }
             }
         } catch (Throwable t) {
-            t.printStackTrace();
+            exceptionHandlers.handleException(System.err::print, t);
         } finally {
             AnsiConsole.systemUninstall();
         }
     }
 
-    private Builtins createBuiltins(Repl repl) {
-        // set up JLine built-in commands
-        Builtins builtins = new Builtins(workDirProvider, null, null);
-        for (Entry<String, String> aliases : repl.getAliases().entrySet()) {
-            builtins.alias(aliases.getKey(), aliases.getValue());
-        }
-        return builtins;
+    private LineReader createReader(Completer completer) {
+        LineReader result = LineReaderBuilder.builder()
+                .terminal(terminal)
+                .completer(completer)
+                .parser(parser)
+                .expander(new NoopExpander())
+                .variable(LineReader.LIST_MAX, 50)   // max tab completion candidates
+                .build();
+        result.setAutosuggestion(SuggestionType.COMPLETER);
+        return result;
     }
 
     public SystemRegistryImpl createRegistry() {

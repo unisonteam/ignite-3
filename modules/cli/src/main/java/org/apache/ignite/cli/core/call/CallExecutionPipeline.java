@@ -7,6 +7,10 @@ import java.util.function.Supplier;
 import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
 import org.apache.ignite.cli.commands.decorators.core.Decorator;
 import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
+import org.apache.ignite.cli.core.exception.ExceptionHandler;
+import org.apache.ignite.cli.core.exception.ExceptionHandlers;
+import org.apache.ignite.cli.core.exception.ExceptionWriter;
+import org.apache.ignite.cli.core.exception.handler.DefaultExceptionHandlers;
 
 /**
  * Call execution pipeline.
@@ -32,14 +36,23 @@ public class CallExecutionPipeline<I extends CallInput, T> {
      */
     private final Decorator<T, TerminalOutput> decorator;
     /**
+     * Handlers for any exceptions.
+     */
+    private final ExceptionHandlers exceptionHandlers;
+    /**
      * Provider for call's input.
      */
     private final Supplier<I> inputProvider;
 
-    private CallExecutionPipeline(Call<I, T> call, PrintWriter output,
-            PrintWriter errOutput, Decorator<T, TerminalOutput> decorator, Supplier<I> inputProvider) {
+    private CallExecutionPipeline(Call<I, T> call,
+            PrintWriter output,
+            PrintWriter errOutput,
+            ExceptionHandlers exceptionHandlers,
+            Decorator<T, TerminalOutput> decorator,
+            Supplier<I> inputProvider) {
         this.call = call;
         this.output = output;
+        this.exceptionHandlers = exceptionHandlers;
         this.errOutput = errOutput;
         this.decorator = decorator;
         this.inputProvider = inputProvider;
@@ -49,7 +62,7 @@ public class CallExecutionPipeline<I extends CallInput, T> {
      * Builder helper method.
      *
      * @return builder for {@link CallExecutionPipeline}.
-     * */
+     */
     public static <I extends CallInput, T> CallExecutionPipelineBuilder<I, T> builder(
             Call<I, T> call) {
         return new CallExecutionPipelineBuilder<>(call);
@@ -62,7 +75,7 @@ public class CallExecutionPipeline<I extends CallInput, T> {
         CallOutput<T> callOutput = call.execute(callInput);
 
         if (callOutput.hasError()) {
-            errOutput.println("Got error during command execution: " + callOutput.errorCause()); // fixme
+            exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(errOutput), callOutput.errorCause());
             return;
         }
 
@@ -79,6 +92,7 @@ public class CallExecutionPipeline<I extends CallInput, T> {
     public static class CallExecutionPipelineBuilder<I extends CallInput, T> {
 
         private final Call<I, T> call;
+        private final ExceptionHandlers exceptionHandlers = new DefaultExceptionHandlers();
         private Supplier<I> inputProvider;
         private PrintWriter output = wrapOutputStream(System.out);
         private PrintWriter errOutput = wrapOutputStream(System.err);
@@ -111,13 +125,23 @@ public class CallExecutionPipeline<I extends CallInput, T> {
             return errOutput(wrapOutputStream(output));
         }
 
+        public CallExecutionPipelineBuilder<I, T> exceptionHandler(ExceptionHandler<?> exceptionHandler) {
+            exceptionHandlers.addExceptionHandler(exceptionHandler);
+            return this;
+        }
+
+        public CallExecutionPipelineBuilder<I, T> exceptionHandlers(ExceptionHandlers exceptionHandlers) {
+            this.exceptionHandlers.addExceptionHandlers(exceptionHandlers);
+            return this;
+        }
+
         public CallExecutionPipelineBuilder<I, T> decorator(Decorator<T, TerminalOutput> decorator) {
             this.decorator = decorator;
             return this;
         }
 
         public CallExecutionPipeline<I, T> build() {
-            return new CallExecutionPipeline<>(call, output, errOutput, decorator, inputProvider);
+            return new CallExecutionPipeline<>(call, output, errOutput, exceptionHandlers, decorator, inputProvider);
         }
 
         private static PrintWriter wrapOutputStream(OutputStream output) {

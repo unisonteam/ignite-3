@@ -3,6 +3,7 @@ package org.apache.ignite.cli.call.configuration;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
+import org.apache.ignite.cli.core.exception.CommandExecutionException;
 import org.apache.ignite.rest.client.api.ClusterConfigurationApi;
 import org.apache.ignite.rest.client.api.NodeConfigurationApi;
 import org.apache.ignite.rest.client.invoker.ApiClient;
@@ -21,33 +22,23 @@ public class ShowConfigurationCall implements Call<ShowConfigurationCallInput, S
     public DefaultCallOutput<String> execute(ShowConfigurationCallInput readConfigurationInput) {
         ApiClient client = createApiClient(readConfigurationInput);
 
-        if (readConfigurationInput.getNodeId() != null) {
-            return readNodeConfig(new NodeConfigurationApi(client), readConfigurationInput);
-        } else {
-            return readClusterConfig(new ClusterConfigurationApi(client), readConfigurationInput);
+        try {
+            return DefaultCallOutput.success(readConfigurationInput.getNodeId() != null
+                    ? readNodeConfig(new NodeConfigurationApi(client), readConfigurationInput)
+                    : readClusterConfig(new ClusterConfigurationApi(client), readConfigurationInput));
+        } catch (ApiException e) {
+            return DefaultCallOutput.failure(new CommandExecutionException("Show configuration", "Ignite return " + e.getResponseBody()));
+        } catch (IllegalArgumentException e) {
+            return DefaultCallOutput.failure(new CommandExecutionException("Show configuration", e.getMessage()));
         }
     }
 
-    private DefaultCallOutput<String> readNodeConfig(NodeConfigurationApi api, ShowConfigurationCallInput input) {
-        try {
-            if (input.getSelector() != null) {
-                return DefaultCallOutput.success(api.getNodeConfigurationByPath(input.getSelector()));
-            }
-            return DefaultCallOutput.success(api.getNodeConfiguration());
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
+    private String readNodeConfig(NodeConfigurationApi api, ShowConfigurationCallInput input) throws ApiException {
+        return input.getSelector() != null ? api.getNodeConfigurationByPath(input.getSelector()) : api.getNodeConfiguration();
     }
 
-    private DefaultCallOutput<String> readClusterConfig(ClusterConfigurationApi api, ShowConfigurationCallInput input) {
-        try {
-            if (input.getSelector() != null) {
-                return DefaultCallOutput.success(api.getClusterConfigurationByPath(input.getSelector()));
-            }
-            return DefaultCallOutput.success(api.getClusterConfiguration());
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
+    private String readClusterConfig(ClusterConfigurationApi api, ShowConfigurationCallInput input) throws ApiException {
+        return input.getSelector() != null ? api.getClusterConfigurationByPath(input.getSelector()) : api.getClusterConfiguration();
     }
 
     @NotNull
