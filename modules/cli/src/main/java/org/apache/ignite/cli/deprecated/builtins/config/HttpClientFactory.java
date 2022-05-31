@@ -15,43 +15,27 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli;
+package org.apache.ignite.cli.deprecated.builtins.config;
 
-import io.micronaut.core.annotation.Introspected;
-import jakarta.inject.Inject;
+import io.micronaut.context.annotation.Factory;
 import jakarta.inject.Singleton;
-import picocli.CommandLine;
+import java.net.http.HttpClient;
 
 /**
- * Version provider for Picocli interactions.
+ * Factory for producing simple HTTP clients.
  */
-@Singleton
-@Introspected
-public class VersionProvider implements CommandLine.IVersionProvider {
-
-    /** Actual Ignite CLI version info. */
-    private final CliVersionInfo cliVerInfo;
-
+@Factory
+public class HttpClientFactory {
     /**
-     * Default constructor needed for bash-autocompletion.
-     */
-    public VersionProvider() {
-        cliVerInfo = null;
-    }
-
-    /**
-     * Creates version provider.
+     * Creates new HTTP client.
      *
-     * @param cliVerInfo Actual Ignite CLI version container.
+     * @return HttpClient
      */
-    @Inject
-    public VersionProvider(CliVersionInfo cliVerInfo) {
-        this.cliVerInfo = cliVerInfo;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String[] getVersion() {
-        return new String[]{"Apache Ignite CLI ver. " + cliVerInfo.ver};
+    @Singleton
+    HttpClient httpClient() {
+        return HttpClient
+                .newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .build();
     }
 }

@@ -15,43 +15,35 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli;
+package org.apache.ignite.cli.deprecated.spec;
 
-import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import java.net.URL;
+import org.apache.ignite.cli.common.IgniteCommand;
+import org.apache.ignite.cli.deprecated.builtins.init.InitIgniteCommand;
 import picocli.CommandLine;
 
 /**
- * Version provider for Picocli interactions.
+ * Command for init Ignite distributive to start new nodes on the current machine.
+ *
+ * @see IgniteCommand
  */
-@Singleton
-@Introspected
-public class VersionProvider implements CommandLine.IVersionProvider {
-
-    /** Actual Ignite CLI version info. */
-    private final CliVersionInfo cliVerInfo;
-
-    /**
-     * Default constructor needed for bash-autocompletion.
-     */
-    public VersionProvider() {
-        cliVerInfo = null;
-    }
-
-    /**
-     * Creates version provider.
-     *
-     * @param cliVerInfo Actual Ignite CLI version container.
-     */
+@CommandLine.Command(name = "init", description = "Installs Ignite core modules locally.")
+public class InitIgniteCommandSpec extends CommandSpec implements IgniteCommand {
+    /** Init command implementation. */
     @Inject
-    public VersionProvider(CliVersionInfo cliVerInfo) {
-        this.cliVerInfo = cliVerInfo;
-    }
+    private InitIgniteCommand cmd;
+
+    /** Option for custom maven repository to download Ignite core. */
+    @CommandLine.Option(
+            names = "--repo",
+            description = "Additional Maven repository URL"
+    )
+    private URL[] urls;
 
     /** {@inheritDoc} */
     @Override
-    public String[] getVersion() {
-        return new String[]{"Apache Ignite CLI ver. " + cliVerInfo.ver};
+    public void run() {
+        cmd.init(urls, spec.commandLine().getOut(), spec.commandLine().getColorScheme());
     }
 }

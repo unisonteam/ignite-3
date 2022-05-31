@@ -199,7 +199,7 @@
 
             <dependency>
                 <groupId>org.apache.ignite</groupId>
-                <artifactId>ignite-cli-2</artifactId>
+                <artifactId>ignite-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
