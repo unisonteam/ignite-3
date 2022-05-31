@@ -18,6 +18,7 @@
 package org.apache.ignite.cli.sql;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,15 +30,18 @@ import org.apache.ignite.cli.sql.table.Table;
  */
 public class SqlManager implements AutoCloseable {
     private final Connection connection;
-    private final SqlSchemaProvider sqlSchemaProvider;
 
     /**
      * Default constructor.
      */
-    public SqlManager(String jdbcUrl) throws SQLException, ClassNotFoundException {
-        Class.forName("org.apache.ignite.jdbc.IgniteJdbcDriver");
+    public SqlManager(String jdbcUrl) throws SQLException {
+        try {
+            Class.forName("org.apache.ignite.jdbc.IgniteJdbcDriver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Jdbc driver not found.");
+        }
         connection = DriverManager.getConnection(jdbcUrl);
-        sqlSchemaProvider = new SqlSchemaProvider(connection::getMetaData);
+
     }
 
     /**
@@ -58,17 +62,12 @@ public class SqlManager implements AutoCloseable {
         }
     }
 
-    /**
-     * Retrieves SQL schema provider.
-     *
-     * @return SQL schema provider
-     */
-    public SqlSchemaProvider getSqlSchemaProvider() {
-        return sqlSchemaProvider;
+    @Override
+    public void close() throws SQLException {
+        connection.close();
     }
 
-    @Override
-    public void close() throws Exception {
-        connection.close();
+    public DatabaseMetaData getMetadata() throws SQLException {
+        return connection.getMetaData();
     }
 }

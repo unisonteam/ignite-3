@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -286,6 +288,27 @@ public class IntegrationTestBase extends BaseIgniteAbstractTest {
         for (Table t : CLUSTER_NODES.get(0).tables().tables()) {
             sql("DROP TABLE " + t.name());
         }
+    }
+
+    protected static PrintWriter output(List<Character> buffer) {
+        return new PrintWriter(new Writer() {
+            @Override
+            public void write(char[] cbuf, int off, int len) {
+                for (int i = off; i < off + len; i++) {
+                    buffer.add(cbuf[i]);
+                }
+            }
+
+            @Override
+            public void flush() {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+        });
     }
 
     /**

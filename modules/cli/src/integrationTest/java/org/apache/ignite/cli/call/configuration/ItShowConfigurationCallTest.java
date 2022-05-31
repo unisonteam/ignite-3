@@ -2,9 +2,15 @@ package org.apache.ignite.cli.call.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.primitives.Chars;
 import jakarta.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.ignite.cli.call.CallIntegrationTestBase;
+import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
+import org.apache.ignite.cli.core.exception.handler.CommandExecutionExceptionHandler;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -102,5 +108,43 @@ class ItShowConfigurationCallTest extends CallIntegrationTestBase {
 
         // Then
         assertThat(output.hasError()).isTrue();
+    }
+
+    @Test
+    @DisplayName("")
+    public void incorrectPortTest() {
+        var input = ShowConfigurationCallInput.builder()
+                .clusterUrl(NODE_URL + "incorrect")
+                .build();
+        List<Character> list = new ArrayList<>();
+
+        CallExecutionPipeline.builder(call)
+                .inputProvider(() -> input)
+                .exceptionHandler(new CommandExecutionExceptionHandler())
+                .errOutput(output(list))
+                .build()
+                .runPipeline();
+
+        Assertions.assertThat(new String(Chars.toArray(list)))
+                .contains("Invalid URL port: \"10300incorrect");
+    }
+
+    @Test
+    @DisplayName("")
+    public void incorrectSchemeTest() {
+        var input = ShowConfigurationCallInput.builder()
+                .clusterUrl("incorrect" + NODE_URL)
+                .build();
+        List<Character> list = new ArrayList<>();
+
+        CallExecutionPipeline.builder(call)
+                .inputProvider(() -> input)
+                .exceptionHandler(new CommandExecutionExceptionHandler())
+                .errOutput(output(list))
+                .build()
+                .runPipeline();
+
+        Assertions.assertThat(new String(Chars.toArray(list)))
+                .contains("Expected URL scheme 'http' or 'https' but was 'incorrecthttp'");
     }
 }

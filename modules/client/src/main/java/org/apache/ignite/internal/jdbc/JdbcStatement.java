@@ -32,6 +32,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletionException;
 import org.apache.ignite.client.proto.query.IgniteQueryErrorCode;
 import org.apache.ignite.client.proto.query.JdbcStatementType;
 import org.apache.ignite.client.proto.query.SqlStateCode;
@@ -86,9 +87,9 @@ public class JdbcStatement implements Statement {
     /**
      * Creates new statement.
      *
-     * @param conn           JDBC connection.
+     * @param conn JDBC connection.
      * @param resHoldability Result set holdability.
-     * @param schema         Schema name.
+     * @param schema Schema name.
      */
     JdbcStatement(JdbcConnection conn, int resHoldability, String schema) {
         assert conn != null;
@@ -115,7 +116,7 @@ public class JdbcStatement implements Statement {
     /**
      * Execute the query with given parameters.
      *
-     * @param sql  Sql query.
+     * @param sql Sql query.
      * @param args Query parameters.
      * @throws SQLException Onj error.
      */
@@ -131,7 +132,12 @@ public class JdbcStatement implements Statement {
         QueryExecuteRequest req = new QueryExecuteRequest(stmtType, schema, pageSize, maxRows, sql,
                 args == null ? ArrayUtils.OBJECT_EMPTY_ARRAY : args.toArray());
 
-        QueryExecuteResult res = conn.handler().queryAsync(req).join();
+        QueryExecuteResult res;
+        try {
+            res = conn.handler().queryAsync(req).join();
+        } catch (CompletionException e) {
+            throw new SQLException("sql execution error", SqlStateCode.PARSING_EXCEPTION);
+        }
 
         if (!res.hasResults()) {
             throw IgniteQueryErrorCode.createJdbcSqlException(res.err(), res.status());
@@ -543,6 +549,8 @@ public class JdbcStatement implements Statement {
             }
 
             return res.updateCounts();
+        } catch (CompletionException e) {
+            throw new SQLException("Batch execute error", SqlStateCode.PARSING_EXCEPTION);
         } finally {
             batch = null;
         }

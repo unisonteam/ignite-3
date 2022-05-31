@@ -3,6 +3,7 @@ package org.apache.ignite.cli.call.configuration;
 import jakarta.inject.Singleton;
 import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
+import org.apache.ignite.cli.core.exception.CommandExecutionException;
 import org.apache.ignite.rest.client.api.ClusterConfigurationApi;
 import org.apache.ignite.rest.client.api.NodeConfigurationApi;
 import org.apache.ignite.rest.client.invoker.ApiClient;
@@ -20,19 +21,20 @@ public class UpdateConfigurationCall implements Call<UpdateConfigurationCallInpu
     public DefaultCallOutput<String> execute(UpdateConfigurationCallInput updateConfigurationCallInput) {
         ApiClient client = createApiClient(updateConfigurationCallInput);
 
-        if (updateConfigurationCallInput.getNodeId() != null) {
-            return updateNodeConfig(new NodeConfigurationApi(client), updateConfigurationCallInput);
-        } else {
-            return updateClusterConfig(new ClusterConfigurationApi(client), updateConfigurationCallInput);
+        try {
+            if (updateConfigurationCallInput.getNodeId() != null) {
+                return updateNodeConfig(new NodeConfigurationApi(client), updateConfigurationCallInput);
+            } else {
+                return updateClusterConfig(new ClusterConfigurationApi(client), updateConfigurationCallInput);
+            }
+        } catch (ApiException e) {
+            throw new CommandExecutionException("Update config", "Ignite api return " + e.getCode());
         }
     }
 
-    private DefaultCallOutput<String> updateClusterConfig(ClusterConfigurationApi api, UpdateConfigurationCallInput input) {
-        try {
-            api.updateClusterConfiguration(input.getConfig());
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getResponseBody());
-        }
+    private DefaultCallOutput<String> updateClusterConfig(ClusterConfigurationApi api, UpdateConfigurationCallInput input)
+            throws ApiException {
+        api.updateClusterConfiguration(input.getConfig());
         return DefaultCallOutput.success("");
     }
 

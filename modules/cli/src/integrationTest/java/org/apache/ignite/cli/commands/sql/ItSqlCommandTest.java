@@ -1,5 +1,7 @@
 package org.apache.ignite.cli.commands.sql;
 
+import static org.apache.ignite.cli.core.exception.handler.SqlExceptionHandler.CLIENT_CONNECTION_FAILED_MESSAGE;
+import static org.apache.ignite.cli.core.exception.handler.SqlExceptionHandler.PARSING_ERROR_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.apache.ignite.cli.commands.CliCommandTestIntegrationBase;
@@ -28,7 +30,6 @@ class ItSqlCommandTest extends CliCommandTestIntegrationBase {
     @Test
     @DisplayName("Should execute select * from table and display table when jdbc-url is correct")
     void selectFromTable() {
-        String nodeName = CLUSTER_NODES.get(0).name();
         execute("sql", "--execute", "select * from person", "--jdbc-url", JDBC_URL);
 
         assertAll(
@@ -48,7 +49,21 @@ class ItSqlCommandTest extends CliCommandTestIntegrationBase {
                 this::assertOutputIsEmpty,
                 this::assertErrOutputIsNotEmpty,
                 // todo: specify error output
-                () -> assertErrOutputIs("Cannot connect to jdbc")
+                () -> assertErrOutputIs(CLIENT_CONNECTION_FAILED_MESSAGE)
+        );
+    }
+
+    @Test
+    @DisplayName("Should display readable error when wrong query is given")
+    void incorrectQueryTest() {
+        execute("sql", "--execute", "select", "--jdbc-url", JDBC_URL);
+
+        assertAll(
+                () -> assertExitCodeIs(1),
+                this::assertOutputIsEmpty,
+                this::assertErrOutputIsNotEmpty,
+                // todo: specify error output
+                () -> assertErrOutputIs(PARSING_ERROR_MESSAGE)
         );
     }
 }
