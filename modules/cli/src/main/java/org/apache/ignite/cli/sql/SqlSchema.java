@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * Sql schema representation.
+ */
 public class SqlSchema {
     private final Map<String, Map<String, Set<String>>> schema;
 

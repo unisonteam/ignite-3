@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Loader of {@link SqlSchema}.
+ */
 public class SqlSchemaLoader {
     private final MetadataSupplier metadataSupplier;
 
@@ -14,6 +17,11 @@ public class SqlSchemaLoader {
         this.metadataSupplier = metadataSupplier;
     }
 
+    /**
+     * Load and return {@link SqlSchema}.
+     *
+     * @return instance of {@link SqlSchema}.
+     */
     public SqlSchema loadSchema() {
         Map<String, Map<String, Set<String>>> schema = new HashMap<>();
         try (ResultSet rs = metadataSupplier.getMetaData().getTables(null, null, null, null)) {

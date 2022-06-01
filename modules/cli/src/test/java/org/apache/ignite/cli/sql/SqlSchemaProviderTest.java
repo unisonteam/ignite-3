@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+/** {@inheritDoc} */
 public class SqlSchemaProviderTest {
     private static MetadataSupplier supplier;
 
@@ -27,13 +28,13 @@ public class SqlSchemaProviderTest {
     }
 
     @Test
-    public void test() throws InterruptedException {
+    public void testProviderWithoutTimeout() {
         SqlSchemaProvider provider = new SqlSchemaProvider(supplier, 0);
         Assertions.assertNotEquals(provider.getSchema(), provider.getSchema());
     }
 
     @Test
-    public void test1() throws InterruptedException {
+    public void testProviderWith1secTimeout() throws InterruptedException {
         SqlSchemaProvider provider = new SqlSchemaProvider(supplier, 1);
         SqlSchema schema = provider.getSchema();
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
