@@ -11,7 +11,6 @@ import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.exception.handler.ReplExceptionHandlers;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
-import org.fusesource.jansi.AnsiConsole;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -58,7 +57,6 @@ public class ReplExecutor {
      * @param repl data class of executing REPL.
      */
     public void execute(Repl repl) {
-        AnsiConsole.systemInstall();
         try {
             repl.customizeTerminal(terminal);
 
@@ -88,8 +86,6 @@ public class ReplExecutor {
             }
         } catch (Throwable t) {
             exceptionHandlers.handleException(System.err::print, t);
-        } finally {
-            AnsiConsole.systemUninstall();
         }
     }
 

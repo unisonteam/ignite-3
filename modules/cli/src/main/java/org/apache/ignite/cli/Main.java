@@ -34,6 +34,7 @@ import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
+import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 
@@ -50,6 +51,7 @@ public class Main {
         initJavaLoggerProps();
 
         try (MicronautFactory micronautFactory = new MicronautFactory()) {
+            AnsiConsole.systemInstall();
             if (args.length != 0 || !isatty()) { // do not enter REPL if input or output is redirected
                 try {
                     executeCommand(args, micronautFactory);
@@ -63,6 +65,8 @@ public class Main {
                     System.err.println("Error occurred during REPL initialization");
                 }
             }
+        } finally {
+            AnsiConsole.systemUninstall();
         }
     }
 
