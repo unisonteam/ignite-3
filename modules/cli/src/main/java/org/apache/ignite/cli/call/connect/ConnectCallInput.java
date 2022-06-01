@@ -26,10 +26,6 @@ public class ConnectCallInput implements CallInput {
     public static class ConnectCallInputBuilder {
         private String nodeUrl;
 
-        public String getNodeUrl() {
-            return nodeUrl;
-        }
-
         public ConnectCallInputBuilder nodeUrl(String nodeUrl) {
             this.nodeUrl = nodeUrl;
             return this;

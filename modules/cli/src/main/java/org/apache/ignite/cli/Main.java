@@ -32,6 +32,7 @@ import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.repl.Repl;
+import org.apache.ignite.cli.core.repl.SessionDefaultValueProvider;
 import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
 import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.fusesource.jansi.AnsiConsole;
@@ -81,12 +82,15 @@ public class Main {
         aliases.put("zle", "widget");
         aliases.put("bindkey", "keymap");
 
+        SessionDefaultValueProvider defaultValueProvider = micronautFactory.create(SessionDefaultValueProvider.class);
+
         System.out.println(banner());
 
         replExecutor.execute(Repl.builder()
                 .withPromptProvider(micronautFactory.create(PromptProvider.class))
                 .withAliases(aliases)
                 .withCommandClass(TopLevelCliReplCommand.class)
+                .withDefaultValueProvider(defaultValueProvider)
                 .withCallExecutionPipelineBuilderProvider((executor, line) ->
                         CallExecutionPipeline.builder(executor)
                                 .inputProvider(() -> new StringCallInput(line))

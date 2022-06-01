@@ -6,6 +6,7 @@ import org.apache.ignite.cli.core.CallExecutionPipelineProvider;
 import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.apache.ignite.cli.core.repl.terminal.TerminalCustomizer;
 import org.jline.reader.Completer;
+import picocli.CommandLine.IDefaultValueProvider;
 
 /**
  * Builder of {@link Repl}.
@@ -14,6 +15,7 @@ public class ReplBuilder {
     private PromptProvider promptProvider;
     private final Map<String, String> aliases = new HashMap<>();
     private Class<?> commandClass;
+    private IDefaultValueProvider defaultValueProvider;
     private TerminalCustomizer terminalCustomizer = terminal -> {
     };
     private Completer completer;
@@ -25,7 +27,7 @@ public class ReplBuilder {
      * @return new instance of {@link Repl}.
      */
     public Repl build() {
-        return new Repl(promptProvider, commandClass, aliases, terminalCustomizer, provider, completer);
+        return new Repl(promptProvider, commandClass, defaultValueProvider, aliases, terminalCustomizer, provider, completer);
     }
 
     public ReplBuilder withPromptProvider(PromptProvider promptProvider) {
@@ -41,6 +43,17 @@ public class ReplBuilder {
      */
     public ReplBuilder withCommandClass(Class<?> commandClass) {
         this.commandClass = commandClass;
+        return this;
+    }
+
+    /**
+     * Builder setter of {@code defaultValueProvider} field.
+     *
+     * @param defaultValueProvider default value provider.
+     * @return invoked builder instance {@link ReplBuilder}.
+     */
+    public ReplBuilder withDefaultValueProvider(IDefaultValueProvider defaultValueProvider) {
+        this.defaultValueProvider = defaultValueProvider;
         return this;
     }
 

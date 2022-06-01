@@ -8,6 +8,7 @@ import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.apache.ignite.cli.core.repl.terminal.TerminalCustomizer;
 import org.jline.reader.Completer;
 import org.jline.terminal.Terminal;
+import picocli.CommandLine.IDefaultValueProvider;
 
 /**
  * Data class with all information about REPL.
@@ -17,6 +18,7 @@ public class Repl {
     private final Map<String, String> aliases;
     private final TerminalCustomizer terminalCustomizer;
     private final Class<?> commandClass;
+    private final IDefaultValueProvider defaultValueProvider;
     private final CallExecutionPipelineProvider provider;
     private final Completer completer;
 
@@ -25,6 +27,7 @@ public class Repl {
      *
      * @param promptProvider REPL prompt provider.
      * @param commandClass top level command class.
+     * @param defaultValueProvider default value provider.
      * @param aliases map of aliases for commands.
      * @param terminalCustomizer customizer of terminal.
      * @param provider default call execution pipeline provider.
@@ -32,12 +35,14 @@ public class Repl {
      */
     public Repl(PromptProvider promptProvider,
             Class<?> commandClass,
+            IDefaultValueProvider defaultValueProvider,
             Map<String, String> aliases,
             TerminalCustomizer terminalCustomizer,
             CallExecutionPipelineProvider provider,
             Completer completer) {
         this.promptProvider = promptProvider;
         this.commandClass = commandClass;
+        this.defaultValueProvider = defaultValueProvider;
         this.aliases = aliases;
         this.terminalCustomizer = terminalCustomizer;
         this.provider = provider;
@@ -63,7 +68,16 @@ public class Repl {
      * @return class with top level command.
      */
     public Class<?> commandClass() {
-        return this.commandClass;
+        return commandClass;
+    }
+
+    /**
+     * Getter for {@code defaultValueProvider} field.
+     *
+     * @return default value provider.
+     */
+    public IDefaultValueProvider defaultValueProvider() {
+        return defaultValueProvider;
     }
 
     /**

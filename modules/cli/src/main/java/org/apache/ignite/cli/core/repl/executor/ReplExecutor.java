@@ -1,13 +1,11 @@
 package org.apache.ignite.cli.core.repl.executor;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
-import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.exception.handler.ReplExceptionHandlers;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
@@ -22,6 +20,7 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
+import picocli.CommandLine.IDefaultValueProvider;
 import picocli.shell.jline3.PicocliCommands;
 import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 
@@ -36,9 +35,6 @@ public class ReplExecutor {
     private final ReplExceptionHandlers exceptionHandlers = new ReplExceptionHandlers(interrupted::set);
     private PicocliCommandsFactory factory;
     private Terminal terminal;
-
-    @Inject
-    private Config config;
 
     /**
      * Secondary constructor.
@@ -60,7 +56,7 @@ public class ReplExecutor {
         try {
             repl.customizeTerminal(terminal);
 
-            PicocliCommands picocliCommands = createPicocliCommands(repl.commandClass());
+            PicocliCommands picocliCommands = createPicocliCommands(repl);
             SystemRegistryImpl registry = createRegistry();
             registry.setCommandRegistries(picocliCommands);
 
@@ -105,15 +101,12 @@ public class ReplExecutor {
         return new SystemRegistryImpl(parser, terminal, workDirProvider, null);
     }
 
-    /**
-     * Creates {@link PicocliCommands} instance for the command with default values taken from config.
-     *
-     * @param commandClass Class of the command.
-     * @return {@link PicocliCommands} for the command.
-     */
-    public PicocliCommands createPicocliCommands(Class<?> commandClass) {
-        CommandLine cmd = new CommandLine(commandClass, factory);
-        cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));
+    private PicocliCommands createPicocliCommands(Repl repl) {
+        CommandLine cmd = new CommandLine(repl.commandClass(), factory);
+        IDefaultValueProvider defaultValueProvider = repl.defaultValueProvider();
+        if (defaultValueProvider != null) {
+            cmd.setDefaultValueProvider(defaultValueProvider);
+        }
         return new PicocliCommands(cmd);
     }
 }
