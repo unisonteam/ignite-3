@@ -3,6 +3,7 @@ package org.apache.ignite.cli.core.repl;
 import java.util.Map;
 import org.apache.ignite.cli.core.CallExecutionPipelineProvider;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
 import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.apache.ignite.cli.core.repl.terminal.TerminalCustomizer;
@@ -96,8 +97,8 @@ public class Repl {
         terminalCustomizer.customize(terminal);
     }
 
-    public CallExecutionPipeline<?, ?> getPipeline(RegistryCommandExecutor executor, String line) {
-        return provider.get(executor, line);
+    public CallExecutionPipeline<?, ?> getPipeline(RegistryCommandExecutor executor, ExceptionHandlers exceptionHandlers, String line) {
+        return provider.get(executor, exceptionHandlers, line);
     }
 
     public Completer getCompleter() {

@@ -49,7 +49,7 @@ class ItSqlCommandTest extends CliCommandTestIntegrationBase {
                 this::assertOutputIsEmpty,
                 this::assertErrOutputIsNotEmpty,
                 // todo: specify error output
-                () -> assertErrOutputIs(CLIENT_CONNECTION_FAILED_MESSAGE)
+                () -> assertErrOutputIs(CLIENT_CONNECTION_FAILED_MESSAGE + System.lineSeparator())
         );
     }
 
@@ -63,7 +63,7 @@ class ItSqlCommandTest extends CliCommandTestIntegrationBase {
                 this::assertOutputIsEmpty,
                 this::assertErrOutputIsNotEmpty,
                 // todo: specify error output
-                () -> assertErrOutputIs(PARSING_ERROR_MESSAGE)
+                () -> assertErrOutputIs(PARSING_ERROR_MESSAGE + System.lineSeparator())
         );
     }
 }

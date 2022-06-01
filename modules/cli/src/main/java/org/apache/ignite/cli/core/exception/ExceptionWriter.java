@@ -20,6 +20,6 @@ public interface ExceptionWriter {
      * @return {@link ExceptionWriter} instance based on {@param pw}.
      */
     static ExceptionWriter fromPrintWriter(PrintWriter pw) {
-        return pw::print;
+        return pw::println;
     }
 }

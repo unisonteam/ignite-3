@@ -12,12 +12,13 @@ import org.apache.ignite.cli.core.CallExecutionPipelineProvider;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.exception.CommandExecutionException;
+import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.ExceptionWriter;
 import org.apache.ignite.cli.core.exception.handler.DefaultExceptionHandlers;
 import org.apache.ignite.cli.core.exception.handler.SqlExceptionHandler;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.executor.RegistryCommandExecutor;
-import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
+import org.apache.ignite.cli.core.repl.executor.ReplExecutorProvider;
 import org.apache.ignite.cli.core.repl.executor.SqlQueryCall;
 import org.apache.ignite.cli.sql.SqlManager;
 import org.apache.ignite.cli.sql.SqlSchemaProvider;
@@ -41,7 +42,7 @@ public class SqlCommand extends BaseCommand implements Runnable {
     private File file;
 
     @Inject
-    private ReplExecutor replExecutor;
+    private ReplExecutorProvider replExecutorProvider;
 
     private static String extract(File file) {
         try {
@@ -58,11 +59,11 @@ public class SqlCommand extends BaseCommand implements Runnable {
     public void run() {
         try (SqlManager sqlManager = new SqlManager(jdbc)) {
             if (command == null && file == null) {
-                replExecutor.execute(Repl.builder()
+                replExecutorProvider.get().execute(Repl.builder()
                         .withPromptProvider(() -> "sql-cli> ")
                         .withCompleter(new SqlCompleter(new SqlSchemaProvider(sqlManager::getMetadata)))
                         .withCommandClass(SqlReplTopLevelCliCommand.class)
-                        .withCallExecutionPipelineBuilderProvider(provider(sqlManager))
+                        .withCallExecutionPipelineProvider(provider(sqlManager))
                         .build());
             } else {
                 String executeCommand = file != null ? extract(file) : command;
@@ -75,27 +76,30 @@ public class SqlCommand extends BaseCommand implements Runnable {
 
     @NotNull
     private CallExecutionPipelineProvider provider(SqlManager sqlManager) {
-        return (call, line) -> line.startsWith(INTERNAL_COMMAND_PREFIX)
-                ? createInternalCommandPipeline(call, line)
+        return (call, exceptionHandlers, line) -> line.startsWith(INTERNAL_COMMAND_PREFIX)
+                ? createInternalCommandPipeline(call, exceptionHandlers, line)
                 : createSqlExecPipeline(sqlManager, line);
     }
 
     private CallExecutionPipeline<?, ?> createSqlExecPipeline(SqlManager sqlManager, String line) {
         return CallExecutionPipeline.builder(new SqlQueryCall(sqlManager))
                 .inputProvider(() -> new StringCallInput(line))
-                .output(spec.commandLine().getOut())
-                .errOutput(spec.commandLine().getErr())
+                .output(System.out)
+                .errOutput(System.err)
                 .exceptionHandlers(new DefaultExceptionHandlers())
                 .decorator(new SqlQueryResultDecorator())
                 .build();
     }
 
-    private CallExecutionPipeline<?, ?> createInternalCommandPipeline(RegistryCommandExecutor call, String line) {
+    private CallExecutionPipeline<?, ?> createInternalCommandPipeline(RegistryCommandExecutor call,
+            ExceptionHandlers exceptionHandlers,
+            String line) {
         return CallExecutionPipeline.builder(call)
                 .inputProvider(() -> new StringCallInput(line.substring(INTERNAL_COMMAND_PREFIX.length())))
                 .output(System.out)
                 .errOutput(System.err)
                 .exceptionHandlers(new DefaultExceptionHandlers())
+                .exceptionHandlers(exceptionHandlers)
                 .build();
     }
 }

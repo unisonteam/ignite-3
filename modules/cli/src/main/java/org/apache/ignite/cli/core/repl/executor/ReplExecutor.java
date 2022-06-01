@@ -1,11 +1,11 @@
 package org.apache.ignite.cli.core.repl.executor;
 
-import io.micronaut.configuration.picocli.MicronautFactory;
-import jakarta.inject.Singleton;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import org.apache.ignite.cli.config.Config;
+import org.apache.ignite.cli.core.exception.handler.PicocliExecutionExceptionHandler;
 import org.apache.ignite.cli.core.exception.handler.ReplExceptionHandlers;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
@@ -27,24 +27,26 @@ import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 /**
  * Executor of {@link Repl}.
  */
-@Singleton
 public class ReplExecutor {
     private final Parser parser = new DefaultParser();
     private final Supplier<Path> workDirProvider = () -> Paths.get(System.getProperty("user.dir"));
     private final AtomicBoolean interrupted = new AtomicBoolean();
     private final ReplExceptionHandlers exceptionHandlers = new ReplExceptionHandlers(interrupted::set);
-    private PicocliCommandsFactory factory;
-    private Terminal terminal;
+    private final PicocliCommandsFactory factory;
+    private final Config config;
+    private final Terminal terminal;
 
     /**
-     * Secondary constructor.
+     * Constructor.
      *
-     * @param micronautFactory command factory instance {@link MicronautFactory}.
+     * @param commandsFactory picocli commands factory.
+     * @param terminal terminal instance.
+     * @param config config instance.
      */
-    public void injectFactory(MicronautFactory micronautFactory) throws Exception {
-        factory = new PicocliCommandsFactory(micronautFactory);
-        terminal = micronautFactory.create(Terminal.class);
-        factory.setTerminal(terminal);
+    public ReplExecutor(PicocliCommandsFactory commandsFactory, Terminal terminal, Config config) {
+        this.factory = commandsFactory;
+        this.terminal = terminal;
+        this.config = config;
     }
 
     /**
@@ -57,7 +59,7 @@ public class ReplExecutor {
             repl.customizeTerminal(terminal);
 
             PicocliCommands picocliCommands = createPicocliCommands(repl);
-            SystemRegistryImpl registry = createRegistry();
+            SystemRegistryImpl registry = new SystemRegistryImpl(parser, terminal, workDirProvider, null);
             registry.setCommandRegistries(picocliCommands);
 
             LineReader reader = createReader(repl.getCompleter() != null
@@ -75,13 +77,13 @@ public class ReplExecutor {
                         continue;
                     }
 
-                    repl.getPipeline(executor, line).runPipeline();
+                    repl.getPipeline(executor, exceptionHandlers, line).runPipeline();
                 } catch (Throwable t) {
-                    exceptionHandlers.handleException(System.err::print, t);
+                    exceptionHandlers.handleException(System.err::println, t);
                 }
             }
         } catch (Throwable t) {
-            exceptionHandlers.handleException(System.err::print, t);
+            exceptionHandlers.handleException(System.err::println, t);
         }
     }
 
@@ -97,16 +99,14 @@ public class ReplExecutor {
         return result;
     }
 
-    public SystemRegistryImpl createRegistry() {
-        return new SystemRegistryImpl(parser, terminal, workDirProvider, null);
-    }
-
     private PicocliCommands createPicocliCommands(Repl repl) {
         CommandLine cmd = new CommandLine(repl.commandClass(), factory);
         IDefaultValueProvider defaultValueProvider = repl.defaultValueProvider();
         if (defaultValueProvider != null) {
             cmd.setDefaultValueProvider(defaultValueProvider);
         }
+        cmd.setExecutionExceptionHandler(new PicocliExecutionExceptionHandler());
+        cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));
         return new PicocliCommands(cmd);
     }
 }

@@ -18,11 +18,7 @@ public class CliConfigGetCall implements Call<StringCallInput, String> {
     @Override
     public DefaultCallOutput<String> execute(StringCallInput input) {
         String key = input.getString();
-        String property = config.getProperty(key);
-        if (property != null) {
-            return DefaultCallOutput.success(property);
-        } else {
-            return DefaultCallOutput.failure(new IllegalArgumentException("Property " + key + " is not defined"));
-        }
+        String property = config.getProperty(key, "");
+        return DefaultCallOutput.success(property);
     }
 }
