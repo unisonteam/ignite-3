@@ -25,10 +25,9 @@ public class SqlSchemaProvider implements SchemaProvider {
 
     @Override
     public SqlSchema getSchema() {
-        Instant now = Instant.now();
-        if (schema == null || Duration.between(lastUpdate, now).toSeconds() >= schemaUpdateTimeout) {
-            lastUpdate = Instant.now();
+        if (schema == null || Duration.between(lastUpdate, Instant.now()).toSeconds() >= schemaUpdateTimeout) {
             schema = sqlSchemaLoader.loadSchema();
+            lastUpdate = Instant.now();
         }
         return schema;
     }

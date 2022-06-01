@@ -20,8 +20,8 @@ public class SqlSchema {
         return Collections.unmodifiableSet(schema.keySet());
     }
 
-    public Set<String> tables(String schema) {
-        return Collections.unmodifiableSet(this.schema.getOrDefault(schema, Collections.emptyMap()).keySet());
+    public Set<String> tables(String schemaName) {
+        return Collections.unmodifiableSet(schema.getOrDefault(schemaName, Collections.emptyMap()).keySet());
     }
 
     /**

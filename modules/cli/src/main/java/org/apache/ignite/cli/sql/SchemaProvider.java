@@ -7,7 +7,7 @@ public interface SchemaProvider {
     /**
      * Retrieves DB schema.
      *
-     * @return map from schema name to the map from table name to nullable set of column names.
+     * @return instance of {@link SqlSchema}.
      */
     SqlSchema getSchema();
 }

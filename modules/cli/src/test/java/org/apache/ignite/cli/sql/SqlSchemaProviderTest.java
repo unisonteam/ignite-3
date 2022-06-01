@@ -12,8 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-/** {@inheritDoc} */
-public class SqlSchemaProviderTest {
+class SqlSchemaProviderTest {
     private static MetadataSupplier supplier;
 
     @BeforeAll
