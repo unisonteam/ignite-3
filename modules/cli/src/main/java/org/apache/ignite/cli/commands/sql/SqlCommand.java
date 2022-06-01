@@ -40,7 +40,6 @@ public class SqlCommand extends BaseCommand implements Runnable {
     @Option(names = {"-f", "--script-file"})
     private File file;
 
-
     @Inject
     private ReplExecutor replExecutor;
 

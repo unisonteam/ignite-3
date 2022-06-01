@@ -10,6 +10,7 @@ import jakarta.inject.Singleton;
 public class Session {
     private boolean connectedToNode;
     private String nodeUrl;
+    private String jdbcUrl;
 
     public boolean isConnectedToNode() {
         return connectedToNode;
@@ -25,5 +26,13 @@ public class Session {
 
     public void setNodeUrl(String nodeUrl) {
         this.nodeUrl = nodeUrl;
+    }
+
+    public String getJdbcUrl() {
+        return jdbcUrl;
+    }
+
+    public void setJdbcUrl(String jdbcUrl) {
+        this.jdbcUrl = jdbcUrl;
     }
 }
