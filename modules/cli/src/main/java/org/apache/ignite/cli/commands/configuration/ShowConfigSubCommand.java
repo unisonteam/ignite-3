@@ -14,7 +14,7 @@ import picocli.CommandLine.Option;
  */
 @Command(name = "show",
         description = "Shows configuration.")
-public class ShowConfigSubCommand extends BaseCommand implements Runnable {
+public class ShowConfigSubCommand extends BaseCommand {
 
     /**
      * Node ID option.

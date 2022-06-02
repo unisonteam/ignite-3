@@ -87,7 +87,8 @@ public class Main {
 
         SessionDefaultValueProvider defaultValueProvider = micronautFactory.create(SessionDefaultValueProvider.class);
 
-        System.out.println(banner());
+        VersionProvider versionProvider = micronautFactory.create(VersionProvider.class);
+        System.out.println(banner(versionProvider));
 
         replExecutorProvider.get().execute(Repl.builder()
                 .withPromptProvider(micronautFactory.create(PromptProvider.class))
@@ -130,13 +131,13 @@ public class Main {
             "  @|red,bold      ##|@                  /____/\n"
     };
 
-    private static String banner() {
+    private static String banner(VersionProvider versionProvider) {
         String banner = Arrays
                 .stream(BANNER)
                 .map(Ansi.AUTO::string)
                 .collect(Collectors.joining("\n"));
 
-        return '\n' + banner + '\n' + " ".repeat(22) + "IGnite Shell alpha. \n\n";
+        return '\n' + banner + '\n' + " ".repeat(22) + versionProvider.getVersion()[0] + "\n\n";
     }
 
     /**

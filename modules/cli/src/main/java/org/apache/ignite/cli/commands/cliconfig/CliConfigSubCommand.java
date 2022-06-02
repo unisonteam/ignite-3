@@ -17,7 +17,7 @@ import picocli.CommandLine.Command;
         CliConfigSetSubCommand.class
 })
 @Singleton
-public class CliConfigSubCommand extends BaseCommand implements Runnable {
+public class CliConfigSubCommand extends BaseCommand {
 
     @Inject
     private CliConfigCall call;

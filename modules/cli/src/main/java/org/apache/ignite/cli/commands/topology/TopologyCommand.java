@@ -12,7 +12,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "topology", description = "Prints topology information.")
 @Singleton
-public class TopologyCommand extends BaseCommand implements Runnable {
+public class TopologyCommand extends BaseCommand {
 
     /**
      * Cluster url option.

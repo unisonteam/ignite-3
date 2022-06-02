@@ -16,7 +16,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "connect", description = "Connect to Ignite 3 node.")
 @Singleton
-public class ConnectCommand extends BaseCommand implements Runnable {
+public class ConnectCommand extends BaseCommand {
 
     /**
      * Cluster url option.

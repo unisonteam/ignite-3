@@ -17,7 +17,7 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "status", description = "Prints status of the cluster.")
 @Singleton
-public class StatusCommand extends BaseCommand implements Runnable {
+public class StatusCommand extends BaseCommand {
 
     /**
      * Cluster url option.

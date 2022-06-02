@@ -16,7 +16,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "update",
         description = "Updates configuration.")
 @Singleton
-public class UpdateConfigSubCommand extends BaseCommand implements Runnable {
+public class UpdateConfigSubCommand extends BaseCommand {
     /**
      * Node ID option.
      */
