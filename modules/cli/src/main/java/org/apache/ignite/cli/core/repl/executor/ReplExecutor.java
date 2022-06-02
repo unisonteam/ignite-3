@@ -111,7 +111,6 @@ public class ReplExecutor {
             cmd.setDefaultValueProvider(defaultValueProvider);
         }
         cmd.setExecutionExceptionHandler(new PicocliExecutionExceptionHandler());
-        cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));
         return new PicocliCommands(cmd);
     }
 }
