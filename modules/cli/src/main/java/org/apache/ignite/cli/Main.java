@@ -79,35 +79,30 @@ public class Main {
     }
 
     private static void enterRepl(MicronautFactory micronautFactory) throws Exception {
-        AnsiConsole.systemInstall();
-        try {
-            ReplExecutorProvider replExecutorProvider = micronautFactory.create(ReplExecutorProvider.class);
-            replExecutorProvider.injectFactory(micronautFactory);
-            HashMap<String, String> aliases = new HashMap<>();
-            aliases.put("zle", "widget");
-            aliases.put("bindkey", "keymap");
+        ReplExecutorProvider replExecutorProvider = micronautFactory.create(ReplExecutorProvider.class);
+        replExecutorProvider.injectFactory(micronautFactory);
+        HashMap<String, String> aliases = new HashMap<>();
+        aliases.put("zle", "widget");
+        aliases.put("bindkey", "keymap");
 
-            SessionDefaultValueProvider defaultValueProvider = micronautFactory.create(SessionDefaultValueProvider.class);
+        SessionDefaultValueProvider defaultValueProvider = micronautFactory.create(SessionDefaultValueProvider.class);
 
-            System.out.println(banner());
+        System.out.println(banner());
 
-            replExecutorProvider.get().execute(Repl.builder()
-                    .withPromptProvider(micronautFactory.create(PromptProvider.class))
-                    .withAliases(aliases)
-                    .withCommandClass(TopLevelCliReplCommand.class)
-                    .withDefaultValueProvider(defaultValueProvider)
-                    .withCallExecutionPipelineProvider((executor, exceptionHandlers, line) ->
-                            CallExecutionPipeline.builder(executor)
-                                    .inputProvider(() -> new StringCallInput(line))
-                                    .output(System.out)
-                                    .errOutput(System.err)
-                                    .exceptionHandlers(new DefaultExceptionHandlers())
-                                    .exceptionHandlers(exceptionHandlers)
-                                    .build())
-                    .build());
-        } finally {
-            AnsiConsole.systemUninstall();
-        }
+        replExecutorProvider.get().execute(Repl.builder()
+                .withPromptProvider(micronautFactory.create(PromptProvider.class))
+                .withAliases(aliases)
+                .withCommandClass(TopLevelCliReplCommand.class)
+                .withDefaultValueProvider(defaultValueProvider)
+                .withCallExecutionPipelineProvider((executor, exceptionHandlers, line) ->
+                        CallExecutionPipeline.builder(executor)
+                                .inputProvider(() -> new StringCallInput(line))
+                                .output(System.out)
+                                .errOutput(System.err)
+                                .exceptionHandlers(new DefaultExceptionHandlers())
+                                .exceptionHandlers(exceptionHandlers)
+                                .build())
+                .build());
     }
 
     private static void executeCommand(String[] args, MicronautFactory micronautFactory) throws Exception {
