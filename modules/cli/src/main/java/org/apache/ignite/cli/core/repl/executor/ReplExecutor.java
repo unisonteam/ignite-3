@@ -1,5 +1,6 @@
 package org.apache.ignite.cli.core.repl.executor;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,6 +66,9 @@ public class ReplExecutor {
             LineReader reader = createReader(repl.getCompleter() != null
                     ? repl.getCompleter()
                     : registry.completer());
+            if (repl.getHistoryFileName() != null) {
+                reader.variable(LineReader.HISTORY_FILE, new File(Config.getStateFolder(), repl.getHistoryFileName()));
+            }
 
             RegistryCommandExecutor executor = new RegistryCommandExecutor(registry, picocliCommands, reader);
 
@@ -82,6 +86,7 @@ public class ReplExecutor {
                     exceptionHandlers.handleException(System.err::println, t);
                 }
             }
+            reader.getHistory().save();
         } catch (Throwable t) {
             exceptionHandlers.handleException(System.err::println, t);
         }

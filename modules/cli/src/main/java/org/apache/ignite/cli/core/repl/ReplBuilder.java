@@ -20,6 +20,7 @@ public class ReplBuilder {
     };
     private Completer completer;
     private CallExecutionPipelineProvider provider;
+    private String historyFileName;
 
     /**
      * Build methods.
@@ -27,7 +28,16 @@ public class ReplBuilder {
      * @return new instance of {@link Repl}.
      */
     public Repl build() {
-        return new Repl(promptProvider, commandClass, defaultValueProvider, aliases, terminalCustomizer, provider, completer);
+        return new Repl(
+                promptProvider,
+                commandClass,
+                defaultValueProvider,
+                aliases,
+                terminalCustomizer,
+                provider,
+                completer,
+                historyFileName
+        );
     }
 
     public ReplBuilder withPromptProvider(PromptProvider promptProvider) {
@@ -86,6 +96,11 @@ public class ReplBuilder {
 
     public ReplBuilder withCallExecutionPipelineProvider(CallExecutionPipelineProvider provider) {
         this.provider = provider;
+        return this;
+    }
+
+    public ReplBuilder withHistoryFileName(String historyFileName) {
+        this.historyFileName = historyFileName;
         return this;
     }
 }

@@ -64,6 +64,7 @@ public class SqlCommand extends BaseCommand implements Runnable {
                         .withCompleter(new SqlCompleter(new SqlSchemaProvider(sqlManager::getMetadata)))
                         .withCommandClass(SqlReplTopLevelCliCommand.class)
                         .withCallExecutionPipelineProvider(provider(sqlManager))
+                        .withHistoryFileName("sqlhistory")
                         .build());
             } else {
                 String executeCommand = file != null ? extract(file) : command;

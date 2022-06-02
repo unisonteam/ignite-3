@@ -102,6 +102,7 @@ public class Main {
                                 .exceptionHandlers(new DefaultExceptionHandlers())
                                 .exceptionHandlers(exceptionHandlers)
                                 .build())
+                .withHistoryFileName("history")
                 .build());
     }
 

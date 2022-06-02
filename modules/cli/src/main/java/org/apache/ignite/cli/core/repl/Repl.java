@@ -22,6 +22,7 @@ public class Repl {
     private final IDefaultValueProvider defaultValueProvider;
     private final CallExecutionPipelineProvider provider;
     private final Completer completer;
+    private final String historyFileName;
 
     /**
      * Constructor.
@@ -33,6 +34,7 @@ public class Repl {
      * @param terminalCustomizer customizer of terminal.
      * @param provider default call execution pipeline provider.
      * @param completer completer instance.
+     * @param historyFileName file name for storing commands history.
      */
     public Repl(PromptProvider promptProvider,
             Class<?> commandClass,
@@ -40,7 +42,9 @@ public class Repl {
             Map<String, String> aliases,
             TerminalCustomizer terminalCustomizer,
             CallExecutionPipelineProvider provider,
-            Completer completer) {
+            Completer completer,
+            String historyFileName
+    ) {
         this.promptProvider = promptProvider;
         this.commandClass = commandClass;
         this.defaultValueProvider = defaultValueProvider;
@@ -48,6 +52,7 @@ public class Repl {
         this.terminalCustomizer = terminalCustomizer;
         this.provider = provider;
         this.completer = completer;
+        this.historyFileName = historyFileName;
     }
 
     /**
@@ -103,5 +108,9 @@ public class Repl {
 
     public Completer getCompleter() {
         return completer;
+    }
+
+    public String getHistoryFileName() {
+        return historyFileName;
     }
 }
