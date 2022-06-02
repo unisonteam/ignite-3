@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.internal.runner.app;
+package org.apache.ignite.rest;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.ignite.internal.testframework.IgniteTestUtils.testNodeName;
@@ -60,19 +60,26 @@ public class ItGeneratedRestClientTest {
 
     /** Start rest server port. */
     private static final int BASE_REST_PORT = 10300;
-
+    private final List<String> clusterNodeNames = new ArrayList<>();
+    private final List<Ignite> clusterNodes = new ArrayList<>();
     @WorkDirectory
     private Path workDir;
-
     private CompletableFuture<Ignite> ignite;
-
-    private final List<String> clusterNodeNames = new ArrayList<>();
-
-    private final List<Ignite> clusterNodes = new ArrayList<>();
-
     private ClusterConfigurationApi clusterConfigurationApi;
     private NodeConfigurationApi nodeConfigurationApi;
     private ClusterManagementApi clusterManagementApi;
+
+    private static String buildConfig(int nodeIdx) {
+        return "{\n"
+                + "  network: {\n"
+                + "    port: " + (BASE_PORT + nodeIdx) + ",\n"
+                + "    portRange: 1,\n"
+                + "    nodeFinder: {\n"
+                + "      netClusterNodes: [ \"localhost:3344\", \"localhost:3345\", \"localhost:3346\" ] \n"
+                + "    }\n"
+                + "  }\n"
+                + "}";
+    }
 
     @BeforeEach
     void setUp(TestInfo testInfo) {
@@ -211,18 +218,6 @@ public class ItGeneratedRestClientTest {
         }
     }
 
-    private static String buildConfig(int nodeIdx) {
-        return "{\n"
-                + "  network: {\n"
-                + "    port: " + (BASE_PORT + nodeIdx) + ",\n"
-                + "    portRange: 1,\n"
-                + "    nodeFinder: {\n"
-                + "      netClusterNodes: [ \"localhost:3344\", \"localhost:3345\", \"localhost:3346\" ] \n"
-                + "    }\n"
-                + "  }\n"
-                + "}";
-    }
-
     private CompletableFuture<Ignite> startNodeAsync(TestInfo testInfo, int index) {
         String nodeName = testNodeName(testInfo, BASE_PORT + index);
 
@@ -231,3 +226,4 @@ public class ItGeneratedRestClientTest {
         return IgnitionManager.start(nodeName, buildConfig(index), workDir.resolve(nodeName));
     }
 }
+
