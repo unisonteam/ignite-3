@@ -30,7 +30,7 @@ import picocli.CommandLine.Option;
  * Command for sql execution.
  */
 @Command(name = "sql", description = "Executes SQL query.")
-public class SqlCommand extends BaseCommand implements Runnable {
+public class SqlCommand extends BaseCommand {
     private static final String INTERNAL_COMMAND_PREFIX = "!";
 
     @Option(names = {"-u", "--jdbc-url"}, required = true,

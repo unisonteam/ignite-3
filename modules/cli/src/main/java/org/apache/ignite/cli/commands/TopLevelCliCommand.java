@@ -20,7 +20,7 @@ import picocli.CommandLine.Option;
 @Command(name = "ignite",
         versionProvider = VersionProvider.class,
         description = {
-                "Welcome to IGnite Shell alpha.",
+                "Welcome to Ignite Shell alpha.",
                 "Run without command to enter interactive mode.",
                 ""},
         subcommands = {
@@ -35,7 +35,7 @@ import picocli.CommandLine.Option;
                 ClusterCommandSpec.class
         })
 @Singleton
-public class TopLevelCliCommand extends BaseCommand implements Runnable {
+public class TopLevelCliCommand extends BaseCommand {
     @Option(names = {"--version"}, versionHelp = true, description = "Print version information and exit")
     private boolean versionRequested;
 

@@ -20,6 +20,7 @@ package org.apache.ignite.cli.deprecated.spec;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.deprecated.builtins.cluster.ClusterApiClient;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -34,12 +35,12 @@ import picocli.CommandLine.Option;
                 ClusterCommandSpec.InitClusterCommandSpec.class,
         }
 )
-public class ClusterCommandSpec extends CategorySpec {
+public class ClusterCommandSpec {
     /**
      * Initializes an Ignite cluster.
      */
     @CommandLine.Command(name = "init", description = "Initializes an Ignite cluster.")
-    public static class InitClusterCommandSpec extends CommandSpec {
+    public static class InitClusterCommandSpec extends BaseCommand {
 
         @Inject
         private ClusterApiClient clusterApiClient;

@@ -19,6 +19,7 @@ package org.apache.ignite.cli.deprecated.spec;
 
 import jakarta.inject.Inject;
 import java.net.URL;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.common.IgniteCommand;
 import org.apache.ignite.cli.deprecated.builtins.init.InitIgniteCommand;
 import picocli.CommandLine;
@@ -29,7 +30,7 @@ import picocli.CommandLine;
  * @see IgniteCommand
  */
 @CommandLine.Command(name = "init", description = "Installs Ignite core modules locally.")
-public class InitIgniteCommandSpec extends CommandSpec implements IgniteCommand {
+public class InitIgniteCommandSpec extends BaseCommand implements IgniteCommand {
     /** Init command implementation. */
     @Inject
     private InitIgniteCommand cmd;

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.List;
+import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.deprecated.CliPathsConfigLoader;
 import org.apache.ignite.cli.deprecated.IgniteCliException;
 import org.apache.ignite.cli.deprecated.IgnitePaths;
@@ -44,12 +45,12 @@ import picocli.CommandLine.Help.ColorScheme;
                 NodeCommandSpec.ListNodesCommandSpec.class
         }
 )
-public class NodeCommandSpec extends CategorySpec {
+public class NodeCommandSpec {
     /**
      * Starts Ignite node command.
      */
     @CommandLine.Command(name = "start", description = "Starts an Ignite node locally.")
-    public static class StartNodeCommandSpec extends CommandSpec {
+    public static class StartNodeCommandSpec extends BaseCommand {
 
         /** Loader for Ignite distributive paths. */
         @Inject
@@ -103,7 +104,7 @@ public class NodeCommandSpec extends CategorySpec {
      * Command for stopping Ignite node on the current machine.
      */
     @CommandLine.Command(name = "stop", description = "Stops a locally running Ignite node.")
-    public static class StopNodeCommandSpec extends CommandSpec {
+    public static class StopNodeCommandSpec extends BaseCommand {
         /** Node manager. */
         @Inject
         private NodeManager nodeMgr;
@@ -144,7 +145,7 @@ public class NodeCommandSpec extends CategorySpec {
      * Command for listing the running nodes.
      */
     @CommandLine.Command(name = "list", description = "Shows the list of currently running local Ignite nodes.")
-    public static class ListNodesCommandSpec extends CommandSpec {
+    public static class ListNodesCommandSpec extends BaseCommand {
         /** Node manager. */
         @Inject
         private NodeManager nodeMgr;
@@ -189,7 +190,7 @@ public class NodeCommandSpec extends CategorySpec {
      * Command for reading the current classpath of Ignite nodes.
      */
     @CommandLine.Command(name = "classpath", description = "Shows the current classpath used by the Ignite nodes.")
-    public static class NodesClasspathCommandSpec extends CommandSpec {
+    public static class NodesClasspathCommandSpec extends BaseCommand {
         /** Node manager. */
         @Inject
         private NodeManager nodeMgr;

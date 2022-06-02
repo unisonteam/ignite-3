@@ -12,7 +12,7 @@ import picocli.CommandLine.Parameters;
  * Command to get CLI configuration parameters.
  */
 @Command(name = "get")
-public class CliConfigGetSubCommand extends BaseCommand implements Runnable {
+public class CliConfigGetSubCommand extends BaseCommand {
     @Parameters
     private String key;
 

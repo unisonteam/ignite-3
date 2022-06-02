@@ -13,7 +13,7 @@ import picocli.CommandLine.Parameters;
  * Command to set CLI configuration parameters.
  */
 @Command(name = "set")
-public class CliConfigSetSubCommand extends BaseCommand implements Runnable {
+public class CliConfigSetSubCommand extends BaseCommand {
     @Parameters(arity = "1..*")
     private Map<String, String> parameters;
 
