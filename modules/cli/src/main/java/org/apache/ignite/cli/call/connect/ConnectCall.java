@@ -34,7 +34,7 @@ public class ConnectCall implements Call<ConnectCallInput, String> {
         String nodeUrl = input.getNodeUrl();
         try {
             String configuration = api.getNodeConfiguration();
-            setJdbcURL(configuration, nodeUrl);
+            setJdbcUrl(configuration, nodeUrl);
         } catch (ApiException e) {
             return DefaultCallOutput.failure(e);
         }
@@ -51,7 +51,7 @@ public class ConnectCall implements Call<ConnectCallInput, String> {
         return new NodeConfigurationApi(client);
     }
 
-    private void setJdbcURL(String configuration, String nodeUrl) {
+    private void setJdbcUrl(String configuration, String nodeUrl) {
         try {
             String host = new URL(nodeUrl).getHost();
             RootConfig config = new Gson().fromJson(configuration, RootConfig.class);

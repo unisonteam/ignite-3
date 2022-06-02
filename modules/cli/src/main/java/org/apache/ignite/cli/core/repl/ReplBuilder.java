@@ -84,7 +84,7 @@ public class ReplBuilder {
         return this;
     }
 
-    public ReplBuilder withCallExecutionPipelineBuilderProvider(CallExecutionPipelineProvider provider) {
+    public ReplBuilder withCallExecutionPipelineProvider(CallExecutionPipelineProvider provider) {
         this.provider = provider;
         return this;
     }

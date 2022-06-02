@@ -31,13 +31,16 @@ import org.apache.ignite.cli.commands.TopLevelCliReplCommand;
 import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.StringCallInput;
+import org.apache.ignite.cli.core.exception.handler.DefaultExceptionHandlers;
+import org.apache.ignite.cli.core.exception.handler.PicocliExecutionExceptionHandler;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.SessionDefaultValueProvider;
-import org.apache.ignite.cli.core.repl.executor.ReplExecutor;
+import org.apache.ignite.cli.core.repl.executor.ReplExecutorProvider;
 import org.apache.ignite.cli.core.repl.prompt.PromptProvider;
 import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
+
 
 /**
  * Ignite cli entry point.
@@ -76,8 +79,8 @@ public class Main {
     }
 
     private static void enterRepl(MicronautFactory micronautFactory) throws Exception {
-        ReplExecutor replExecutor = micronautFactory.create(ReplExecutor.class);
-        replExecutor.injectFactory(micronautFactory);
+        ReplExecutorProvider replExecutorProvider = micronautFactory.create(ReplExecutorProvider.class);
+        replExecutorProvider.injectFactory(micronautFactory);
         HashMap<String, String> aliases = new HashMap<>();
         aliases.put("zle", "widget");
         aliases.put("bindkey", "keymap");
@@ -86,21 +89,25 @@ public class Main {
 
         System.out.println(banner());
 
-        replExecutor.execute(Repl.builder()
+        replExecutorProvider.get().execute(Repl.builder()
                 .withPromptProvider(micronautFactory.create(PromptProvider.class))
                 .withAliases(aliases)
                 .withCommandClass(TopLevelCliReplCommand.class)
                 .withDefaultValueProvider(defaultValueProvider)
-                .withCallExecutionPipelineBuilderProvider((executor, line) ->
+                .withCallExecutionPipelineProvider((executor, exceptionHandlers, line) ->
                         CallExecutionPipeline.builder(executor)
                                 .inputProvider(() -> new StringCallInput(line))
                                 .output(System.out)
-                                .errOutput(System.err).build())
+                                .errOutput(System.err)
+                                .exceptionHandlers(new DefaultExceptionHandlers())
+                                .exceptionHandlers(exceptionHandlers)
+                                .build())
                 .build());
     }
 
     private static void executeCommand(String[] args, MicronautFactory micronautFactory) throws Exception {
         CommandLine cmd = new CommandLine(TopLevelCliCommand.class, micronautFactory);
+        cmd.setExecutionExceptionHandler(new PicocliExecutionExceptionHandler());
         Config config = micronautFactory.create(Config.class);
         cmd.setDefaultValueProvider(new CommandLine.PropertiesDefaultProvider(config.getProperties()));
         cmd.execute(args);

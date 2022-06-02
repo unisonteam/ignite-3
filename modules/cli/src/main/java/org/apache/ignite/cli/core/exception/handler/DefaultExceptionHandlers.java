@@ -15,5 +15,8 @@ public class DefaultExceptionHandlers extends ExceptionHandlers {
         addExceptionHandler(new CommandExecutionExceptionHandler());
         addExceptionHandler(new TimeoutExceptionHandler());
         addExceptionHandler(new IgniteClientExceptionHandler());
+        addExceptionHandler(new IgniteCliExceptionHandler());
+        addExceptionHandler(new ConnectExceptionHandler());
+        addExceptionHandler(new ApiExceptionHandler());
     }
 }
