@@ -408,7 +408,7 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         @DisplayName("init --cluster-url http://localhost:10300 --meta-storage-node node1ConsistentId --meta-storage-node node2ConsistentId "
                 + "--cmg-node node2ConsistentId --cmg-node node3ConsistentId --cluster-name cluster")
         void initSuccess() {
-            var expSentContent = "{\"metaStorageNodes\":[\"node1ConsistentId\",\"node2ConsistentId\"],"
+            var expectedSentContent = "{\"metaStorageNodes\":[\"node1ConsistentId\",\"node2ConsistentId\"],"
                     + "\"cmgNodes\":[\"node2ConsistentId\",\"node3ConsistentId\"],"
                     + "\"clusterName\":\"cluster\"}";
 
@@ -416,7 +416,7 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
                     .when(request()
                             .withMethod("POST")
                             .withPath("/management/v1/cluster/init")
-                            .withBody(expSentContent)
+                            .withBody(expectedSentContent)
                             .withContentType(MediaType.APPLICATION_JSON_UTF_8)
                     )
                     .respond(response(null));
@@ -439,50 +439,15 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         }
 
         @Test
-        void initErrorWithWellFormedJsonResponseDisplaysPrettifiedJson() {
+        void initError() {
             clientAndServer
-                    .when(
-                            request()
-                                    .withMethod("POST")
-                                    .withPath("/management/v1/cluster/init")
+                    .when(request()
+                            .withMethod("POST")
+                            .withPath("/management/v1/cluster/init")
                     )
-                    .respond(
-                            response()
-                                    .withStatusCode(INTERNAL_SERVER_ERROR_500.code())
-                                    .withBody("{\"error\":{\"type\":\"INTERNAL_ERROR\",\"message\":\"Cannot elect leaders\"}}")
-                    );
-
-            int exitCode = cmd(ctx).execute(
-                    "cluster", "init",
-                    "--cluster-url", mockUrl,
-                    "--meta-storage-node", "node1ConsistentId",
-                    "--meta-storage-node", "node2ConsistentId",
-                    "--cmg-node", "node2ConsistentId",
-                    "--cmg-node", "node3ConsistentId",
-                    "--cluster-name", "cluster"
-            );
-
-            assertThatExitCodeIs(1, exitCode);
-
-            assertThatStdoutIsEmpty();
-            assertErrOutputEqual(
-                    "An error occurred, error code: 500, "
-                            + "response: {\"error\":{\"type\":\"INTERNAL_ERROR\",\"message\":\"Cannot elect leaders\"}}"
-            );
-        }
-
-        @Test
-        void initErrorWithNonJsonResponse() {
-            clientAndServer
-                    .when(
-                            request()
-                                    .withMethod("POST")
-                                    .withPath("/management/v1/cluster/init")
-                    )
-                    .respond(
-                            response()
-                                    .withStatusCode(INTERNAL_SERVER_ERROR_500.code())
-                                    .withBody("Oops")
+                    .respond(response()
+                            .withStatusCode(INTERNAL_SERVER_ERROR_500.code())
+                            .withBody("Oops")
                     );
 
             int exitCode = cmd(ctx).execute(
@@ -522,10 +487,9 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         @DisplayName("init --cluster-url http://localhost:10300 --meta-storage-node node2ConsistentId --meta-storage-node node3ConsistentId")
         void cmgNodesAreNotMandatoryForInit() {
             clientAndServer
-                    .when(
-                            request()
-                                    .withMethod("POST")
-                                    .withPath("/management/v1/cluster/init")
+                    .when(request()
+                            .withMethod("POST")
+                            .withPath("/management/v1/cluster/init")
                     )
                     .respond(response().withStatusCode(OK_200.code()));
 
@@ -564,10 +528,9 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         @DisplayName("config show --cluster-url http://localhost:10300")
         void show() {
             clientAndServer
-                    .when(
-                            request()
-                                    .withMethod("GET")
-                                    .withPath("/management/v1/configuration/cluster")
+                    .when(request()
+                            .withMethod("GET")
+                            .withPath("/management/v1/configuration/cluster")
                     )
                     .respond(response("{\"autoAdjust\":{\"enabled\":true}}"));
 
@@ -588,10 +551,9 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         @DisplayName("show --cluster-url http://localhost:8081 --selector local.baseline")
         void showSubtree() {
             clientAndServer
-                    .when(
-                            request()
-                                    .withMethod("GET")
-                                    .withPath("/management/v1/configuration/cluster/local.baseline")
+                    .when(request()
+                            .withMethod("GET")
+                            .withPath("/management/v1/configuration/cluster/local.baseline")
                     )
                     .respond(response("{\"autoAdjust\":{\"enabled\":true}}"));
 
@@ -612,11 +574,10 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         @DisplayName("config update --cluster-url http://localhost:8081 local.baseline.autoAdjust.enabled=true")
         void updateHocon() {
             clientAndServer
-                    .when(
-                            request()
-                                    .withMethod("PATCH")
-                                    .withPath("/management/v1/configuration/cluster")
-                                    .withBody("local.baseline.autoAdjust.enabled=true")
+                    .when(request()
+                            .withMethod("PATCH")
+                            .withPath("/management/v1/configuration/cluster")
+                            .withBody("local.baseline.autoAdjust.enabled=true")
                     )
                     .respond(response(null));
 

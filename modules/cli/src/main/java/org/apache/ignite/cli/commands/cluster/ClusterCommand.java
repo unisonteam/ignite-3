@@ -25,6 +25,6 @@ import picocli.CommandLine.Command;
  */
 @Command(name = "cluster",
         subcommands = {ClusterConfigSubCommand.class, ClusterInitSubCommand.class},
-        description = "Manages an Ignite cluster as a whole.")
+        description = "Manages an Ignite cluster.")
 public class ClusterCommand {
 }
