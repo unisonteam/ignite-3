@@ -28,20 +28,17 @@ public class ClusterInitCallInput implements CallInput {
     private final List<String> metaStorageNodes;
     private final List<String> cmgNodes;
     private final String clusterName;
-    private final String commandName;
 
     private ClusterInitCallInput(
             String clusterUrl,
             List<String> metaStorageNodes,
             List<String> cmgNodes,
-            String clusterName,
-            String commandName
+            String clusterName
     ) {
         this.clusterUrl = clusterUrl;
         this.metaStorageNodes = metaStorageNodes;
         this.cmgNodes = cmgNodes;
         this.clusterName = clusterName;
-        this.commandName = commandName;
     }
 
     /**
@@ -89,15 +86,6 @@ public class ClusterInitCallInput implements CallInput {
     }
 
     /**
-     * Get command name.
-     *
-     * @return command name.
-     */
-    public String getCommandName() {
-        return commandName;
-    }
-
-    /**
      * Builder for {@link ClusterInitCallInput}.
      */
     public static class ClusterInitCallInputBuilder {
@@ -108,8 +96,6 @@ public class ClusterInitCallInput implements CallInput {
         private List<String> cmgNodes;
 
         private String clusterName;
-
-        private String commandName;
 
         public ClusterInitCallInputBuilder clusterUrl(String clusterUrl) {
             this.clusterUrl = clusterUrl;
@@ -131,13 +117,8 @@ public class ClusterInitCallInput implements CallInput {
             return this;
         }
 
-        public ClusterInitCallInputBuilder commandName(String commandName) {
-            this.commandName = commandName;
-            return this;
-        }
-
         public ClusterInitCallInput build() {
-            return new ClusterInitCallInput(clusterUrl, metaStorageNodes, cmgNodes, clusterName, commandName);
+            return new ClusterInitCallInput(clusterUrl, metaStorageNodes, cmgNodes, clusterName);
         }
     }
 }
