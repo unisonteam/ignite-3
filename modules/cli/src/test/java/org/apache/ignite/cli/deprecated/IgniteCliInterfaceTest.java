@@ -328,7 +328,6 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         @Nested
         @DisplayName("config")
         class Config {
-            //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
             @Test
             @DisplayName("show --node-url http://localhost:10300")
             void show() {
@@ -352,7 +351,6 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
                 assertThatStderrIsEmpty();
             }
 
-            //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
             @Test
             @DisplayName("show --node-url http://localhost:10300 --selector local.baseline")
             void showSubtree() {
@@ -376,7 +374,6 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
                 assertThatStderrIsEmpty();
             }
 
-            //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
             @Test
             @DisplayName("update --node-url http://localhost:10300 local.baseline.autoAdjust.enabled=true")
             void updateHocon() {
@@ -467,7 +464,7 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
         }
 
         @Test
-        @DisplayName("init --cluster-url http://localhost:17300 --cmg-node node2ConsistentId --cmg-node node3ConsistentId")
+        @DisplayName("init --cluster-url http://localhost:10300 --cmg-node node2ConsistentId --cmg-node node3ConsistentId")
         void metastorageNodesAreMandatoryForInit() {
             int exitCode = cmd(ctx).execute(
                     "cluster", "init",
@@ -523,70 +520,71 @@ public class IgniteCliInterfaceTest extends AbstractCliTest {
             assertThat(err.toString(UTF_8), startsWith("Missing required option: '--cluster-name=<clusterName>'"));
         }
 
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName("config show --cluster-url http://localhost:10300")
-        void show() {
-            clientAndServer
-                    .when(request()
-                            .withMethod("GET")
-                            .withPath("/management/v1/configuration/cluster")
-                    )
-                    .respond(response("{\"autoAdjust\":{\"enabled\":true}}"));
+        @Nested
+        @DisplayName("config")
+        class Config {
+            @Test
+            @DisplayName("show --cluster-url http://localhost:10300")
+            void show() {
+                clientAndServer
+                        .when(request()
+                                .withMethod("GET")
+                                .withPath("/management/v1/configuration/cluster")
+                        )
+                        .respond(response("{\"autoAdjust\":{\"enabled\":true}}"));
 
-            int exitCode = execute("cluster config show --cluster-url " + mockUrl);
+                int exitCode = execute("cluster config show --cluster-url " + mockUrl);
 
-            assertThatExitCodeMeansSuccess(exitCode);
+                assertThatExitCodeMeansSuccess(exitCode);
 
-            assertOutputEqual("{\n"
-                            + "  \"autoAdjust\" : {\n"
-                            + "    \"enabled\" : true\n"
-                            + "  }\n"
-                            + "}\n");
-            assertThatStderrIsEmpty();
-        }
+                assertOutputEqual("{\n"
+                        + "  \"autoAdjust\" : {\n"
+                        + "    \"enabled\" : true\n"
+                        + "  }\n"
+                        + "}\n");
+                assertThatStderrIsEmpty();
+            }
 
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName("show --cluster-url http://localhost:8081 --selector local.baseline")
-        void showSubtree() {
-            clientAndServer
-                    .when(request()
-                            .withMethod("GET")
-                            .withPath("/management/v1/configuration/cluster/local.baseline")
-                    )
-                    .respond(response("{\"autoAdjust\":{\"enabled\":true}}"));
+            @Test
+            @DisplayName("show --cluster-url http://localhost:10300 --selector local.baseline")
+            void showSubtree() {
+                clientAndServer
+                        .when(request()
+                                .withMethod("GET")
+                                .withPath("/management/v1/configuration/cluster/local.baseline")
+                        )
+                        .respond(response("{\"autoAdjust\":{\"enabled\":true}}"));
 
-            int exitCode = execute("cluster config show --cluster-url " + mockUrl + " --selector local.baseline");
+                int exitCode = execute("cluster config show --cluster-url " + mockUrl + " --selector local.baseline");
 
-            assertThatExitCodeMeansSuccess(exitCode);
+                assertThatExitCodeMeansSuccess(exitCode);
 
-            assertOutputEqual("{\n"
-                            + "  \"autoAdjust\" : {\n"
-                            + "    \"enabled\" : true\n"
-                            + "  }\n"
-                            + "}\n");
-            assertThatStderrIsEmpty();
-        }
+                assertOutputEqual("{\n"
+                        + "  \"autoAdjust\" : {\n"
+                        + "    \"enabled\" : true\n"
+                        + "  }\n"
+                        + "}\n");
+                assertThatStderrIsEmpty();
+            }
 
-        //TODO: Fix in https://issues.apache.org/jira/browse/IGNITE-15306
-        @Test
-        @DisplayName("config update --cluster-url http://localhost:8081 local.baseline.autoAdjust.enabled=true")
-        void updateHocon() {
-            clientAndServer
-                    .when(request()
-                            .withMethod("PATCH")
-                            .withPath("/management/v1/configuration/cluster")
-                            .withBody("local.baseline.autoAdjust.enabled=true")
-                    )
-                    .respond(response(null));
+            @Test
+            @DisplayName("update --cluster-url http://localhost:10300 local.baseline.autoAdjust.enabled=true")
+            void updateHocon() {
+                clientAndServer
+                        .when(request()
+                                .withMethod("PATCH")
+                                .withPath("/management/v1/configuration/cluster")
+                                .withBody("local.baseline.autoAdjust.enabled=true")
+                        )
+                        .respond(response(null));
 
-            int exitCode = execute("cluster config update --cluster-url " + mockUrl + " local.baseline.autoAdjust.enabled=true");
+                int exitCode = execute("cluster config update --cluster-url " + mockUrl + " local.baseline.autoAdjust.enabled=true");
 
-            assertThatExitCodeMeansSuccess(exitCode);
+                assertThatExitCodeMeansSuccess(exitCode);
 
-            assertOutputEqual("Cluster configuration was updated successfully.");
-            assertThatStderrIsEmpty();
+                assertOutputEqual("Cluster configuration was updated successfully.");
+                assertThatStderrIsEmpty();
+            }
         }
     }
 
