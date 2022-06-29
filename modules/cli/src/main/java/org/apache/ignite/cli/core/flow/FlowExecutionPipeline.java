@@ -7,10 +7,8 @@ import java.util.function.Supplier;
 import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
 import org.apache.ignite.cli.commands.decorators.core.Decorator;
 import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
-import org.apache.ignite.cli.core.call.Call;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.CallInput;
-import org.apache.ignite.cli.core.call.CallOutput;
 import org.apache.ignite.cli.core.exception.ExceptionHandler;
 import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.ExceptionWriter;
@@ -78,18 +76,19 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
     public int runPipeline() {
         I callInput = inputProvider.get();
 
+        FlowOutput<T> flowOutput = null;
         try {
-            CallOutput<T> callOutput = flow.call(callInput);
+            flowOutput = flow.call(callInput);
         } catch (FlowInterruptException e) {
-            e.printStackTrace();
+            flowOutput = DefaultFlowOutput.failure(e.getCause());
         }
 
-        if (callOutput.hasError()) {
-            return exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(errOutput), callOutput.errorCause());
+        if (flowOutput.hasError()) {
+            return exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(errOutput), flowOutput.errorCause());
         }
 
-        if (!callOutput.isEmpty()) {
-            TerminalOutput decoratedOutput = decorator.decorate(callOutput.body());
+        if (flowOutput.hasResult()) {
+            TerminalOutput decoratedOutput = decorator.decorate(flowOutput.body());
             output.println(decoratedOutput.toTerminalString());
         }
         return 0;
@@ -114,7 +113,7 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
             this.flow = flow;
         }
 
-        public <OT> FlowExecutionPipelineBuilder<I, OT> appendFlow(FlowElement<T, OT> next, FlowInterrupter<T> interrupter) {
+        public <OT> FlowExecutionPipelineBuilder<I, OT> appendFlow(FlowElement<FlowOutput<T>, OT> next, FlowInterrupter<T> interrupter) {
             return new FlowExecutionPipelineBuilder<>(flow.composite(next, interrupter))
                     .inputProvider(inputProvider)
                     .output(output)

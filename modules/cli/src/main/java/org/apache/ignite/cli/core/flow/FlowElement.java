@@ -1,11 +1,11 @@
 package org.apache.ignite.cli.core.flow;
 
 public interface FlowElement<IT, OT> {
-    OT call(IT input) throws FlowInterruptException;
+    FlowOutput<OT> call(IT input) throws FlowInterruptException;
 
-    default <O> FlowElement<IT, O> composite(FlowElement<OT, O> next, FlowInterrupter<OT> flowInterrupter) {
+    default <O> FlowElement<IT, O> composite(FlowElement<FlowOutput<OT>, O> next, FlowInterrupter<OT> flowInterrupter) {
         return input -> {
-            OT output = FlowElement.this.call(input);
+            FlowOutput<OT> output = FlowElement.this.call(input);
             try {
                 return next.call(output);
             } catch (FlowInterruptException e) {
