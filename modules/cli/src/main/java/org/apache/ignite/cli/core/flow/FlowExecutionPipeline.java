@@ -3,6 +3,9 @@ package org.apache.ignite.cli.core.flow;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
 import org.apache.ignite.cli.commands.decorators.core.Decorator;
@@ -64,8 +67,8 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
      *
      * @return builder for {@link CallExecutionPipeline}.
      */
-    public static <I extends CallInput, T> FlowExecutionPipelineBuilder<I, T> builder(FlowElement<I, T> flow) {
-        return new FlowExecutionPipelineBuilder<>(flow);
+    public static <I extends CallInput, T> FlowExecutionPipelineBuilder<I, T> builder() {
+        return new FlowExecutionPipelineBuilder<>();
     }
 
     /**
@@ -76,11 +79,12 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
     public int runPipeline() {
         I callInput = inputProvider.get();
 
-        FlowOutput<T> flowOutput = null;
+        MyFlowInterrupt flowInterrupt = new MyFlowInterrupt();
+        FlowOutput<T> flowOutput;
         try {
-            flowOutput = flow.call(callInput);
+            flowOutput = flow.call(callInput, flowInterrupt);
         } catch (FlowInterruptException e) {
-            flowOutput = DefaultFlowOutput.failure(e.getCause());
+            flowOutput = (FlowOutput<T>) flowInterrupt.flowOutput;
         }
 
         if (flowOutput.hasError()) {
@@ -109,16 +113,25 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
 
         private Decorator<T, TerminalOutput> decorator = new DefaultDecorator<>();
 
+        public FlowExecutionPipelineBuilder() {
+            this(null);
+        }
+
         public FlowExecutionPipelineBuilder(FlowElement<I, T> flow) {
             this.flow = flow;
         }
 
-        public <OT> FlowExecutionPipelineBuilder<I, OT> appendFlow(FlowElement<FlowOutput<T>, OT> next, FlowInterrupter<T> interrupter) {
-            return new FlowExecutionPipelineBuilder<>(flow.composite(next, interrupter))
-                    .inputProvider(inputProvider)
-                    .output(output)
-                    .errOutput(errOutput)
-                    .exceptionHandlers(exceptionHandlers);
+
+        public <OT> FlowExecutionPipelineBuilder<I, OT> flow(FlowElement<FlowOutput<T>, OT> flow) {
+            return new FlowAppenderExecutionPipelineBuilder<>(this, flow);
+        }
+
+        public FlowBranchExecutionPipelineBuilder<I, T> branches() {
+            return new FlowBranchExecutionPipelineBuilder<>(this);
+        }
+
+        public FlowExecutionPipelineBuilder<I, T> interruptHandler(InterruptHandler<T> interruptHandler) {
+            return this;
         }
 
         public FlowExecutionPipelineBuilder<I, T> inputProvider(Supplier<I> inputProvider) {
@@ -170,6 +183,69 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
         private static Charset getStdoutEncoding() {
             String encoding = System.getProperty("sun.stdout.encoding");
             return encoding != null ? Charset.forName(encoding) : Charset.defaultCharset();
+        }
+    }
+
+
+    public static class FlowAppenderExecutionPipelineBuilder<I extends CallInput, T> {
+        private final FlowExecutionPipelineBuilder<I, T> flowBuilder;
+
+        public FlowAppenderExecutionPipelineBuilder(FlowExecutionPipelineBuilder<I, T> flowBuilder, FlowElement<FlowOutput<T>, OT>) {
+            this.flowBuilder = flowBuilder;
+        }
+
+        public <OT> FlowExecutionPipelineBuilder<I, OT> appendFlow(FlowElement<FlowOutput<T>, OT> next) {
+            return new FlowExecutionPipelineBuilder<>(flow.composite(next))
+                    .inputProvider(inputProvider)
+                    .output(output)
+                    .errOutput(errOutput)
+                    .exceptionHandlers(exceptionHandlers);
+        }
+    }
+
+    public static class FlowBranchExecutionPipelineBuilder<I extends CallInput, T> {
+        private final FlowExecutionPipelineBuilder<I, T> flowBuilder;
+        private final List<Branch<T>> branches = new ArrayList<>();
+
+        public FlowBranchExecutionPipelineBuilder(FlowExecutionPipelineBuilder<I, T> flowBuilder) {
+            this.flowBuilder = flowBuilder;
+        }
+
+        public FlowBranchExecutionPipelineBuilder<I, T> branch(Predicate<T> predicate, FlowElement<FlowOutput<T>, ?> flowElement) {
+            branches.add(new Branch<>(predicate, flowElement));
+            return this;
+        }
+
+        public FlowExecutionPipeline<I, ?> build() {
+            return flowBuilder.appendFlow((input, interrupt) -> {
+                T body = input.body();
+                for (Branch<T> branch : branches) {
+                    if (branch.filter.test(body)) {
+                        return branch.flowElement.call(input, interrupt);
+                    }
+                }
+                return null;
+            }).build();
+        }
+
+        private static class Branch<I> {
+            private final Predicate<I> filter;
+            private final FlowElement<FlowOutput<I>, ?> flowElement;
+
+            public Branch(Predicate<I> filter, FlowElement<FlowOutput<I>, ?> flowElement) {
+                this.filter = filter;
+                this.flowElement = flowElement;
+            }
+        }
+    }
+
+    private static class MyFlowInterrupt implements FlowInterrupter {
+        private FlowOutput<?> flowOutput;
+
+        @Override
+        public void interrupt(FlowOutput<?> flowOutput) {
+            this.flowOutput = flowOutput;
+            throw new FlowInterruptException();
         }
     }
 }

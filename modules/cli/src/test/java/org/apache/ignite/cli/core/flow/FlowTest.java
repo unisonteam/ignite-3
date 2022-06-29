@@ -1,7 +1,6 @@
 package org.apache.ignite.cli.core.flow;
 
-import org.apache.ignite.cli.commands.decorators.core.Decorator;
-import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
+import java.util.function.Predicate;
 import org.apache.ignite.cli.core.call.StringCallInput;
 import org.junit.jupiter.api.Test;
 
@@ -11,26 +10,23 @@ public class FlowTest {
 
     @Test
     public void test() {
-        FlowExecutionPipeline<StringCallInput, Integer> pipeline = FlowExecutionPipeline
-                .<StringCallInput, String>builder(input -> DefaultFlowOutput.success(input.getString()))
+        FlowExecutionPipeline<StringCallInput, ?> pipeline = FlowExecutionPipeline
+                .<StringCallInput, String>builder()
                 .inputProvider(() -> new StringCallInput(s))
-                .appendFlow(input -> {
-                    if (input.hasResult()) {
+                .appendFlow((input, interrupt) -> DefaultFlowOutput.success(input.body()))
+                .appendFlow((input, interrupt) -> {
                         try {
                             return DefaultFlowOutput.success(Integer.parseInt(input.body()));
                         } catch (NumberFormatException e) {
-                            return DefaultFlowOutput.failure(e);
+                            interrupt.interrupt(input);
+                            return null;
                         }
-                    }
-                    throw new FlowInterruptException(input.errorCause());
-                }, FlowInterrupter.identity())
-                .appendFlow(input -> {
-                    if (input.hasError()) {
-                        return DefaultFlowOutput.success(-1);
-                    }
-                    return input;
-                }, FlowInterrupter.build(data -> () -> String.valueOf(data)))
+                })
+                .branches()
+                .branch(integer -> integer % 2 == 0, (input, interrupt) -> DefaultFlowOutput.success(input.body()))
+                .branch(integer -> integer % 2 == 1, (input, interrupt) -> DefaultFlowOutput.success(input.body() + 1))
                 .build();
+
 
         s = "5";
         pipeline.runPipeline();
