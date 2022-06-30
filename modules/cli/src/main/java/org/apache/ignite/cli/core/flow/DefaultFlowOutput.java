@@ -35,9 +35,18 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
     }
 
     @Override
+    public Class<T> type() {
+        return (Class<T>) body.getClass();
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         DefaultFlowOutput<?> that = (DefaultFlowOutput<?>) o;
         return Objects.equals(body, that.body) && Objects.equals(cause, that.cause);
     }
@@ -103,6 +112,8 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
      */
     public static class DefaultFlowOutputBuilder<T> {
 
+        private Class<T> type;
+
         private T body;
 
         private Throwable cause;
@@ -115,6 +126,7 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
          */
         public DefaultFlowOutputBuilder<T> body(T body) {
             this.body = body;
+            type = (Class<T>) body.getClass();
             return this;
         }
 

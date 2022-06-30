@@ -10,6 +10,8 @@ public interface FlowOutput<T> {
     }
 
 
+    Class<T> type();
+
     /**
      * Body provider method.
      *
@@ -40,6 +42,11 @@ public interface FlowOutput<T> {
             @Override
             public boolean hasResult() {
                 return FlowOutput.super.hasResult();
+            }
+
+            @Override
+            public Class<String> type() {
+                return String.class;
             }
 
             @Override

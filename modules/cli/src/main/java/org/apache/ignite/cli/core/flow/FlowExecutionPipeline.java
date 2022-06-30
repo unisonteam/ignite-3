@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
-import org.apache.ignite.cli.commands.decorators.core.Decorator;
 import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
 import org.apache.ignite.cli.core.call.CallInput;
@@ -36,7 +34,7 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
     /**
      * Decorator that decorates call's output.
      */
-    private final Decorator<T, TerminalOutput> decorator;
+    private final DecoratorStore store = new DefaultDecoratorStore();
 
     /**
      * Handlers for any exceptions.
@@ -52,13 +50,11 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
                                   PrintWriter output,
                                   PrintWriter errOutput,
                                   ExceptionHandlers exceptionHandlers,
-                                  Decorator<T, TerminalOutput> decorator,
                                   Supplier<I> inputProvider) {
         this.flow = flow;
         this.output = output;
         this.exceptionHandlers = exceptionHandlers;
         this.errOutput = errOutput;
-        this.decorator = decorator;
         this.inputProvider = inputProvider;
     }
 
@@ -67,8 +63,8 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
      *
      * @return builder for {@link CallExecutionPipeline}.
      */
-    public static <I extends CallInput, T> FlowExecutionPipelineBuilder<I, T> builder() {
-        return new FlowExecutionPipelineBuilder<>();
+    public static <I extends CallInput, T> FlowExecutionPipelineBuilder<I, T> builder(FlowElement<I, T> flowElement) {
+        return new FlowExecutionPipelineBuilder<>(flowElement);
     }
 
     /**
@@ -92,7 +88,7 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
         }
 
         if (flowOutput.hasResult()) {
-            TerminalOutput decoratedOutput = decorator.decorate(flowOutput.body());
+            TerminalOutput decoratedOutput = store.getDecorator(flowOutput.type()).decorate(flowOutput.body());
             output.println(decoratedOutput.toTerminalString());
         }
         return 0;
@@ -111,19 +107,18 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
 
         private PrintWriter errOutput = wrapOutputStream(System.err);
 
-        private Decorator<T, TerminalOutput> decorator = new DefaultDecorator<>();
-
-        public FlowExecutionPipelineBuilder() {
-            this(null);
-        }
 
         public FlowExecutionPipelineBuilder(FlowElement<I, T> flow) {
             this.flow = flow;
         }
 
 
-        public <OT> FlowExecutionPipelineBuilder<I, OT> flow(FlowElement<FlowOutput<T>, OT> flow) {
-            return new FlowAppenderExecutionPipelineBuilder<>(this, flow);
+        public <OT> FlowExecutionPipelineBuilder<I, OT> appendFlow(FlowElement<FlowOutput<T>, OT> next) {
+            return new FlowExecutionPipelineBuilder<>(flow.composite(next))
+                    .inputProvider(inputProvider)
+                    .output(output)
+                    .errOutput(errOutput)
+                    .exceptionHandlers(exceptionHandlers);
         }
 
         public FlowBranchExecutionPipelineBuilder<I, T> branches() {
@@ -167,13 +162,8 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
             return this;
         }
 
-        public FlowExecutionPipelineBuilder<I, T> decorator(Decorator<T, TerminalOutput> decorator) {
-            this.decorator = decorator;
-            return this;
-        }
-
         public FlowExecutionPipeline<I, T> build() {
-            return new FlowExecutionPipeline<>(flow, output, errOutput, exceptionHandlers, decorator, inputProvider);
+            return new FlowExecutionPipeline<>(flow, output, errOutput, exceptionHandlers, inputProvider);
         }
 
         private static PrintWriter wrapOutputStream(OutputStream output) {
@@ -183,23 +173,6 @@ public class FlowExecutionPipeline<I extends CallInput, T> {
         private static Charset getStdoutEncoding() {
             String encoding = System.getProperty("sun.stdout.encoding");
             return encoding != null ? Charset.forName(encoding) : Charset.defaultCharset();
-        }
-    }
-
-
-    public static class FlowAppenderExecutionPipelineBuilder<I extends CallInput, T> {
-        private final FlowExecutionPipelineBuilder<I, T> flowBuilder;
-
-        public FlowAppenderExecutionPipelineBuilder(FlowExecutionPipelineBuilder<I, T> flowBuilder, FlowElement<FlowOutput<T>, OT>) {
-            this.flowBuilder = flowBuilder;
-        }
-
-        public <OT> FlowExecutionPipelineBuilder<I, OT> appendFlow(FlowElement<FlowOutput<T>, OT> next) {
-            return new FlowExecutionPipelineBuilder<>(flow.composite(next))
-                    .inputProvider(inputProvider)
-                    .output(output)
-                    .errOutput(errOutput)
-                    .exceptionHandlers(exceptionHandlers);
         }
     }
 
