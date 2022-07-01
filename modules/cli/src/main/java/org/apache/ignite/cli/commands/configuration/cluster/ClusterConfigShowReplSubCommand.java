@@ -20,12 +20,20 @@ package org.apache.ignite.cli.commands.configuration.cluster;
 import jakarta.inject.Inject;
 import org.apache.ignite.cli.call.configuration.ClusterConfigShowCall;
 import org.apache.ignite.cli.call.configuration.ClusterConfigShowCallInput;
+import org.apache.ignite.cli.call.connect.ConnectCall;
+import org.apache.ignite.cli.call.connect.ConnectCallInput;
 import org.apache.ignite.cli.commands.BaseCommand;
 import org.apache.ignite.cli.commands.decorators.JsonDecorator;
+import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.call.CallExecutionPipeline;
+import org.apache.ignite.cli.core.call.EmptyCallInput;
 import org.apache.ignite.cli.core.exception.ExceptionWriter;
 import org.apache.ignite.cli.core.exception.IgniteCliApiException;
 import org.apache.ignite.cli.core.exception.handler.IgniteCliApiExceptionHandler;
+import org.apache.ignite.cli.core.flow.DefaultFlowOutput;
+import org.apache.ignite.cli.core.flow.FlowElement;
+import org.apache.ignite.cli.core.flow.QuestionFactory;
+import org.apache.ignite.cli.core.flow.builder.FlowExecutionPipeline;
 import org.apache.ignite.cli.core.repl.Session;
 import org.apache.ignite.rest.client.invoker.ApiException;
 import picocli.CommandLine.Command;
@@ -58,6 +66,15 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
     @Inject
     private Session session;
 
+    @Inject
+    private QuestionFactory questionFactory;
+
+    @Inject
+    private ConnectCall connectCall;
+
+    @Inject
+    private Config config;
+
     @Override
     public void run() {
         var input = ClusterConfigShowCallInput.builder().selector(selector);
@@ -66,7 +83,41 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
         } else if (clusterUrl != null) {
             input.clusterUrl(clusterUrl);
         } else {
-            spec.commandLine().getErr().println("You are not connected to node. Run 'connect' command or use '--cluster-url' option.");
+            FlowExecutionPipeline
+                    .<EmptyCallInput, ClusterConfigShowCallInput>builder((empty, interrupt) -> {
+                        String answer = questionFactory.askQuestion(
+                                "You are not connected to node. Do you want to connect to the default node?");
+                        if ("y".equalsIgnoreCase(answer)) {
+                            return DefaultFlowOutput.empty();
+                        } else {
+                            interrupt.interrupt(DefaultFlowOutput.empty());
+                            return null;
+                        }
+                    })
+                    .appendFlow((empty, interrupt) -> {
+                        String clusterUrl = config.getProperty("ignite.cluster-url");
+                        CallExecutionPipeline.builder(connectCall)
+                                .inputProvider(() -> new ConnectCallInput(clusterUrl))
+                                .output(spec.commandLine().getOut())
+                                .errOutput(spec.commandLine().getErr())
+                                .build()
+                                .runPipeline();
+                        if (session.isConnectedToNode()) {
+                            ClusterConfigShowCallInput output = ClusterConfigShowCallInput.builder()
+                                    .selector(selector)
+                                    .clusterUrl(session.getNodeUrl())
+                                    .build();
+                            return DefaultFlowOutput.success(output);
+                        } else {
+                            interrupt.interrupt(DefaultFlowOutput.empty());
+                            return null;
+                        }
+                    })
+                    .appendFlow(FlowElement.appendCall(call))
+                    .exceptionHandler(new ShowConfigReplExceptionHandler())
+                    .inputProvider(EmptyCallInput::new)
+                    .build()
+                    .runPipeline();
             return;
         }
 

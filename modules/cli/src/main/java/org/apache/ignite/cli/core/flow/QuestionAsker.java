@@ -15,22 +15,8 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.call.connect;
+package org.apache.ignite.cli.core.flow;
 
-import org.apache.ignite.cli.core.call.CallInput;
-
-/**
- * Input for connect call to Ignite 3 node.
- */
-public class ConnectCallInput implements CallInput {
-    private final String nodeUrl;
-
-    public ConnectCallInput(String nodeUrl) {
-        this.nodeUrl = nodeUrl;
-    }
-
-    public String getNodeUrl() {
-        return nodeUrl;
-    }
-
+public interface QuestionAsker {
+    String askQuestion(String prompt);
 }

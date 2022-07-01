@@ -15,13 +15,18 @@ public interface FlowElement<IT, OT> {
     }
 
     static <I extends CallInput, T> FlowElement<I, T> fromCall(Call<I, T> call) {
-        return (input, interrupt) -> {
-            CallOutput<T> execute = call.execute(input);
-            return DefaultFlowOutput
-                    .<T>builder()
-                    .body(execute.body())
-                    .cause(execute.errorCause())
-                    .build();
-        };
+        return (input, interrupt) -> fromOutput(call.execute(input));
+    }
+
+    static <I extends CallInput, T> FlowElement<FlowOutput<I>, T> appendCall(Call<I, T> call) {
+        return (input, interrupt) -> fromOutput(call.execute(input.body()));
+    }
+
+    private static <T> DefaultFlowOutput<T> fromOutput(CallOutput<T> output) {
+        return DefaultFlowOutput
+                .<T>builder()
+                .body(output.body())
+                .cause(output.errorCause())
+                .build();
     }
 }

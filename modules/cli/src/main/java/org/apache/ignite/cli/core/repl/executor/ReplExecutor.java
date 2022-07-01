@@ -23,17 +23,20 @@ import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.apache.ignite.cli.config.Config;
+import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.handler.PicocliExecutionExceptionHandler;
-import org.apache.ignite.cli.core.exception.handler.ReplExceptionHandlers;
+import org.apache.ignite.cli.core.flow.QuestionFactory;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.Completer;
+import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReader.SuggestionType;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.MaskingCallback;
 import org.jline.reader.Parser;
+import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.widget.TailTipWidgets;
@@ -54,21 +57,25 @@ public class ReplExecutor {
 
     private final AtomicBoolean interrupted = new AtomicBoolean();
 
-    private final ReplExceptionHandlers exceptionHandlers = new ReplExceptionHandlers(interrupted::set);
+    private final ExceptionHandlers exceptionHandlers = new ExceptionHandlers();
 
     private final PicocliCommandsFactory factory;
 
     private final Terminal terminal;
+
+    private final QuestionFactory questionFactory;
 
     /**
      * Constructor.
      *
      * @param commandsFactory picocli commands factory.
      * @param terminal terminal instance.
+     * @param questionFactory question factory.
      */
-    public ReplExecutor(PicocliCommandsFactory commandsFactory, Terminal terminal) {
+    public ReplExecutor(PicocliCommandsFactory commandsFactory, Terminal terminal, QuestionFactory questionFactory) {
         this.factory = commandsFactory;
         this.terminal = terminal;
+        this.questionFactory = questionFactory;
     }
 
     /**
@@ -101,12 +108,16 @@ public class ReplExecutor {
                 registry.setScriptDescription(cmdLine -> null);
             }
 
+            questionFactory.setAsker(prompt -> {
+                System.out.println(prompt);
+                return readLine(repl, reader);
+            });
+
             while (!interrupted.get()) {
                 try {
                     executor.cleanUp();
-                    String prompt = Ansi.AUTO.string(repl.getPromptProvider().getPrompt());
-                    String line = reader.readLine(prompt, null, (MaskingCallback) null, null);
-                    if (line.isEmpty()) {
+                    String line = readLine(repl, reader);
+                    if (line == null || line.isEmpty()) {
                         continue;
                     }
 
@@ -119,6 +130,17 @@ public class ReplExecutor {
         } catch (Throwable t) {
             exceptionHandlers.handleException(System.err::println, t);
         }
+    }
+
+    private String readLine(Repl repl, LineReader reader) {
+        try {
+            String prompt = Ansi.AUTO.string(repl.getPromptProvider().getPrompt());
+            return reader.readLine(prompt, null, (MaskingCallback) null, null);
+        } catch (UserInterruptException ignored) { // Ctrl-C pressed
+        } catch (EndOfFileException e) { // Ctrl-D pressed
+            interrupted.set(true);
+        }
+        return null;
     }
 
     private LineReader createReader(Completer completer) {
