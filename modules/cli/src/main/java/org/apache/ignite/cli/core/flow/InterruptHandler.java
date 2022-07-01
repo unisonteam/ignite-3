@@ -1,6 +1,5 @@
 package org.apache.ignite.cli.core.flow;
 
-public class InterruptHandler<T> {
-
-
+public interface InterruptHandler<T> {
+    void handle(FlowOutput<T> value);
 }

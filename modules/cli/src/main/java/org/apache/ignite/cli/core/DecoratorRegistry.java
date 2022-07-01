@@ -1,4 +1,4 @@
-package org.apache.ignite.cli.core.flow;
+package org.apache.ignite.cli.core;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,7 +6,7 @@ import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
 import org.apache.ignite.cli.commands.decorators.core.Decorator;
 import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 
-public class DecoratorStore {
+public class DecoratorRegistry {
     private final Map<Class<?>, Decorator<?, TerminalOutput>> store = new HashMap<>();
 
     public <T> void add(Class<T> clazz, Decorator<T, TerminalOutput> decorator) {
