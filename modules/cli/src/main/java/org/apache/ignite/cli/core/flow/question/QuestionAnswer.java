@@ -15,19 +15,25 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.core.flow;
+package org.apache.ignite.cli.core.flow.question;
 
-import jakarta.inject.Singleton;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-@Singleton
-public class QuestionFactory {
-    private QuestionAsker asker = prompt -> null;
+public class QuestionAnswer<T> {
+    private final Predicate<String> answer;
+    private final Function<String, T> action;
 
-    public String askQuestion(String prompt) {
-        return asker.askQuestion(prompt);
+    public QuestionAnswer(Predicate<String> answerTester, Function<String, T> action) {
+        this.answer = answerTester;
+        this.action = action;
     }
 
-    public void setAsker(QuestionAsker asker) {
-        this.asker = asker;
+    public boolean isAnswer(String userAnswer) {
+        return answer.test(userAnswer);
+    }
+
+    public T transform(String answer) {
+        return action.apply(answer);
     }
 }

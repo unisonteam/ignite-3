@@ -15,8 +15,17 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.core.flow;
+package org.apache.ignite.cli.core.flow.builder;
 
-public interface QuestionAsker {
-    String askQuestion(String prompt);
+import org.apache.ignite.cli.core.flow.Flowable;
+
+public interface Flow<I, O> {
+    Flowable<O> call(Flowable<I> input);
+
+    default <OT> Flow<I, OT> composite(Flow<O, OT> next) {
+        return input -> {
+            Flowable<O> outputFlowable = Flow.this.call(input);
+            return next.call(outputFlowable);
+        };
+    }
 }

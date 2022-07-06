@@ -25,7 +25,8 @@ import java.util.function.Supplier;
 import org.apache.ignite.cli.config.Config;
 import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.handler.PicocliExecutionExceptionHandler;
-import org.apache.ignite.cli.core.flow.QuestionFactory;
+import org.apache.ignite.cli.core.flow.question.QuestionFactory;
+import org.apache.ignite.cli.core.flow.question.QuestionWriterReader;
 import org.apache.ignite.cli.core.repl.Repl;
 import org.apache.ignite.cli.core.repl.expander.NoopExpander;
 import org.jline.console.impl.SystemRegistryImpl;
@@ -108,15 +109,22 @@ public class ReplExecutor {
                 registry.setScriptDescription(cmdLine -> null);
             }
 
-            questionFactory.setAsker(prompt -> {
-                System.out.println(prompt);
-                return readLine(repl, reader);
+            questionFactory.setReadWriter(new QuestionWriterReader() {
+                @Override
+                public void writeQuestion(String question) {
+                    System.out.println(question);
+                }
+
+                @Override
+                public String readAnswer() {
+                    return readLine("", reader);
+                }
             });
 
             while (!interrupted.get()) {
                 try {
                     executor.cleanUp();
-                    String line = readLine(repl, reader);
+                    String line = readLine(repl.getPromptProvider().getPrompt(), reader);
                     if (line == null || line.isEmpty()) {
                         continue;
                     }
@@ -132,10 +140,10 @@ public class ReplExecutor {
         }
     }
 
-    private String readLine(Repl repl, LineReader reader) {
+    private String readLine(String prompt, LineReader reader) {
         try {
-            String prompt = Ansi.AUTO.string(repl.getPromptProvider().getPrompt());
-            return reader.readLine(prompt, null, (MaskingCallback) null, null);
+            String ansiPrompt = Ansi.AUTO.string(prompt);
+            return reader.readLine(ansiPrompt, null, (MaskingCallback) null, null);
         } catch (UserInterruptException ignored) { // Ctrl-C pressed
         } catch (EndOfFileException e) { // Ctrl-D pressed
             interrupted.set(true);

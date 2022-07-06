@@ -4,12 +4,12 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import org.apache.ignite.cli.core.call.DefaultCallOutput;
 
-public class DefaultFlowOutput<T> implements FlowOutput<T> {
+public class DefaultFlowable<T> implements Flowable<T> {
     private final T body;
 
     private final Throwable cause;
 
-    private DefaultFlowOutput(T body, Throwable cause) {
+    DefaultFlowable(T body, Throwable cause) {
         this.body = body;
         this.cause = cause;
     }
@@ -25,7 +25,7 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
     }
 
     @Override
-    public T body() {
+    public T value() {
         return body;
     }
 
@@ -47,7 +47,7 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DefaultFlowOutput<?> that = (DefaultFlowOutput<?>) o;
+        DefaultFlowable<?> that = (DefaultFlowable<?>) o;
         return Objects.equals(body, that.body) && Objects.equals(cause, that.cause);
     }
 
@@ -58,7 +58,7 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", DefaultFlowOutput.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", DefaultFlowable.class.getSimpleName() + "[", "]")
                 .add("body=" + body)
                 .add("cause=" + cause)
                 .toString();
@@ -71,40 +71,6 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
      */
     public static <T> DefaultFlowOutputBuilder<T> builder() {
         return new DefaultFlowOutputBuilder<>();
-    }
-
-    /**
-     * New successful call output with provided body.
-     *
-     * @param body for successful call output.
-     * @return Successful call output with provided body.
-     */
-    public static <T> DefaultFlowOutput<T> success(T body) {
-        return DefaultFlowOutput.<T>builder()
-                .body(body)
-                .build();
-    }
-
-    /**
-     * New failed call output with provided cause.
-     *
-     * @param cause error of failed call.
-     * @return Failed call output with provided cause.
-     */
-    public static <T> DefaultFlowOutput<T> failure(Throwable cause) {
-        return DefaultFlowOutput.<T>builder()
-                .cause(cause)
-                .build();
-    }
-
-    /**
-     * New empty coll output.
-     *
-     * @return Empty call output.
-     */
-    public static <T> DefaultFlowOutput<T> empty() {
-        return DefaultFlowOutput.<T>builder()
-                .build();
     }
 
     /**
@@ -124,9 +90,10 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
          * @param body call output body.
          * @return invoked builder instance {@link DefaultCallOutput.DefaultCallOutputBuilder}.
          */
+        @SuppressWarnings("unchecked")
         public DefaultFlowOutputBuilder<T> body(T body) {
             this.body = body;
-            type = (Class<T>) body.getClass();
+            type = body == null ? null : (Class<T>) body.getClass();
             return this;
         }
 
@@ -146,8 +113,8 @@ public class DefaultFlowOutput<T> implements FlowOutput<T> {
          *
          * @return new {@link DefaultCallOutput} with field provided to builder.
          */
-        public DefaultFlowOutput<T> build() {
-            return new DefaultFlowOutput<>(body, cause);
+        public DefaultFlowable<T> build() {
+            return new DefaultFlowable<>(body, cause);
         }
     }
 }

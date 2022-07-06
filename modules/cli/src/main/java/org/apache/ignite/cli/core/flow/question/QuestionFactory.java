@@ -15,34 +15,28 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.core.repl.executor;
+package org.apache.ignite.cli.core.flow.question;
 
-import io.micronaut.configuration.picocli.MicronautFactory;
-import jakarta.inject.Inject;
+import io.micronaut.context.annotation.Factory;
 import jakarta.inject.Singleton;
-import org.apache.ignite.cli.core.flow.question.QuestionFactory;
-import org.jline.terminal.Terminal;
-import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
 
-/**
- * Provider of {@link ReplExecutor}.
- */
-@Singleton
-public class ReplExecutorProvider {
-    private PicocliCommandsFactory factory;
+@Factory
+public class QuestionFactory {
+    private static QuestionWriterReader questionWriterReader;
 
-    @Inject
-    private Terminal terminal;
 
-    @Inject
-    QuestionFactory questionFactory;
-
-    public ReplExecutor get() {
-        return new ReplExecutor(factory, terminal, questionFactory);
+    @Singleton
+    public QuestionAsker questionAsker() {
+        return new QuestionAsker(questionWriterReader);
     }
 
-    public void injectFactory(MicronautFactory micronautFactory) {
-        factory = new PicocliCommandsFactory(micronautFactory);
-        factory.setTerminal(terminal);
+
+    //TODO: tech debt
+    public static QuestionAsker newQuestionAsker() {
+        return new QuestionAsker(questionWriterReader);
+    }
+
+    public void setReadWriter(QuestionWriterReader questionWriterReader) {
+        QuestionFactory.questionWriterReader = questionWriterReader;
     }
 }

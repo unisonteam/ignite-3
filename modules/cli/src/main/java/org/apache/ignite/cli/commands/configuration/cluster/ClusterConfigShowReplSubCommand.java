@@ -18,22 +18,27 @@
 package org.apache.ignite.cli.commands.configuration.cluster;
 
 import jakarta.inject.Inject;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 import org.apache.ignite.cli.call.configuration.ClusterConfigShowCall;
 import org.apache.ignite.cli.call.configuration.ClusterConfigShowCallInput;
+import org.apache.ignite.cli.call.configuration.JsonString;
 import org.apache.ignite.cli.call.connect.ConnectCall;
 import org.apache.ignite.cli.call.connect.ConnectCallInput;
 import org.apache.ignite.cli.commands.BaseCommand;
-import org.apache.ignite.cli.commands.decorators.JsonDecorator;
 import org.apache.ignite.cli.config.Config;
-import org.apache.ignite.cli.core.call.CallExecutionPipeline;
-import org.apache.ignite.cli.core.call.EmptyCallInput;
+import org.apache.ignite.cli.core.call.StringCallInput;
 import org.apache.ignite.cli.core.exception.ExceptionWriter;
 import org.apache.ignite.cli.core.exception.IgniteCliApiException;
 import org.apache.ignite.cli.core.exception.handler.IgniteCliApiExceptionHandler;
-import org.apache.ignite.cli.core.flow.DefaultFlowOutput;
-import org.apache.ignite.cli.core.flow.FlowElement;
-import org.apache.ignite.cli.core.flow.QuestionFactory;
-import org.apache.ignite.cli.core.flow.builder.FlowExecutionPipeline;
+import org.apache.ignite.cli.core.flow.DefaultFlowable;
+import org.apache.ignite.cli.core.flow.Flowable;
+import org.apache.ignite.cli.core.flow.builder.Flow;
+import org.apache.ignite.cli.core.flow.builder.FlowBuilder;
+import org.apache.ignite.cli.core.flow.builder.Flows;
+import org.apache.ignite.cli.core.flow.question.QuestionAnswer;
+import org.apache.ignite.cli.core.flow.question.QuestionAsker;
 import org.apache.ignite.cli.core.repl.Session;
 import org.apache.ignite.rest.client.invoker.ApiException;
 import picocli.CommandLine.Command;
@@ -67,9 +72,6 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
     private Session session;
 
     @Inject
-    private QuestionFactory questionFactory;
-
-    @Inject
     private ConnectCall connectCall;
 
     @Inject
@@ -77,58 +79,34 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
 
     @Override
     public void run() {
-        var input = ClusterConfigShowCallInput.builder().selector(selector);
-        if (session.isConnectedToNode()) {
-            input.clusterUrl(session.getNodeUrl());
-        } else if (clusterUrl != null) {
-            input.clusterUrl(clusterUrl);
-        } else {
-            FlowExecutionPipeline
-                    .<EmptyCallInput, ClusterConfigShowCallInput>builder((empty, interrupt) -> {
-                        String answer = questionFactory.askQuestion(
-                                "You are not connected to node. Do you want to connect to the default node?");
-                        if ("y".equalsIgnoreCase(answer)) {
-                            return DefaultFlowOutput.empty();
-                        } else {
-                            interrupt.interrupt(DefaultFlowOutput.empty());
-                            return null;
-                        }
-                    })
-                    .appendFlow((empty, interrupt) -> {
-                        String clusterUrl = config.getProperty("ignite.cluster-url");
-                        CallExecutionPipeline.builder(connectCall)
-                                .inputProvider(() -> new ConnectCallInput(clusterUrl))
-                                .output(spec.commandLine().getOut())
-                                .errOutput(spec.commandLine().getErr())
-                                .build()
-                                .runPipeline();
-                        if (session.isConnectedToNode()) {
-                            ClusterConfigShowCallInput output = ClusterConfigShowCallInput.builder()
-                                    .selector(selector)
-                                    .clusterUrl(session.getNodeUrl())
-                                    .build();
-                            return DefaultFlowOutput.success(output);
-                        } else {
-                            interrupt.interrupt(DefaultFlowOutput.empty());
-                            return null;
-                        }
-                    })
-                    .appendFlow(FlowElement.appendCall(call))
-                    .exceptionHandler(new ShowConfigReplExceptionHandler())
-                    .inputProvider(EmptyCallInput::new)
-                    .build()
-                    .runPipeline();
-            return;
-        }
+        String question = "You are not connected to node. Do you want to connect to the default node?";
 
-        CallExecutionPipeline.builder(call)
-                .inputProvider(input::build)
-                .output(spec.commandLine().getOut())
-                .errOutput(spec.commandLine().getErr())
-                .decorator(new JsonDecorator())
+        Flows.from(getClusterUrl())
+                .ifThen(Objects::isNull, Flows.<String, ConnectCallInput>question(question,
+                        List.of(
+                                new QuestionAnswer<>(s1 -> s1.equalsIgnoreCase("y"),
+                                        s1 -> new ConnectCallInput(config.getProperty("ignite.cluster-url"))),
+                                new QuestionAnswer<>(s1 -> true, s1 -> Flowable.interrupt()))
+                        ).appendFlow(Flows.fromCall(connectCall))
+                        .build())
+                .map(clusterUrl1 -> ClusterConfigShowCallInput.builder().selector(selector).clusterUrl(getClusterUrl()).build())
+                .appendFlow(Flows.fromCall(call))
                 .exceptionHandler(new ShowConfigReplExceptionHandler())
+                .output(spec.commandLine().getOut())
+                .errorOutput(spec.commandLine().getErr())
                 .build()
-                .runPipeline();
+                .call(Flowable.empty());
+
+    }
+
+    private String getClusterUrl() {
+        String s = null;
+        if (session.isConnectedToNode()) {
+            s = session.getNodeUrl();
+        } else if (clusterUrl != null) {
+            s = clusterUrl;
+        }
+        return s;
     }
 
     private static class ShowConfigReplExceptionHandler extends IgniteCliApiExceptionHandler {
