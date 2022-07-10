@@ -75,6 +75,7 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
 
 
 
+
     private static class ShowConfigReplExceptionHandler extends IgniteCliApiExceptionHandler {
         @Override
         public int handle(ExceptionWriter err, IgniteCliApiException e) {

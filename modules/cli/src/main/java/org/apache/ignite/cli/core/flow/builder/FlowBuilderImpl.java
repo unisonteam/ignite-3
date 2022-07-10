@@ -29,11 +29,10 @@ import org.apache.ignite.cli.core.flow.question.QuestionAnswer;
 import org.apache.ignite.cli.core.flow.question.QuestionFactory;
 
 public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
-
-    private final Flow<I, O> flow;
-    private final ExceptionHandlers exceptionHandlers = new DefaultExceptionHandlers();
-    private PrintWriter output;
-    private PrintWriter errorOutput;
+    protected final Flow<I, O> flow;
+    protected final ExceptionHandlers exceptionHandlers = new DefaultExceptionHandlers();
+    protected PrintWriter output;
+    protected PrintWriter errorOutput;
 
     FlowBuilderImpl(Flow<I, O> flow) {
         this(flow, null, null, new DefaultExceptionHandlers());
@@ -54,7 +53,7 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
     @Override
     public <OT> FlowBuilder<I, O> ifThen(Predicate<O> tester, Flow<O, OT> flow) {
         return new FlowBuilderImpl<>(this.flow.composite(input -> {
-            if (tester.test(input.value())) {
+            if (input.hasResult() && tester.test(input.value())) {
                 flow.call(input);
             }
             return input;

@@ -59,8 +59,9 @@ public class FlowImpl<I, O> implements Flow<I, O> {
             output = Flowable.empty();
         }
 
-        if (output.hasError() && errorOutput != null) {
-            exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(errorOutput), output.errorCause());
+        if (output.hasError()) {
+            PrintWriter pw = errorOutput != null ? errorOutput : new PrintWriter(System.err);
+            exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(pw), output.errorCause());
         }
 
         if (output.hasResult() && this.output != null) {

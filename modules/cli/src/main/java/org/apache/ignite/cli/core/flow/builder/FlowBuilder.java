@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 import org.apache.ignite.cli.core.exception.ExceptionHandler;
 import org.apache.ignite.cli.core.flow.question.QuestionAnswer;
 
-public interface FlowBuilder<I, O> {
+public interface FlowBuilder<I, O>  {
 
     <OT> FlowBuilder<I, OT> appendFlow(Flow<O, OT> flow);
 
