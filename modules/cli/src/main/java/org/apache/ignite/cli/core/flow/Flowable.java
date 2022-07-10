@@ -1,8 +1,6 @@
 package org.apache.ignite.cli.core.flow;
 
 import java.util.function.Supplier;
-import org.apache.ignite.cli.commands.decorators.core.Decorator;
-import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
 
 public interface Flowable<T> {
 

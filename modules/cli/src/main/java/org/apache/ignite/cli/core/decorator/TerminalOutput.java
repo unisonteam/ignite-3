@@ -15,20 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.commands.decorators.core;
+package org.apache.ignite.cli.core.decorator;
 
 /**
- * Interface for transformation command output to terminal output.
- *
- * @param <CommandDataT> type of command output.
- * @param <TerminalDataT> type of terminal output.
+ * Interface for terminal output representation.
  */
-public interface Decorator<CommandDataT, TerminalDataT extends TerminalOutput> {
+public interface TerminalOutput {
     /**
-     * Interface for transforming command output to terminal output.
+     * Terminal output transformation.
      *
-     * @param data incoming data object.
-     * @return Decorated object with type {@link TerminalDataT}.
+     * @return String representation of some
      */
-    TerminalDataT decorate(CommandDataT data);
+    String toTerminalString();
 }

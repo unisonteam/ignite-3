@@ -15,16 +15,22 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.commands.decorators.core;
+package org.apache.ignite.cli.core.decorator;
 
-/**
- * Interface for terminal output representation.
- */
-public interface TerminalOutput {
-    /**
-     * Terminal output transformation.
-     *
-     * @return String representation of some
-     */
-    String toTerminalString();
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.ignite.cli.commands.decorators.DefaultDecorator;
+import org.apache.ignite.cli.core.decorator.Decorator;
+import org.apache.ignite.cli.core.decorator.TerminalOutput;
+
+public class DecoratorRegistry {
+    private final Map<Class<?>, Decorator<?, TerminalOutput>> store = new HashMap<>();
+
+    public <T> void add(Class<T> clazz, Decorator<T, TerminalOutput> decorator) {
+        store.put(clazz, decorator);
+    }
+
+    public <T> Decorator<T, TerminalOutput> getDecorator(Class<T> clazz) {
+        return (Decorator<T, TerminalOutput>) store.getOrDefault(clazz, new DefaultDecorator<T>());
+    }
 }

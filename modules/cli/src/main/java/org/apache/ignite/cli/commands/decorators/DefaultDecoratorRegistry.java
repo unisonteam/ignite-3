@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.core;
+package org.apache.ignite.cli.commands.decorators;
 
 import org.apache.ignite.cli.call.configuration.JsonString;
 import org.apache.ignite.cli.call.status.Status;
@@ -25,7 +25,7 @@ import org.apache.ignite.cli.commands.decorators.SqlQueryResultDecorator;
 import org.apache.ignite.cli.commands.decorators.StatusDecorator;
 import org.apache.ignite.cli.commands.decorators.TableDecorator;
 import org.apache.ignite.cli.config.Config;
-import org.apache.ignite.cli.core.DecoratorRegistry;
+import org.apache.ignite.cli.core.decorator.DecoratorRegistry;
 import org.apache.ignite.cli.sql.SqlQueryResult;
 import org.apache.ignite.cli.sql.table.Table;
 

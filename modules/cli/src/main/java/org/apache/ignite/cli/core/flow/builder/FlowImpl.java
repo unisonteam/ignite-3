@@ -18,9 +18,9 @@
 package org.apache.ignite.cli.core.flow.builder;
 
 import java.io.PrintWriter;
-import org.apache.ignite.cli.commands.decorators.core.TerminalOutput;
-import org.apache.ignite.cli.core.DecoratorRegistry;
-import org.apache.ignite.cli.core.DefaultDecoratorRegistry;
+import org.apache.ignite.cli.core.decorator.TerminalOutput;
+import org.apache.ignite.cli.core.decorator.DecoratorRegistry;
+import org.apache.ignite.cli.commands.decorators.DefaultDecoratorRegistry;
 import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.ExceptionWriter;
 import org.apache.ignite.cli.core.flow.FlowInterruptException;

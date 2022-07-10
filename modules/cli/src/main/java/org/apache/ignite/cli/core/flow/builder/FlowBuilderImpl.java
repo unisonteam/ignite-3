@@ -24,7 +24,9 @@ import java.util.function.Predicate;
 import org.apache.ignite.cli.core.exception.ExceptionHandler;
 import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.handler.DefaultExceptionHandlers;
+import org.apache.ignite.cli.core.flow.Flowable;
 import org.apache.ignite.cli.core.flow.question.QuestionAnswer;
+import org.apache.ignite.cli.core.flow.question.QuestionFactory;
 
 public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
 
@@ -61,7 +63,7 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
 
     @Override
     public <QT> FlowBuilder<I, QT> question(String questionText, List<QuestionAnswer<QT>> questionAnswers) {
-        return null;
+        return new FlowBuilderImpl<>(input -> Flowable.success(QuestionFactory.newQuestionAsker().askQuestion(questionText, questionAnswers)));
     }
 
     @Override
@@ -86,10 +88,5 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
     @Override
     public Flow<I, O> build() {
         return new FlowImpl<>(flow, exceptionHandlers, output, errorOutput);
-    }
-
-    private static Charset getStdoutEncoding() {
-        String encoding = System.getProperty("sun.stdout.encoding");
-        return encoding != null ? Charset.forName(encoding) : Charset.defaultCharset();
     }
 }

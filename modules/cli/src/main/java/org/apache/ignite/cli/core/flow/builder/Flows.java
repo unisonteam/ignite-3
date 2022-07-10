@@ -56,4 +56,5 @@ public class Flows {
     public static <I, O> FlowBuilder<I, O> question(String question, List<QuestionAnswer<O>> answers) {
         return new FlowBuilderImpl<>(input -> Flowable.success(QuestionFactory.newQuestionAsker().askQuestion(question, answers)));
     }
+
 }

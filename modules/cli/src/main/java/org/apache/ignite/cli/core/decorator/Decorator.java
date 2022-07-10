@@ -15,23 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.cli.commands.decorators;
-
-import org.apache.ignite.cli.core.decorator.Decorator;
-import org.apache.ignite.cli.core.decorator.TerminalOutput;
-import org.apache.ignite.cli.sql.SqlQueryResult;
+package org.apache.ignite.cli.core.decorator;
 
 /**
- * Composite decorator for {@link SqlQueryResult}.
+ * Interface for transformation command output to terminal output.
+ *
+ * @param <CommandDataT> type of command output.
+ * @param <TerminalDataT> type of terminal output.
  */
-public class SqlQueryResultDecorator implements Decorator<SqlQueryResult, TerminalOutput> {
-
-    private final TableDecorator tableDecorator = new TableDecorator();
-
-    private final DefaultDecorator<String> messageDecorator = new DefaultDecorator<>();
-
-    @Override
-    public TerminalOutput decorate(SqlQueryResult data) {
-        return data.getResult(tableDecorator, messageDecorator);
-    }
+public interface Decorator<CommandDataT, TerminalDataT extends TerminalOutput> {
+    /**
+     * Interface for transforming command output to terminal output.
+     *
+     * @param data incoming data object.
+     * @return Decorated object with type {@link TerminalDataT}.
+     */
+    TerminalDataT decorate(CommandDataT data);
 }
