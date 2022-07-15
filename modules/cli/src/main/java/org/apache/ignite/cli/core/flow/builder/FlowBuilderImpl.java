@@ -100,7 +100,7 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
     public FlowBuilder<I, O> toOutput(PrintWriter output, PrintWriter errorOutput) {
         return new FlowBuilderImpl<>(flow.composite(input -> {
             if (input.hasResult()) {
-                output.write(decoratorRegistry.getDecorator(input.type()).decorate(input.value()).toTerminalString());
+                output.println(decoratorRegistry.getDecorator(input.type()).decorate(input.value()).toTerminalString());
             } else if (input.hasError()) {
                 exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(errorOutput), input.errorCause());
             }
