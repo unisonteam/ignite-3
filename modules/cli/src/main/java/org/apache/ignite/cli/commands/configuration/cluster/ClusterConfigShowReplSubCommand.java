@@ -59,12 +59,6 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
     @Inject
     private Session session;
 
-    @Inject
-    private ConnectCall connectCall;
-
-    @Inject
-    private ConfigManagerProvider provider;
-
     @Override
     public void run() {
         callWithConnectQuestion(this::getClusterUrl,
