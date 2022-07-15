@@ -22,6 +22,7 @@ import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.configuration.NodeConfigUpdateCall;
 import org.apache.ignite.cli.call.configuration.NodeConfigUpdateCallInput;
 import org.apache.ignite.cli.commands.BaseCommand;
+import org.apache.ignite.cli.commands.questions.ConnectToClusterQuestion;
 import org.apache.ignite.cli.core.flow.Flowable;
 import org.apache.ignite.cli.core.repl.Session;
 import picocli.CommandLine.Command;
@@ -56,11 +57,16 @@ public class NodeConfigUpdateReplSubCommand extends BaseCommand implements Runna
     @Inject
     private Session session;
 
+    @Inject
+    private ConnectToClusterQuestion question;
+
     /** {@inheritDoc} */
     @Override
     public void run() {
-        callWithConnectQuestion(this::getNodeUrl,
-                s -> NodeConfigUpdateCallInput.builder().config(config).nodeUrl(getNodeUrl()).build(), call)
+        question.callWithConnectQuestion(spec,
+                        this::getNodeUrl,
+                        s -> NodeConfigUpdateCallInput.builder().config(config).nodeUrl(getNodeUrl()).build(),
+                        call)
                 .build()
                 .call(Flowable.empty());
     }

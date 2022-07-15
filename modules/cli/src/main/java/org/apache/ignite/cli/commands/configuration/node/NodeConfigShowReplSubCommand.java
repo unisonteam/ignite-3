@@ -21,6 +21,7 @@ import jakarta.inject.Inject;
 import org.apache.ignite.cli.call.configuration.NodeConfigShowCall;
 import org.apache.ignite.cli.call.configuration.NodeConfigShowCallInput;
 import org.apache.ignite.cli.commands.BaseCommand;
+import org.apache.ignite.cli.commands.questions.ConnectToClusterQuestion;
 import org.apache.ignite.cli.core.flow.Flowable;
 import org.apache.ignite.cli.core.repl.Session;
 import picocli.CommandLine.Command;
@@ -53,11 +54,16 @@ public class NodeConfigShowReplSubCommand extends BaseCommand implements Runnabl
     @Inject
     private Session session;
 
+    @Inject
+    private ConnectToClusterQuestion question;
+
     /** {@inheritDoc} */
     @Override
     public void run() {
-        callWithConnectQuestion(this::getNodeUrl,
-                s -> NodeConfigShowCallInput.builder().selector(selector).nodeUrl(getNodeUrl()).build(), call)
+        question.callWithConnectQuestion(spec,
+                        this::getNodeUrl,
+                        s -> NodeConfigShowCallInput.builder().selector(selector).nodeUrl(getNodeUrl()).build(),
+                        call)
                 .build()
                 .call(Flowable.empty());
     }

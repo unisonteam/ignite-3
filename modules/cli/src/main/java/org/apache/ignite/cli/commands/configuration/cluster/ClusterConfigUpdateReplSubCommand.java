@@ -22,6 +22,7 @@ import jakarta.inject.Singleton;
 import org.apache.ignite.cli.call.configuration.ClusterConfigUpdateCall;
 import org.apache.ignite.cli.call.configuration.ClusterConfigUpdateCallInput;
 import org.apache.ignite.cli.commands.BaseCommand;
+import org.apache.ignite.cli.commands.questions.ConnectToClusterQuestion;
 import org.apache.ignite.cli.core.flow.Flowable;
 import org.apache.ignite.cli.core.repl.Session;
 import picocli.CommandLine.Command;
@@ -56,11 +57,16 @@ public class ClusterConfigUpdateReplSubCommand extends BaseCommand implements Ru
     @Inject
     private Session session;
 
+    @Inject
+    private ConnectToClusterQuestion question;
+
     /** {@inheritDoc} */
     @Override
     public void run() {
-        callWithConnectQuestion(this::getClusterUrl,
-                s -> ClusterConfigUpdateCallInput.builder().config(config).clusterUrl(getClusterUrl()).build(), call)
+        question.callWithConnectQuestion(spec,
+                        this::getClusterUrl,
+                        s -> ClusterConfigUpdateCallInput.builder().config(config).clusterUrl(getClusterUrl()).build(),
+                        call)
                 .build()
                 .call(Flowable.empty());
     }

@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import org.apache.ignite.cli.config.StateFolderProvider;
 import org.apache.ignite.cli.core.exception.ExceptionHandlers;
 import org.apache.ignite.cli.core.exception.handler.PicocliExecutionExceptionHandler;
+import org.apache.ignite.cli.core.exception.handler.ReplExceptionHandlers;
 import org.apache.ignite.cli.core.flow.question.JlineQuestionWriterReader;
 import org.apache.ignite.cli.core.flow.question.QuestionAskerFactory;
 import org.apache.ignite.cli.core.repl.Repl;
@@ -58,7 +59,7 @@ public class ReplExecutor {
 
     private final AtomicBoolean interrupted = new AtomicBoolean();
 
-    private final ExceptionHandlers exceptionHandlers = new ExceptionHandlers();
+    private final ExceptionHandlers exceptionHandlers = new ReplExceptionHandlers(interrupted::set);
 
     private final PicocliCommandsFactory factory;
 

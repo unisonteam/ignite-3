@@ -20,9 +20,8 @@ package org.apache.ignite.cli.commands.configuration.cluster;
 import jakarta.inject.Inject;
 import org.apache.ignite.cli.call.configuration.ClusterConfigShowCall;
 import org.apache.ignite.cli.call.configuration.ClusterConfigShowCallInput;
-import org.apache.ignite.cli.call.connect.ConnectCall;
 import org.apache.ignite.cli.commands.BaseCommand;
-import org.apache.ignite.cli.config.ConfigManagerProvider;
+import org.apache.ignite.cli.commands.questions.ConnectToClusterQuestion;
 import org.apache.ignite.cli.core.exception.ExceptionWriter;
 import org.apache.ignite.cli.core.exception.IgniteCliApiException;
 import org.apache.ignite.cli.core.exception.handler.IgniteCliApiExceptionHandler;
@@ -59,10 +58,15 @@ public class ClusterConfigShowReplSubCommand extends BaseCommand implements Runn
     @Inject
     private Session session;
 
+    @Inject
+    private ConnectToClusterQuestion question;
+
     @Override
     public void run() {
-        callWithConnectQuestion(this::getClusterUrl,
-                unused -> ClusterConfigShowCallInput.builder().selector(selector).clusterUrl(getClusterUrl()).build(), call)
+        question.callWithConnectQuestion(spec,
+                        this::getClusterUrl,
+                        unused -> ClusterConfigShowCallInput.builder().selector(selector).clusterUrl(getClusterUrl()).build(),
+                        call)
                 .exceptionHandler(new ShowConfigReplExceptionHandler())
                 .build()
                 .call(Flowable.empty());

@@ -103,6 +103,7 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
                 output.println(decoratorRegistry.getDecorator(input.type()).decorate(input.value()).toTerminalString());
             } else if (input.hasError()) {
                 exceptionHandlers.handleException(ExceptionWriter.fromPrintWriter(errorOutput), input.errorCause());
+                return Flowable.empty();
             }
             return input;
         }));
