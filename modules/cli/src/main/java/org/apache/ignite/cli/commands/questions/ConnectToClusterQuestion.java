@@ -49,6 +49,17 @@ public class ConnectToClusterQuestion {
     private ConfigManagerProvider provider;
 
 
+    /**
+     * Execute call with question about connect to cluster in case when disconnected state.
+     *
+     * @param spec command spec.
+     * @param clusterUrl cluster url provider.
+     * @param clusterUrlMapper mapper of cluster url to call input
+     * @param call call instance.
+     * @param <T> call input type.
+     * @param <O> call output type.
+     * @return {@link FlowBuilder} instance with question and provided call.
+     */
     public <T extends CallInput, O> FlowBuilder<Void, O> callWithConnectQuestion(
             CommandSpec spec,
             Supplier<String> clusterUrl,
