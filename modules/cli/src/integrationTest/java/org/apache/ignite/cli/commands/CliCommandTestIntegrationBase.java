@@ -29,6 +29,7 @@ import org.apache.ignite.cli.commands.cliconfig.TestConfigManagerHelper;
 import org.apache.ignite.cli.commands.cliconfig.TestConfigManagerProvider;
 import org.apache.ignite.cli.config.ConfigDefaultValueProvider;
 import org.apache.ignite.cli.config.ini.IniConfigManager;
+import org.apache.ignite.cli.core.repl.context.CommandLineContextProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import picocli.CommandLine;
@@ -44,10 +45,10 @@ public class CliCommandTestIntegrationBase extends IntegrationTestBase {
     private ApplicationContext context;
 
     @Inject
-    ConfigDefaultValueProvider configDefaultValueProvider;
+    private ConfigDefaultValueProvider configDefaultValueProvider;
 
     @Inject
-    TestConfigManagerProvider configManagerProvider;
+    protected TestConfigManagerProvider configManagerProvider;
 
     private CommandLine cmd;
     private StringWriter sout;
@@ -70,6 +71,7 @@ public class CliCommandTestIntegrationBase extends IntegrationTestBase {
         serr = new StringWriter();
         cmd.setOut(new PrintWriter(sout));
         cmd.setErr(new PrintWriter(serr));
+        CommandLineContextProvider.setCmd(cmd);
     }
 
     protected Class<?> getCommandClass() {
