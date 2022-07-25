@@ -88,28 +88,20 @@ public class ConnectToClusterQuestion {
             clusterUrl = defaultUrl;
         }
 
-        PrintWriter out = specBean.getSpec().commandLine().getOut();
-        PrintWriter err = specBean.getSpec().commandLine().getErr();
+        Flows.acceptQuestion(question, () -> new ConnectCallInput(clusterUrl))
+                .then(Flows.fromCall(connectCall))
+                .toOutput(CommandLineContextProvider.getContext())
+                .ifThen(s -> !Objects.equals(lastConnectedUrl, defaultUrl) && session.isConnectedToNode(),
+                        defaultUrlQuestion(lastConnectedUrl).toOutput(CommandLineContextProvider.getContext()).build())
+                .build().start(Flowable.empty());
+    }
 
-        FlowBuilder<Object, String> builder = Flows.question(question,
-                        List.of(new AcceptedQuestionAnswer<>((a, i) -> new ConnectCallInput(clusterUrl)),
-                                new InterruptQuestionAnswer<>())
-                )
-                .then(Flows.fromCall(connectCall));
-
-        // If urls are different, suggest saving last connected url as default in case of successful connect
-        if (!Objects.equals(lastConnectedUrl, defaultUrl)) {
-            String saveQuestion = "Would you like to use " + lastConnectedUrl + " as the default URL? [Y/n]";
-            builder = builder
-                    .ifThen(s -> session.isConnectedToNode(), Flows.<String, String>question(saveQuestion,
-                            List.of(new AcceptedQuestionAnswer<>((a, i) -> lastConnectedUrl),
-                                    new InterruptQuestionAnswer<>())
-                    ).then(Flows.<String, String>from(url -> {
-                        provider.get().setProperty(ConfigConstants.CLUSTER_URL, url);
-                        return "Config saved";
-                    }).toOutput(out, err).build()).build());
-        }
-
-        builder.toOutput(out, err).build().start(Flowable.empty());
+    private FlowBuilder<String, String> defaultUrlQuestion(String lastConnectedUrl) {
+        return Flows.acceptQuestion("Would you like to use " + lastConnectedUrl + " as the default URL? [Y/n]",
+                () -> {
+                    provider.get().setProperty(ConfigConstants.CLUSTER_URL, lastConnectedUrl);
+                    return "Config saved";
+                }
+        );
     }
 }
