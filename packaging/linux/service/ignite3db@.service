@@ -1,0 +1,17 @@
+[Unit]
+Description=Apache Ignite is a distributed database for high-performance computing with in-memory speed
+
+[Service]
+User=@USERNAME@
+Group=@GROUPNAME@
+WorkingDirectory=@INSTALL_DIR@
+ExecStart=@INSTALL_DIR@/start.sh %i
+SuccessExitStatus=143
+Type=simple
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=5
+StartLimitInterval=60
+
+[Install]
+WantedBy=multi-user.target
