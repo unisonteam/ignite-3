@@ -36,7 +36,7 @@ dependencies {
 // task that generates start script for cli
 task cliStartScript(type: CreateStartScripts) {
     // will be passed to exec "java ... <mainClassName>"
-    mainClassName = "org.apache.ignite.internal.cli.Main"
+    mainClass = "org.apache.ignite.internal.cli.Main"
     // forms a classpath string that will be passed to exec "java -cp <classpath> .."
     // it is expected to locate the "lib" dir together with "bin"
     classpath = files(new File("../lib/${project(':ignite-cli').name}-${project(':ignite-cli').version}.jar"), new File("../lib/*"))
