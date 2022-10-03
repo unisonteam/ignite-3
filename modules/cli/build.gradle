@@ -139,11 +139,11 @@ task generateAutocompletionScript(type: JavaExec) {
     systemProperty("picocli.autocomplete.systemExitOnError", "")
     args = ["--force",
             "--completionScript",
-            "${buildDir}/ignite_completion.sh",
+            "${buildDir}/ignite3cli_completion.sh",
             "-n",
-            "ignite",
+            "ignite3cli",
             "org.apache.ignite.internal.cli.commands.TopLevelCliCommand"]
-    outputs.file "${buildDir}/ignite_completion.sh"
+    outputs.file "${buildDir}/ignite3cli_completion.sh"
 }
 
 build.dependsOn generateAutocompletionScript
@@ -156,7 +156,7 @@ configurations {
 }
 
 artifacts {
-    cliScripts(new File("${buildDir}/ignite_completion.sh")) {
+    cliScripts(new File("${buildDir}/ignite3cli_completion.sh")) {
         builtBy(generateAutocompletionScript)
     }
 }
