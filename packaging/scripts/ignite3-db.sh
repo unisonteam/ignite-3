@@ -42,10 +42,7 @@ start() {
   --add-opens java.base/jdk.internal.misc=ALL-UNNAMED \
   -Dio.netty.tryReflectionSetAccessible=true \
   -Djava.util.logging.config.file=$CONFIG_PATH/ignite.java.util.logging.properties \
-  -classpath $LIBS_PATH/ignite-runner.jar:$LIBS_PATH/* org.apache.ignite.app.IgniteCliRunner \
-  --config-path $IGNITE_CONFIG_FILE \
-  --work-dir $WORK_PATH \
-  $NODE_NAME"
+  -classpath $LIBS_PATH/ignite-runner.jar:$LIBS_PATH/* org.apache.ignite.app.IgniteCliRunner"
 
   ############# STAGE 3: RUN CMD, REPORT ###############
   exec ${CMD} >>${LOG_OUT_FILE:-/dev/null} 2>&1 < /dev/null & jobs -p > ${IGNITE_HOME}/pid

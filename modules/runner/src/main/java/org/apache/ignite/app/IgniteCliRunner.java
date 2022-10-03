@@ -17,143 +17,155 @@
 
 package org.apache.ignite.app;
 
-import static picocli.CommandLine.Model.CommandSpec;
-import static picocli.CommandLine.Model.OptionSpec;
-import static picocli.CommandLine.Model.PositionalParamSpec;
-
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigRenderOptions;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgnitionManager;
+import org.apache.ignite.internal.app.EnvironmentDefaultValueProvider;
+import org.apache.ignite.network.NetworkAddress;
 import picocli.CommandLine;
-import picocli.CommandLine.Model.ArgGroupSpec;
+import picocli.CommandLine.ArgGroup;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.TypeConversionException;
 
 /**
  * The main entry point for run new Ignite node from CLI toolchain.
  */
-public class IgniteCliRunner {
+@SuppressWarnings("FieldMayBeFinal")
+@Command(name = "runner")
+public class IgniteCliRunner implements Callable<CompletableFuture<Ignite>> {
+    private static final String CONFIG_PATH = "--config-path";
+
+    private static final String CONFIG_STRING = "--config-string";
+
+    @ArgGroup
+    private ConfigOptions configOptions = new ConfigOptions();
+
+    private static class ConfigOptions {
+        @Option(names = {CONFIG_PATH}, description = "Path to node configuration file in HOCON format.")
+        private Path configPath;
+
+        @Option(names = {CONFIG_STRING}, description = "Node configuration in HOCON format.")
+        private String configString;
+    }
+
+    @ArgGroup(validate = false)
+    private ConfigArgs configArgs = new ConfigArgs();
+
+    private static class ConfigArgs {
+        @Option(names = {"-p", "--port"}, description = "Node port.")
+        private Integer port;
+
+        @Option(names = {"-r", "--rest-port"}, description = "REST port.")
+        private Integer restPort;
+
+        @Option(names = {"-j", "--join"}, description = "Seed nodes.", split = ",")
+        private NetworkAddress[] seedNodes;
+
+        // picocli doesn't apply default values to arg groups without initial value, so we can't test for configArgs == null
+        // and need to test all args separately.
+        private boolean isEmpty() {
+            return port == null && restPort == null && seedNodes == null;
+        }
+    }
+
+    @Option(names = {"--work-dir"}, description = "Path to node working directory.", required = true)
+    private Path workDir;
+
+    @Option(names = {"--node-name"}, description = "Node name.", required = true)
+    private String nodeName;
+
+    @Override
+    public CompletableFuture<Ignite> call() throws Exception {
+        Path configPath = configOptions.configPath;
+        // If config path is specified and there are no overrides then pass it directly.
+        // picocli doesn't apply default values to group args, so we need to test all args separately.
+        if (configPath != null && configArgs.isEmpty()) {
+            return IgnitionManager.start(nodeName, configPath.toAbsolutePath(), workDir, null);
+        }
+        return IgnitionManager.start(nodeName, getConfigStr(), workDir);
+    }
+
+    private String getConfigStr() {
+        Config configOptions = parseConfigOptions();
+        Config configArgs = parseConfigArgs();
+        // Override config from file or string with command-line arguments
+        Config config = configArgs.withFallback(configOptions).resolve();
+        return config.isEmpty() ? null : config.root().render(ConfigRenderOptions.concise().setJson(false));
+    }
+
+    private Config parseConfigOptions() {
+        Path configPath = configOptions.configPath;
+        String configString = configOptions.configString;
+        if (configPath != null) {
+            return ConfigFactory.parseFile(configPath.toFile(), ConfigParseOptions.defaults().setAllowMissing(false));
+        } else if (configString != null) {
+            return ConfigFactory.parseString(configString);
+        }
+        return ConfigFactory.empty();
+    }
+
+    private Config parseConfigArgs() {
+        Map<String, Object> configMap = new HashMap<>();
+        if (configArgs.port != null) {
+            configMap.put("network.port", configArgs.port);
+        }
+        if (configArgs.seedNodes != null) {
+            List<String> strings = Arrays.stream(configArgs.seedNodes)
+                    .map(NetworkAddress::toString)
+                    .collect(Collectors.toList());
+            configMap.put("network.nodeFinder.netClusterNodes", strings);
+        }
+        if (configArgs.restPort != null) {
+            configMap.put("rest.port", configArgs.restPort);
+        }
+        return ConfigFactory.parseMap(configMap);
+    }
+
+    // Used only for testing, may be simplified later.
+    public static CompletableFuture<Ignite> start(String... args) {
+        CommandLine commandLine = new CommandLine(new IgniteCliRunner());
+        commandLine.setDefaultValueProvider(new EnvironmentDefaultValueProvider());
+        commandLine.registerConverter(NetworkAddress.class, value -> {
+            try {
+                return NetworkAddress.from(value);
+            } catch (IllegalArgumentException e) {
+                throw new TypeConversionException(e.getMessage());
+            }
+        });
+        int exitCode = commandLine.execute(args);
+        if (exitCode != 0) {
+            System.exit(exitCode);
+        }
+        return commandLine.getExecutionResult();
+    }
+
     /**
      * Main method for running a new Ignite node.
-     *
-     * <p>Usage: IgniteCliRunner [--config=configPath] --work-dir=workDir nodeName
      *
      * @param args CLI args to start a new node.
      */
     public static void main(String[] args) {
         try {
             start(args).get();
-        } catch (CommandLine.ParameterException e) {
-            System.out.println(e.getMessage());
-
-            e.getCommandLine().usage(System.out);
-
-            System.exit(1);
         } catch (ExecutionException | InterruptedException e) {
             System.out.println("Error when starting the node: " + e.getMessage());
 
             e.printStackTrace(System.out);
 
             System.exit(1);
-        }
-    }
-
-    /**
-     * Starts a new Ignite node.
-     *
-     * @param args CLI args to start a new node.
-     * @return New Ignite node.
-     */
-    public static CompletableFuture<Ignite> start(String... args) {
-        CommandSpec spec = CommandSpec.create();
-
-        OptionSpec configPath = OptionSpec
-                .builder("--config-path")
-                .paramLabel("configPath")
-                .type(Path.class)
-                .description("Path to node configuration file in HOCON format.")
-                .build();
-
-        OptionSpec configStr = OptionSpec
-                .builder("--config-string")
-                .paramLabel("configStr")
-                .type(String.class)
-                .description("Configuration in HOCON format.")
-                .build();
-
-        spec.addArgGroup(
-                ArgGroupSpec
-                        .builder()
-                        .addArg(configPath)
-                        .addArg(configStr)
-                        .build()
-        );
-
-        spec.addOption(
-                OptionSpec
-                        .builder("--work-dir")
-                        .paramLabel("workDir")
-                        .type(Path.class)
-                        .description("Path to node working directory.")
-                        .required(true)
-                        .build()
-        );
-
-        spec.addPositional(
-                PositionalParamSpec
-                        .builder()
-                        .paramLabel("nodeName")
-                        .type(String.class)
-                        .description("Node name.")
-                        .required(true)
-                        .build()
-        );
-
-        var cmd = new CommandLine(spec);
-
-        var pr = cmd.parseArgs(args);
-
-        var parsedArgs = new Args(
-                pr.matchedPositionalValue(0, null),
-                pr.matchedOptionValue("--config-path", null),
-                pr.matchedOptionValue("--config-string", null),
-                pr.matchedOptionValue("--work-dir", null)
-        );
-
-        if (parsedArgs.config != null) {
-            return IgnitionManager.start(parsedArgs.nodeName, parsedArgs.config.toAbsolutePath(), parsedArgs.nodeWorkDir, null);
-        } else {
-            return IgnitionManager.start(parsedArgs.nodeName, parsedArgs.configStr, parsedArgs.nodeWorkDir);
-        }
-    }
-
-    /**
-     * Simple value object with parsed CLI args of ignite runner.
-     */
-    private static class Args {
-        /** Name of the node. */
-        private final String nodeName;
-
-        /** Path to config file. */
-        private final Path config;
-
-        /** Config string. */
-        private final String configStr;
-
-        /** Path to node work directory. */
-        private final Path nodeWorkDir;
-
-        /**
-         * Creates new instance with parsed arguments.
-         *
-         * @param nodeName Name of the node.
-         * @param config   Path to config file.
-         */
-        private Args(String nodeName, Path config, String configStr, Path nodeWorkDir) {
-            this.nodeName = nodeName;
-            this.config = config;
-            this.configStr = configStr;
-            this.nodeWorkDir = nodeWorkDir;
         }
     }
 }
