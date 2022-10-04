@@ -24,6 +24,10 @@
 
   . $IGNITE_HOME/etc/bootstrap-config
 
+  # Export these variables so that IgniteCliRunner can use them as default values
+  export IGNITE_NODE_NAME=$NODE_NAME
+  export IGNITE_WORK_DIR=$WORK_PATH
+  export IGNITE_CONFIG_PATH=$IGNITE_CONFIG_FILE
 
 
 start() {

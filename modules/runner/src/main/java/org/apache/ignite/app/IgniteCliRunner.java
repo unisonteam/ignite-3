@@ -46,18 +46,15 @@ import picocli.CommandLine.TypeConversionException;
 @SuppressWarnings("FieldMayBeFinal")
 @Command(name = "runner")
 public class IgniteCliRunner implements Callable<CompletableFuture<Ignite>> {
-    private static final String CONFIG_PATH = "--config-path";
-
-    private static final String CONFIG_STRING = "--config-string";
 
     @ArgGroup
     private ConfigOptions configOptions = new ConfigOptions();
 
     private static class ConfigOptions {
-        @Option(names = {CONFIG_PATH}, description = "Path to node configuration file in HOCON format.")
+        @Option(names = {"--config-path"}, description = "Path to node configuration file in HOCON format.")
         private Path configPath;
 
-        @Option(names = {CONFIG_STRING}, description = "Node configuration in HOCON format.")
+        @Option(names = {"--config-string"}, description = "Node configuration in HOCON format.")
         private String configString;
     }
 

@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-. $IGNITE_HOME/etc/bootstrap-config
-
 CMD="java \
 --add-opens java.base/java.lang=ALL-UNNAMED \
 --add-opens java.base/java.lang.invoke=ALL-UNNAMED \
