@@ -41,7 +41,11 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.TypeConversionException;
 
 /**
- * The main entry point for run new Ignite node from CLI toolchain.
+ * The main entry point for running new Ignite node from CLI toolchain. Some configuration values (see {@link ConfigArgs}) can be overridden
+ * using environment variables or command-line arguments. Base configuration is either empty, or taken from the {@code --config-path} or
+ * {@code --config-string}. Then, if an environment variable with the pattern {@code IGNITE_VAR_NAME} (where VAR_NAME corresponds to
+ * {@code --var-name} command line argument) is set, it overrides the value from the config. And last, if the {@code --var-name} command
+ * line argument is passed, it overrides any other values.
  */
 @SuppressWarnings("FieldMayBeFinal")
 @Command(name = "runner")
@@ -61,13 +65,17 @@ public class IgniteCliRunner implements Callable<CompletableFuture<Ignite>> {
     @ArgGroup(validate = false)
     private ConfigArgs configArgs = new ConfigArgs();
 
+    /** Groups command line arguments that can be used to override default config values. */
     private static class ConfigArgs {
+        /** Ignite node port. */
         @Option(names = {"-p", "--port"}, description = "Node port.")
         private Integer port;
 
+        /** Ignite node REST port. */
         @Option(names = {"-r", "--rest-port"}, description = "REST port.")
         private Integer restPort;
 
+        /** List of seed nodes. */
         @Option(names = {"-j", "--join"}, description = "Seed nodes.", split = ",")
         private NetworkAddress[] seedNodes;
 
