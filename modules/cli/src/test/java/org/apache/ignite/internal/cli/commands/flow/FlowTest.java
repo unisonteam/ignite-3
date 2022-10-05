@@ -53,6 +53,24 @@ class FlowTest {
     private StringWriter out;
     private StringWriter errOut;
 
+    private static Flow<Object, Integer> createFlow() {
+        return askQuestion()
+                .question(s -> "Here is your number " + s + ":, would you like to multiply it by 2?",
+                        List.of(new QuestionAnswer<>("yes"::equals, (a, i) -> Integer.parseInt(i) * 2),
+                                new QuestionAnswer<>("no"::equals, (a, i) -> Integer.parseInt(i))))
+                .ifThen(num -> num == 1, Flows.fromCall(new IntCall(), IntCallInput::new))
+                .ifThen(num -> num > 1, Flows.fromCall(new StrCall(), integer -> new StrCallInput(String.valueOf(integer))))
+                .build();
+    }
+
+    private static FlowBuilder<Object, String> askQuestion() {
+        return Flows.question("Do you like this?",
+                        List.of(new QuestionAnswer<>("yes"::equals, (a, i) -> 1),
+                                new QuestionAnswer<>("no"::equals, (a, i) -> 2))
+                )
+                .map(String::valueOf);
+    }
+
     @BeforeEach
     public void setup() throws IOException {
         input = Files.createTempFile("input", "");
@@ -192,7 +210,7 @@ class FlowTest {
 
         // Then output equals to 2 messages from print operations
         assertThat(out.toString(), equalTo("2" + System.lineSeparator()
-                        + "2" + System.lineSeparator()));
+                + "2" + System.lineSeparator()));
         assertThat(errOut.toString(), emptyString());
     }
 
@@ -219,7 +237,7 @@ class FlowTest {
         // Then error output equals to 2 messages from exception handler
         assertThat(out.toString(), emptyString());
         assertThat(errOut.toString(), equalTo("Ooops!" + System.lineSeparator()
-                        + "Ooops!" + System.lineSeparator()));
+                + "Ooops!" + System.lineSeparator()));
     }
 
     @Test
@@ -269,23 +287,31 @@ class FlowTest {
         assertThat(errOut.toString(), emptyString());
     }
 
-    private static Flow<Object, Integer> createFlow() {
-        return askQuestion()
-                .question(s -> "Here is your number " + s + ":, would you like to multiply it by 2?",
-                        List.of(new QuestionAnswer<>("yes"::equals, (a, i) -> Integer.parseInt(i) * 2),
-                                new QuestionAnswer<>("no"::equals, (a, i) -> Integer.parseInt(i))))
-                .ifThen(num -> num == 1, Flows.fromCall(new IntCall(), IntCallInput::new))
-                .ifThen(num -> num > 1, Flows.fromCall(new StrCall(), integer -> new StrCallInput(String.valueOf(integer))))
-                .build();
+    @Test
+    void flatMap() {
+        Flows.from("fizz")
+                .flatMap(v -> Flows.from(it -> it + "buzz"))
+                .print()
+                .start();
+        assertThat(out.toString(), equalTo("fizzbuzz" + System.lineSeparator()));
     }
 
-    private static FlowBuilder<Object, String> askQuestion() {
-        return Flows.question("Do you like this?",
-                        List.of(new QuestionAnswer<>("yes"::equals, (a, i) -> 1),
-                                new QuestionAnswer<>("no"::equals, (a, i) -> 2))
-                )
-                .map(String::valueOf);
+    @Test
+    void interruptOnFailure() {
+        Flows.from("fizz")
+                .map(it -> it + "1")
+                .print()
+                .flatMap(v -> Flows.<String, String>from(ignored -> {
+                    throw new RuntimeException();
+                }))
+                .interruptOnFailure()
+                .print()
+                .map(it -> it + "2")
+                .print()
+                .start();
+        assertThat(out.toString(), equalTo("fizz1" + System.lineSeparator()));
     }
+
 
     private void bindAnswers(String... answers) throws IOException {
         Files.writeString(input, String.join("\n", answers) + "\n");

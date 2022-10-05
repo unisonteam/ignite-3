@@ -24,6 +24,7 @@ import org.apache.ignite.internal.cli.core.decorator.Decorator;
 import org.apache.ignite.internal.cli.core.decorator.TerminalOutput;
 import org.apache.ignite.internal.cli.core.exception.ExceptionHandler;
 import org.apache.ignite.internal.cli.core.flow.Flow;
+import org.apache.ignite.internal.cli.core.flow.Flowable;
 import org.apache.ignite.internal.cli.core.flow.question.QuestionAnswer;
 
 /**
@@ -55,6 +56,16 @@ public interface FlowBuilder<I, O>  {
     }
 
     /**
+     * Returns a {@link FlowBuilder} consisting of the results of replacing each element
+     * of this flow with the contents of a mapped flow produced
+     * by applying the provided mapping function to each element.
+     *
+     * @param mapper function to apply to each element which produces a flow of new values
+     * @return the new {@link FlowBuilder}
+     */
+    <OT> FlowBuilder<I, OT> flatMap(Function<O, FlowBuilder<O, OT>> mapper);
+
+    /**
      * Appends the flow to this builder if the result of the current flow matches the predicate.
      *
      * @param tester predicate to test
@@ -63,6 +74,13 @@ public interface FlowBuilder<I, O>  {
      * @return instance of builder
      */
     <OT> FlowBuilder<I, O> ifThen(Predicate<O> tester, Flow<O, OT> flow);
+
+    /**
+     * Interrupts the flow if the result has an error.
+     */
+    default FlowBuilder<I, O> interruptOnFailure() {
+        return then(result -> result.hasError() ? Flowable.interrupt() : result);
+    }
 
     /**
      * Appends the flow which will ask a question based on the result of the current flow and return the question answer.

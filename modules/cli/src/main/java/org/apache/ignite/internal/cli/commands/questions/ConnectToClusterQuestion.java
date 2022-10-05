@@ -66,16 +66,17 @@ public class ConnectToClusterQuestion {
         );
 
         return Flows.from(clusterUrlOrSessionNode(clusterUrl))
-                .ifThen(Objects::isNull, Flows.<String, ConnectCallInput>acceptQuestion(questionUiComponent,
-                                () -> new ConnectCallInput(defaultUrl))
-                        .then(Flows.fromCall(connectCall))
-                        .print()
-                        .build())
-                .then(prevUrl -> {
-                    // If inner flow from ifThen is interrupted we should interrupt outer flow as well.
-                    // TODO https://issues.apache.org/jira/browse/IGNITE-17553
-                    String url = clusterUrlOrSessionNode(clusterUrl);
-                    return url != null ? Flowable.success(url) : Flowable.interrupt();
+                .flatMap(v -> {
+                    if (Objects.isNull(v)) {
+                        return Flows.<String, ConnectCallInput>acceptQuestion(questionUiComponent,
+                                        () -> new ConnectCallInput(defaultUrl))
+                                .then(Flows.fromCall(connectCall))
+                                .print()
+                                .interruptOnFailure()
+                                .map(ignored -> clusterUrlOrSessionNode(clusterUrl));
+                    } else {
+                        return Flows.identity();
+                    }
                 });
     }
 

@@ -70,6 +70,11 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
     }
 
     @Override
+    public <OT> FlowBuilder<I, OT> flatMap(Function<O, FlowBuilder<O, OT>> mapper) {
+        return then(it -> mapper.apply(it.value()).build().start(it));
+    }
+
+    @Override
     public <OT> FlowBuilder<I, O> ifThen(Predicate<O> tester, Flow<O, OT> flow) {
         return then(input -> {
             if (tester.test(input.value())) {
