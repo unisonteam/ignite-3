@@ -25,7 +25,6 @@ import org.apache.ignite.internal.cli.call.connect.ConnectCallInput;
 import org.apache.ignite.internal.cli.config.ConfigConstants;
 import org.apache.ignite.internal.cli.config.ConfigManagerProvider;
 import org.apache.ignite.internal.cli.config.StateConfigProvider;
-import org.apache.ignite.internal.cli.core.flow.Flowable;
 import org.apache.ignite.internal.cli.core.flow.builder.FlowBuilder;
 import org.apache.ignite.internal.cli.core.flow.builder.Flows;
 import org.apache.ignite.internal.cli.core.repl.Session;
@@ -111,7 +110,7 @@ public class ConnectToClusterQuestion {
                 .print()
                 .ifThen(s -> !Objects.equals(clusterUrl, defaultUrl) && session.isConnectedToNode(),
                         defaultUrlQuestion(clusterUrl).print().build())
-                .build().start(Flowable.empty());
+                .start();
     }
 
     private FlowBuilder<String, String> defaultUrlQuestion(String lastConnectedUrl) {

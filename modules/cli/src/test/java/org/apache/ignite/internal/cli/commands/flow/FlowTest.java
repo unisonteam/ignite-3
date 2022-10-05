@@ -128,17 +128,11 @@ class FlowTest {
         bindAnswers("no"); // we don't care about answer in this test
 
         // When build flow
-        Flow<Object, String> flow = askQuestion()
+        askQuestion()
                 .exceptionHandler(new TestExceptionHandler())
                 .then(Flows.fromCall(new ThrowingStrCall(), StrCallInput::new))
                 .print()
-                .build();
-
-        // Then the output is empty
-        assertThat(errOut.toString(), emptyString());
-
-        // When start flow
-        flow.start(Flowable.empty());
+                .start();
 
         // Then output equals to the message from the exception because we use TestExceptionHandler
         assertThat(errOut.toString(), equalTo("Ooops!" + System.lineSeparator()));
@@ -150,18 +144,12 @@ class FlowTest {
         // Given
         bindAnswers("no"); // we don't care about answer in this test
 
-        // When build flow
-        Flow<Object, String> flow = askQuestion()
+        // When build and start flow
+        askQuestion()
                 .print()
                 .then(Flows.fromCall(new ThrowingStrCall(), StrCallInput::new))
                 .exceptionHandler(new TestExceptionHandler())
-                .build();
-
-        // Then the output is empty
-        assertThat(errOut.toString(), emptyString());
-
-        // When start flow
-        flow.start(Flowable.empty());
+                .start();
 
         // Then output is empty because print was used before the call
         assertThat(errOut.toString(), emptyString());
@@ -173,18 +161,12 @@ class FlowTest {
         // Given
         bindAnswers("no"); // we don't care about answer in this test
 
-        // When build flow
-        Flow<Object, String> flow = askQuestion()
+        // When build and start flow
+        askQuestion()
                 .then(Flows.fromCall(new ThrowingStrCall(), StrCallInput::new))
                 .exceptionHandler(new TestExceptionHandler())
                 .print()
-                .build();
-
-        // Then the output is empty
-        assertThat(errOut.toString(), emptyString());
-
-        // When start flow
-        flow.start(Flowable.empty());
+                .start();
 
         // Then output equals to the message from the exception because we use TestExceptionHandler
         assertThat(errOut.toString(), equalTo("Ooops!" + System.lineSeparator()));
@@ -195,18 +177,11 @@ class FlowTest {
         // Given
         bindAnswers("no");
 
-        // When build flow
-        Flow<Object, String> flow = askQuestion()
+        // When build and start flow
+        askQuestion()
                 .print()
                 .print()
-                .build();
-
-        // Then the output is empty
-        assertThat(out.toString(), emptyString());
-        assertThat(errOut.toString(), emptyString());
-
-        // When start flow
-        flow.start(Flowable.empty());
+                .start();
 
         // Then output equals to 2 messages from print operations
         assertThat(out.toString(), equalTo("2" + System.lineSeparator()
@@ -219,20 +194,13 @@ class FlowTest {
         // Given
         bindAnswers("no");
 
-        // When build flow
-        Flow<Object, String> flow = askQuestion()
+        // When build and start flow
+        askQuestion()
                 .then(Flows.fromCall(new ThrowingStrCall(), StrCallInput::new))
                 .exceptionHandler(new TestExceptionHandler())
                 .print()
                 .print()
-                .build();
-
-        // Then the output is empty
-        assertThat(out.toString(), emptyString());
-        assertThat(errOut.toString(), emptyString());
-
-        // When start flow
-        flow.start(Flowable.empty());
+                .start();
 
         // Then error output equals to 2 messages from exception handler
         assertThat(out.toString(), emptyString());
@@ -305,6 +273,32 @@ class FlowTest {
                     throw new RuntimeException();
                 }))
                 .interruptOnFailure()
+                .print()
+                .map(it -> it + "2")
+                .print()
+                .start();
+        assertThat(out.toString(), equalTo("fizz1" + System.lineSeparator()));
+    }
+
+    @Test
+    void interruptFlatMap() {
+        Flows.from("fizz")
+                .map(it -> it + "1")
+                .print()
+                .flatMap(v -> Flows.<String, String>from(ignored -> Flowable.interrupt()))
+                .print()
+                .map(it -> it + "2")
+                .print()
+                .start();
+        assertThat(out.toString(), equalTo("fizz1" + System.lineSeparator()));
+    }
+
+    @Test
+    void interruptThen() {
+        Flows.from("fizz")
+                .map(it -> it + "1")
+                .print()
+                .then(v -> Flowable.interrupt())
                 .print()
                 .map(it -> it + "2")
                 .print()

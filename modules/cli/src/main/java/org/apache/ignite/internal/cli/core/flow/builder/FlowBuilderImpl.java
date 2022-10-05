@@ -119,7 +119,10 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
 
     @Override
     public void start() {
-        run(Flowable.empty());
+        try {
+            run(Flowable.empty());
+        } catch (FlowInterruptException ignored) {
+        }
     }
 
     /**
@@ -129,11 +132,7 @@ public class FlowBuilderImpl<I, O> implements FlowBuilder<I, O> {
      * @return output flowable
      */
     private Flowable<O> run(Flowable<I> input) {
-        try {
-            return flow.start(input);
-        } catch (FlowInterruptException e) {
-            return Flowable.empty();
-        }
+        return flow.start(input);
     }
 
     /**
