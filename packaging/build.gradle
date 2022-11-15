@@ -113,11 +113,6 @@ task buildAndSignAllSrcZip(type: Sign) {
     sign file("$buildDir/distributions/apache-ignite-${project.version}-src.zip")
 }
 
-// copyCliAndDbZip depends on configurations.cliZip and configurations.dbZip
-// it makes allDistZip be depended on configurations.cliZip and configurations.dbZip
-// https://issues.apache.org/jira/browse/IGNITE-17918
-allDistZip.dependsOn copyCliAndDbZip
-
 signing {
     sign allDistZip
 }
