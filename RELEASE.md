@@ -65,7 +65,7 @@ For all the commands going forward:
    ```
 8. Copy src zip with checksums and signatures
    ```
-   cp packaging/build/distributions/apache-ignite-3.0.0-beta1-src.zip \
+   cp packaging/build/distributions/apache-ignite-{version}-src.zip \
    packaging/build/distributions/ignite3-{version}.zip.asc \ 
    packaging/build/distributions/ignite3-{version}.zip.sha512 \
    {dist.dev}/{version}-rc{rc}
@@ -109,12 +109,12 @@ For all the commands going forward:
    ```
 15. Copy zip with checksums and signatures
    ```
-   cp modules/platforms/build/distributions/apache-ignite-3.0.0-beta1-cpp.zip \
-   modules/platforms/build/distributions/apache-ignite-3.0.0-beta1-cpp.zip.asc \ 
-   modules/platforms/build/distributions/apache-ignite-3.0.0-beta1-cpp.zip.sha512 \  
-   modules/platforms/build/distributions/apache-ignite-3.0.0-beta1-nuget.zip \
-   modules/platforms/build/distributions/apache-ignite-3.0.0-beta1-nuget.zip.asc \ 
-   modules/platforms/build/distributions/apache-ignite-3.0.0-beta1-nuget.zip.sha512 \ 
+   cp modules/platforms/build/distributions/apache-ignite-{version}-cpp.zip \
+   modules/platforms/build/distributions/apache-ignite-{version}-cpp.zip.asc \ 
+   modules/platforms/build/distributions/apache-ignite-{version}-cpp.zip.sha512 \  
+   modules/platforms/build/distributions/apache-ignite-{version}-nuget.zip \
+   modules/platforms/build/distributions/apache-ignite-{version}-nuget.zip.asc \ 
+   modules/platforms/build/distributions/apache-ignite-{version}-nuget.zip.sha512 \ 
    {dist.dev}/{version}-rc{rc}
    ```
 16. Commit ZIP and DEB\RPM packages:
