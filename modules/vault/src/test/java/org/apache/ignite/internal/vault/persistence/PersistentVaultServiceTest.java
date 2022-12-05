@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * Test suite for the {@link PersistentVaultService}.
  */
 @ExtendWith(WorkDirectoryExtension.class)
-class ItPersistentVaultServiceTest extends VaultServiceTest {
+class PersistentVaultServiceTest extends VaultServiceTest {
     @WorkDirectory
     private Path vaultDir;
 

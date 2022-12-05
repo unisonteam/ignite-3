@@ -43,8 +43,11 @@ dependencies {
     integrationTestImplementation(testFixtures(project(':ignite-raft')))
     integrationTestImplementation(testFixtures(project(':ignite-network')))
     integrationTestImplementation project(':ignite-metastorage-server')
+    integrationTestImplementation project(':ignite-metastorage-common')
     integrationTestImplementation project(':ignite-api')
     integrationTestImplementation project(':ignite-raft')
+    integrationTestImplementation project(':ignite-raft-client')
+    integrationTestImplementation libs.jetbrains.annotations
     integrationTestImplementation libs.mockito.junit
     integrationTestImplementation libs.hamcrest.core
     integrationTestImplementation libs.classgraph

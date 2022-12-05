@@ -21,6 +21,7 @@ plugins {
     alias(libs.plugins.javacc) apply false
     alias(libs.plugins.modernizer) apply false
     alias(libs.plugins.aggregateJavadoc)
+    id 'project-report'
 }
 
 apply from: "$rootDir/buildscripts/javadoc.gradle"
@@ -47,7 +48,8 @@ ext {
 allprojects {
     group 'org.apache.ignite'
     version = "3.0.0-SNAPSHOT"
-
+    task printAllDependencies(type: DependencyReportTask) {}
+    task findDependency(type: DependencyInsightReportTask) {}
     tasks.withType(Test) {
         defaultCharacterEncoding = 'UTF-8'
 
@@ -83,6 +85,16 @@ allprojects {
 
     tasks.withType(Javadoc) {
         options.addStringOption('bottom', javadocFooter())
+    }
+}
+
+//configurations.all {
+//    resolutionStrategy.force libs.ams.core
+//}
+//
+configurations.all {
+    resolutionStrategy {
+        failOnVersionConflict()
     }
 }
 

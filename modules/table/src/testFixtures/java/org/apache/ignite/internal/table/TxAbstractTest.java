@@ -69,6 +69,7 @@ import org.apache.ignite.table.Tuple;
 import org.apache.ignite.tx.IgniteTransactions;
 import org.apache.ignite.tx.Transaction;
 import org.apache.ignite.tx.TransactionException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -433,7 +434,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
 
         var futUpd2 = table2.upsertAllAsync(tx2, rows2);
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> {
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> {
             boolean lockUpgraded = false;
 
             for (Iterator<Lock> it = txManager(accounts).lockManager().locks(tx2.id()); it.hasNext(); ) {
@@ -841,7 +842,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         validateBalance(txAcc2.getAll(tx2, List.of(makeKey(2), makeKey(1))), 200., 300.);
         validateBalance(txAcc2.getAll(tx2, List.of(makeKey(1), makeKey(2))), 300., 200.);
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> TxState.ABORTED == tx.state(), 5_000), tx.state().toString());
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> TxState.ABORTED == tx.state(), 5_000), tx.state().toString());
 
         tx2.commit();
 
@@ -1126,8 +1127,8 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test2", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(200., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(customers).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(customers).isEmpty(), 10_000));
     }
 
     @Test
@@ -1165,7 +1166,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test2", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(200., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
     }
 
     @Test
@@ -1203,7 +1204,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test2", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(200., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
     }
 
     @Test
@@ -1221,7 +1222,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test2", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(200., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
     }
 
     @Test
@@ -1239,7 +1240,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(100., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
     }
 
     @Test
@@ -1258,7 +1259,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test2", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(200., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
     }
 
     @Test
@@ -1277,7 +1278,7 @@ public abstract class TxAbstractTest extends IgniteAbstractTest {
         assertEquals("test", customers.recordView().get(null, makeKey(1)).stringValue("name"));
         assertEquals(100., accounts.recordView().get(null, makeKey(1)).doubleValue("balance"));
 
-        assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
+        Assertions.assertTrue(IgniteTestUtils.waitForCondition(() -> lockManager(accounts).isEmpty(), 10_000));
     }
 
     @Test
