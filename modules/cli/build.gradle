@@ -88,6 +88,10 @@ dependencies {
     integrationTestImplementation libs.micronaut.junit5
     integrationTestImplementation libs.micronaut.test
     integrationTestImplementation libs.assertj.core
+    integrationTestImplementation ("org.jetbrains.pty4j:pty4j:0.12.10") {
+        exclude group: "org.jetbrains.pty4j", module:"purejavacomm"
+    }
+    integrationTestImplementation files('purejavacomm-0.0.11.1.jar')
 }
 
 ext.generatedClientDir = layout.buildDirectory.dir("swagger/client")

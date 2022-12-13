@@ -13,4 +13,8 @@ rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 rem See the License for the specific language governing permissions and
 rem limitations under the License.
 
-start java -jar target/ignite.jar
+@ECHO OFF
+set CLASSPATH=.
+set CLASSPATH=%CLASSPATH%;./../lib/
+
+%JAVA_HOME%\bin\java -Xms128m -Xmx384m -Xnoclassgc @MAIN_CLASS@

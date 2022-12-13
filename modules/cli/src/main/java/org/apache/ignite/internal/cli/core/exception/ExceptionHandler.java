@@ -33,6 +33,7 @@ public interface ExceptionHandler<T extends Throwable> {
         @Override
         public int handle(ExceptionWriter err, Throwable e) {
             LOG.error("Unhandled exception", e);
+            e.printStackTrace();
             err.write(
                     ErrorUiComponent.builder()
                             .header("Unknown error")

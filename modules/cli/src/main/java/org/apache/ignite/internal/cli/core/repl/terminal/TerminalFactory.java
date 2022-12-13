@@ -21,6 +21,7 @@ import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import jakarta.inject.Singleton;
 import java.io.IOException;
+import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
@@ -40,6 +41,8 @@ public class TerminalFactory {
     @Bean(preDestroy = "close")
     @Singleton
     public Terminal terminal() throws IOException {
-        return TerminalBuilder.terminal();
+        Terminal terminal = TerminalBuilder.terminal();
+        terminal.setSize(new Size(120, 40));
+        return terminal;
     }
 }
