@@ -19,7 +19,10 @@ package org.apache.ignite.internal.cli.core.repl.executor;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.apache.ignite.internal.cli.NodeNameRegistry;
@@ -37,6 +40,8 @@ import org.apache.ignite.internal.cli.core.repl.completer.DynamicCompleterFilter
 import org.apache.ignite.internal.cli.core.repl.completer.DynamicCompleterRegistry;
 import org.apache.ignite.internal.cli.core.repl.context.CommandLineContextProvider;
 import org.apache.ignite.internal.cli.core.repl.expander.NoopExpander;
+import org.jline.console.ArgDesc;
+import org.jline.console.CmdDesc;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -46,7 +51,10 @@ import org.jline.reader.MaskingCallback;
 import org.jline.reader.Parser;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
+import org.jline.utils.AttributedString;
+import org.jline.widget.AutosuggestionWidgets;
 import org.jline.widget.TailTipWidgets;
+import org.jline.widget.TailTipWidgets.TipType;
 import picocli.CommandLine;
 import picocli.CommandLine.IDefaultValueProvider;
 import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
@@ -85,7 +93,7 @@ public class ReplExecutor {
 
     private static TailTipWidgets createWidgets(SystemRegistryImpl registry, LineReader reader) {
         TailTipWidgets widgets = new TailTipWidgets(reader, registry::commandDescription, 5,
-                TailTipWidgets.TipType.COMPLETER);
+                TipType.COMBINED);
         widgets.enable();
         // Workaround for the https://issues.apache.org/jira/browse/IGNITE-17346
         // Turn off tailtip widgets before printing to the output
@@ -122,9 +130,34 @@ public class ReplExecutor {
             }
 
             RegistryCommandExecutor executor = new RegistryCommandExecutor(parser, picocliCommands.getCmd());
+
+            AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(reader);
+            autosuggestionWidgets.enable();
+
+//            Map<String, CmdDesc> tailTips = new HashMap<>();
+//            Map<String, List<AttributedString>> widgetOpts = new HashMap<>();
+//            List<AttributedString> mainDesc = Arrays.asList(new AttributedString("ccccccc")
+//                    , new AttributedString("wwwwwwww")
+//                    , new AttributedString("cluster config lol")
+//                    , new AttributedString("node config lol")
+//            );
+//            widgetOpts.put("--cluster-url", Arrays.asList(new AttributedString("Cluster url desc")));
+//            widgetOpts.put("--help", Arrays.asList(new AttributedString("Shows help")));
+//            widgetOpts.put("--cluster-name", Arrays.asList(new AttributedString("any name you'd like to use")));
+
+//            tailTips.put("cluster", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
+//            tailTips.put("cluster", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
+//            tailTips.put("node config show", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
+//            tailTips.put("node config update", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
+//
+//            TailTipWidgets tailtipWidgets = new TailTipWidgets(reader, tailTips, 0, TipType.COMPLETER);
+//            tailtipWidgets.enable();
+
             TailTipWidgets widgets = repl.isTailTipWidgetsEnabled() ? createWidgets(registry, reader) : null;
 
             QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, widgets));
+//            QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, tailtipWidgets));
+//            QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, null));
 
             repl.onStart();
 

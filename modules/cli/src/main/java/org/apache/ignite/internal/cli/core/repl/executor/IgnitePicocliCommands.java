@@ -237,11 +237,11 @@ public class IgnitePicocliCommands implements CommandRegistry {
             // the absence of dots, on the other hand, means that this completion should have higher sorting priority
             int sortingPriority = one.split("\\.").length;
 
-            return new Candidate(one, one, null, null, null, null, false, sortingPriority);
+            return new Candidate(one, one,  null, "Config description", null, null, false, sortingPriority);
         }
 
         private Candidate staticCandidate(String one) {
-            return new Candidate(one, one, null, null, null, null, true, 10);
+            return new Candidate(one, one, null, "Parameter description", null, null, true, 10);
         }
     }
 }
