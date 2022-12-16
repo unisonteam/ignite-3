@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
+import org.apache.ignite.internal.cli.commands.Options;
 import org.apache.ignite.internal.cli.core.repl.completer.CompleterFilter;
 import org.apache.ignite.internal.cli.core.repl.completer.DynamicCompleter;
 import org.apache.ignite.internal.cli.core.repl.completer.DynamicCompleterRegistry;
@@ -237,11 +239,18 @@ public class IgnitePicocliCommands implements CommandRegistry {
             // the absence of dots, on the other hand, means that this completion should have higher sorting priority
             int sortingPriority = one.split("\\.").length;
 
-            return new Candidate(one, one,  null, "Config description", null, null, false, sortingPriority);
+            return new Candidate(one, one,  null, null, null, null, false, sortingPriority);
         }
 
         private Candidate staticCandidate(String one) {
-            return new Candidate(one, one, null, "Parameter description", null, null, true, 10);
+            String descr = null;
+            if (one.startsWith("-")) {
+                descr = Stream.of(Options.values())
+                        .filter(it -> it.fullName().equalsIgnoreCase(one) || it.shortName().equalsIgnoreCase(one))
+                        .map(Options::description)
+                        .findAny().get();
+            }
+            return new Candidate(one, one, null, descr, null, null, true, 10);
         }
     }
 }

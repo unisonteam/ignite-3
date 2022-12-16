@@ -134,30 +134,7 @@ public class ReplExecutor {
             AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(reader);
             autosuggestionWidgets.enable();
 
-//            Map<String, CmdDesc> tailTips = new HashMap<>();
-//            Map<String, List<AttributedString>> widgetOpts = new HashMap<>();
-//            List<AttributedString> mainDesc = Arrays.asList(new AttributedString("ccccccc")
-//                    , new AttributedString("wwwwwwww")
-//                    , new AttributedString("cluster config lol")
-//                    , new AttributedString("node config lol")
-//            );
-//            widgetOpts.put("--cluster-url", Arrays.asList(new AttributedString("Cluster url desc")));
-//            widgetOpts.put("--help", Arrays.asList(new AttributedString("Shows help")));
-//            widgetOpts.put("--cluster-name", Arrays.asList(new AttributedString("any name you'd like to use")));
-
-//            tailTips.put("cluster", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
-//            tailTips.put("cluster", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
-//            tailTips.put("node config show", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
-//            tailTips.put("node config update", new CmdDesc(mainDesc, ArgDesc.doArgNames(Arrays.asList("[pN...]")), widgetOpts));
-//
-//            TailTipWidgets tailtipWidgets = new TailTipWidgets(reader, tailTips, 0, TipType.COMPLETER);
-//            tailtipWidgets.enable();
-
-            TailTipWidgets widgets = repl.isTailTipWidgetsEnabled() ? createWidgets(registry, reader) : null;
-
-            QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, widgets));
-//            QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, tailtipWidgets));
-//            QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, null));
+            QuestionAskerFactory.setReadWriter(new JlineQuestionWriterReader(reader, null));
 
             repl.onStart();
 
