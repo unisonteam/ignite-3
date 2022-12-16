@@ -51,7 +51,6 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         initJavaLoggerProps();
 
-//        Thread.sleep(10000);
         int exitCode = 0;
         ApplicationContextBuilder builder = ApplicationContext.builder(Environment.CLI).deduceEnvironment(false);
         try (MicronautFactory micronautFactory = new MicronautFactory(builder.start())) {
