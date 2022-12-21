@@ -42,7 +42,7 @@ public class TerminalFactory {
     @Singleton
     public Terminal terminal() throws IOException {
         Terminal terminal = TerminalBuilder.terminal();
-        terminal.setSize(new Size(120, 40));
+        terminal.setSize(new Size(240, 80));
         return terminal;
     }
 }
