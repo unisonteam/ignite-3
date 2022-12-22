@@ -113,25 +113,24 @@ public class Cli {
     boolean awaitMatches(Matcher<String> matcher) {
         ArrayList<String> processedLines = new ArrayList<>();
 
-        long waitTime = Duration.ofSeconds(20).toNanos();
+        long waitTime = Duration.ofSeconds(60).toNanos();
         long startNanos = System.nanoTime();
         String line = null;
         while (startNanos + waitTime > System.nanoTime()) {
             try {
                 line = readCleanText();
-                processedLines.add(line);
+                if (line != null) {
+                    processedLines.add(line);
+                }
                 while (line != null) {
                     if (matcher.matches(line)) {
                         return true;
                     }
                     line = readCleanText();
-                    processedLines.add(line);
+                    if (line != null) {
+                        processedLines.add(line);
+                    }
                 }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                Thread.sleep(100);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
