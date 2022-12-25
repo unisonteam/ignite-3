@@ -21,11 +21,8 @@ import com.pty4j.PtyProcess;
 import java.io.IOException;
 import java.io.Reader;
 import java.time.Duration;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import org.jetbrains.annotations.Nullable;
 
 public class Gobbler implements Runnable {
     private final Reader reader;
@@ -33,7 +30,7 @@ public class Gobbler implements Runnable {
     private final Thread thread;
     private final ConcurrentLinkedQueue<String> lineQueue = new ConcurrentLinkedQueue<>();
 
-    Gobbler(Reader reader, CountDownLatch latch, PtyProcess process) {
+    Gobbler(Reader reader, PtyProcess process) {
         this.reader = reader;
         output = new StringBuffer();
         thread = new Thread(this, "Stream gobbler");
@@ -68,7 +65,6 @@ public class Gobbler implements Runnable {
     public void run() {
         try {
             int maxCharBufferSize = 2048;
-            String linePrefix = "";
             while (true) {
                 char[] buf = new char[32 * maxCharBufferSize];
                 int count = reader.read(buf);
@@ -77,9 +73,9 @@ public class Gobbler implements Runnable {
                     return;
                 }
                 output.append(buf, 0, count);
-                System.out.println("######## [" + count + "]: " + new String(buf, 0, count));
-                lineQueue.add(new String(buf, 0, count));
-//                linePrefix = processLines(linePrefix + new String(buf, 0, count));
+                String line = new String(buf, 0, count);
+                System.out.println("######## [" + count + "]: " + line);
+                lineQueue.add(line);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -110,16 +106,8 @@ public class Gobbler implements Runnable {
         thread.join(Duration.ofSeconds(10).toMillis());
     }
 
-    public String readLine() throws InterruptedException {
-        return readLine(Duration.ofSeconds(10).toMillis());
-    }
-
-    public String readLine(long awaitTimeoutMillis) throws InterruptedException {
-        String line = lineQueue.poll();
-        if (line != null) {
-            System.out.println("######## [read]: " + line);
-            line = cleanWinText(line);
-        }
-        return line;
+    @Nullable
+    public String readLine() {
+        return lineQueue.poll();
     }
 }

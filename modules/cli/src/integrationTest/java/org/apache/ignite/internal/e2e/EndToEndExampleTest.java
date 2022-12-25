@@ -53,8 +53,6 @@ public class EndToEndExampleTest {
 
     Cli cli;
 
-    // -------------------
-
     @AfterEach
     void tearDown() throws Exception {
         List<AutoCloseable> closeables = clusterNodeNames.stream()

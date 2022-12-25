@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.e2e;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.pty4j.PtyProcess;
@@ -28,17 +29,26 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+import net.bytebuddy.agent.builder.AgentBuilder.LambdaInstrumentationStrategy;
+import org.apache.ignite.internal.e2e.core.CompleteStep;
+import org.apache.ignite.internal.e2e.core.History;
+import org.apache.ignite.internal.e2e.core.IncompleteStep;
+import org.apache.ignite.internal.e2e.core.Input;
+import org.apache.ignite.internal.e2e.core.StepCompleter;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import picocli.CommandLine.Help.Ansi;
 
 public class Cli {
+    private final History history;
     private final PtyProcess process;
     private final Gobbler sout;
     private final Gobbler serr;
     private int lastExitCode;
 
     private Cli(PtyProcess process) {
+        this.history = History.empty();
         this.process = process;
         this.sout = startStdoutGobbler(process);
         this.serr = startStdoutGobbler(process);
@@ -76,16 +86,20 @@ public class Cli {
     }
 
     public static Gobbler startStdoutGobbler(PtyProcess process) {
-        return new Gobbler(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8), null, process);
+        return new Gobbler(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8), process);
     }
 
     public static Gobbler startStderrGobbler(PtyProcess process) {
-        return new Gobbler(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8), null, process);
+        return new Gobbler(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8), process);
     }
 
     public Cli run(String cmd) {
         try {
+            var input = new Input(cmd, true);
+            var step = new IncompleteStep(input);
+            history.run(step);
             writeToStdinAndFlush(this.process, cmd, true);
+            new StepCompleter(step, history, serr, sout).completeAsync();
             return this;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -93,50 +107,16 @@ public class Cli {
     }
 
     public Cli assertThatOutput(Matcher<String> matcher) {
-        if (!awaitMatches(matcher)) {
-//            matcher.describeMismatch(sout.getOutput(), Description.NONE);
-            fail("Expecting " + matcher + " but was: " + sout.getOutput());
-        }
-
+        String text = readCleanTextBlocking();
+        assertThat(text, matcher);
         return this;
     }
 
-    String readCleanText() throws InterruptedException {
-        String line = sout.readLine();
-        if (line != null) {
-            line = Ansi.OFF.string(line);
-        }
+    String readCleanTextBlocking() {
+        history.waitStepCompleted();
+        CompleteStep lastStep = history.findLastStep();
 
-        return line;
-    }
-
-    boolean awaitMatches(Matcher<String> matcher) {
-        ArrayList<String> processedLines = new ArrayList<>();
-
-        long waitTime = Duration.ofSeconds(60).toNanos();
-        long startNanos = System.nanoTime();
-        String line = null;
-        while (startNanos + waitTime > System.nanoTime()) {
-            try {
-                line = readCleanText();
-                if (line != null) {
-                    processedLines.add(line);
-                }
-                while (line != null) {
-                    if (matcher.matches(line)) {
-                        return true;
-                    }
-                    line = readCleanText();
-                    if (line != null) {
-                        processedLines.add(line);
-                    }
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return false;
+        return Ansi.OFF.string(lastStep.output().out().stream().collect(Collectors.joining("\n")));
     }
 
     public void stop() {
