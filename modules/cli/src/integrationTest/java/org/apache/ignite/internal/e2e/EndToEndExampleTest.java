@@ -20,6 +20,9 @@ package org.apache.ignite.internal.e2e;
 import static java.util.stream.Collectors.toList;
 import static org.apache.ignite.internal.testframework.IgniteTestUtils.testNodeName;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.not;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -60,14 +63,14 @@ public class EndToEndExampleTest {
                 .collect(toList());
 
         IgniteUtils.closeAll(closeables);
-        cli.run("exit");
+        cli.run("exit").assertThatOutput(not(emptyString())); // todo add wait
         cli.stop();
     }
 
     @BeforeEach
     void setUp(TestInfo testInfo, @TempDir Path tmpDir) {
         startIgniteNode(testInfo, 1);
-        cli = Cli.startInteractive(tmpDir);
+        cli = Cli.startInteractive(tmpDir, System.out::println);
         cli.run("cp -r /Users/apakhomov/unison/ignite-3/packaging/build/distributions/ignite3-cli-3.0.0-SNAPSHOT .")
                 .run("cd ignite3-cli-3.0.0-SNAPSHOT");
     }
@@ -80,7 +83,11 @@ public class EndToEndExampleTest {
                         containsString("Do you want to reconnect to the last connected node"))
                 .run("Y")
                 .assertThatOutput(
-                        containsString("Connected to"));
+                        containsString("Connected to"))
+                .run("node config show")
+                .assertThatOutput(containsString("rest"))
+                .run("node config show rest.port")
+                .assertThatOutput(containsString("10300"));
     }
 
     private void startIgniteNode(TestInfo testInfo, int nodesCount) {

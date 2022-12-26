@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.jetbrains.annotations.Nullable;
 
 public class Gobbler implements Runnable {
@@ -29,6 +31,8 @@ public class Gobbler implements Runnable {
     private final StringBuffer output;
     private final Thread thread;
     private final ConcurrentLinkedQueue<String> lineQueue = new ConcurrentLinkedQueue<>();
+
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     Gobbler(Reader reader, PtyProcess process) {
         this.reader = reader;
@@ -72,35 +76,39 @@ public class Gobbler implements Runnable {
                     reader.close();
                     return;
                 }
-                output.append(buf, 0, count);
                 String line = new String(buf, 0, count);
-                System.out.println("######## [" + count + "]: " + line);
-                lineQueue.add(line);
+                if (!line.isEmpty()) {
+                    var wLock = lock.writeLock();
+                    wLock.lock();
+                    try {
+                        lineQueue.add(line);
+                        output.append(line);
+                    } finally {
+                        wLock.unlock();
+                    }
+
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String processLines(String text) {
-        int start = 0;
-        while (true) {
-            int end = text.indexOf('\n', start);
-            if (end < 0) {
-                String lastLine = text.substring(start);
-                System.out.println("######## [append to queue]: " + lastLine);
-                lineQueue.add(lastLine);
-                return lastLine;
-            }
-            System.out.println("######## [append to queue]: " + text.substring(start, end + 1));
-            lineQueue.add(text.substring(start, end + 1));
-            start = end + 1;
-        }
-    }
-
-    public String getOutput() {
-        return output.toString();
-    }
+//    private String processLines(String text) {
+//        int start = 0;
+//        while (true) {
+//            int end = text.indexOf('\n', start);
+//            if (end < 0) {
+//                String lastLine = text.substring(start);
+//                System.out.println("######## [append to queue]: " + lastLine);
+//                lineQueue.add(lastLine);
+//                return lastLine;
+//            }
+//            System.out.println("######## [append to queue]: " + text.substring(start, end + 1));
+//            lineQueue.add(text.substring(start, end + 1));
+//            start = end + 1;
+//        }
+//    }
 
     public void awaitFinish() throws InterruptedException {
         thread.join(Duration.ofSeconds(10).toMillis());
@@ -108,6 +116,12 @@ public class Gobbler implements Runnable {
 
     @Nullable
     public String readLine() {
-        return lineQueue.poll();
+        var rLock = lock.readLock();
+        rLock.lock();
+        try {
+            return lineQueue.poll();
+        } finally {
+            rLock.unlock();
+        }
     }
 }

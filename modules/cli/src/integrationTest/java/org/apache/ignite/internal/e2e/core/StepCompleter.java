@@ -21,11 +21,10 @@ import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.net.ssl.SNIHostName;
 import org.apache.ignite.internal.e2e.Gobbler;
 
 public class StepCompleter {
-    private final IncompleteStep incompleteStep;
+    public final IncompleteStep incompleteStep;
     private final History history;
     private final Gobbler errGobbler;
     private final Gobbler outGobbler;
@@ -50,7 +49,7 @@ public class StepCompleter {
                     lastUpdateTime.set(System.nanoTime());
                     incompleteStep.outAdd(line);
                 } else {
-                    if (lastUpdateTime.get() + withoutUpdatesTime.get()  < System.nanoTime()) {
+                    if (lastUpdateTime.get() + withoutUpdatesTime.get() < System.nanoTime()) {
                         history.completeStep();
                         return;
                     }

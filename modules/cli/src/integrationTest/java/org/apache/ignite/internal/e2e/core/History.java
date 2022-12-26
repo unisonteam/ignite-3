@@ -17,28 +17,32 @@
 
 package org.apache.ignite.internal.e2e.core;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 public class History {
     private final List<CompleteStep> completedSteps;
     private final ReentrantLock lock;
     private final Condition notRunning;
     private final Condition running;
-    private IncompleteStep runningStep;
+    private final Consumer<String> logger;
+    public IncompleteStep runningStep;
 
-    private History(List<CompleteStep> completedSteps, IncompleteStep runningStep) {
+    private History(List<CompleteStep> completedSteps, IncompleteStep runningStep, Consumer<String> logger) {
         this.completedSteps = completedSteps;
         this.runningStep = runningStep;
         this.lock = new ReentrantLock();
         this.notRunning = lock.newCondition();
         this.running = lock.newCondition();
+        this.logger = logger;
     }
 
-    public static History empty() {
-        return new History(new CopyOnWriteArrayList<>(), null);
+    public static History empty(Consumer<String> logger) {
+        return new History(new CopyOnWriteArrayList<>(), null, logger);
     }
 
     public void run(IncompleteStep incompleteStep) {
@@ -48,6 +52,7 @@ public class History {
                 notRunning.await();
             }
             runningStep = incompleteStep;
+            logger.accept(incompleteStep.toString());
             running.signalAll();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -64,6 +69,7 @@ public class History {
             }
             completedSteps.add(runningStep.complete());
             runningStep = null;
+            logger.accept(findLastStep().output().toString());
             notRunning.signalAll();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -87,5 +93,10 @@ public class History {
 
     public CompleteStep findLastStep() {
         return completedSteps.get(completedSteps.size() - 1); // todo
+    }
+
+    @Override
+    public String toString() {
+        return new ArrayList<>(completedSteps).toString();
     }
 }

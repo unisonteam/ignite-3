@@ -44,4 +44,12 @@ public class Input {
     public int hashCode() {
         return Objects.hash(text, hitEnter);
     }
+
+    @Override
+    public String toString() {
+        return "Input{" +
+                "text='" + text + '\'' +
+                ", hitEnter=" + hitEnter +
+                '}';
+    }
 }

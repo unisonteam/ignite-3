@@ -59,4 +59,13 @@ public class Output {
     public int hashCode() {
         return Objects.hash(out, err, exit);
     }
+
+    @Override
+    public String toString() {
+        return "Output{" +
+                "out=" + out +
+                ", err=" + err +
+                ", exit=" + exit +
+                '}';
+    }
 }

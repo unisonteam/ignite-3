@@ -18,7 +18,6 @@
 package org.apache.ignite.internal.e2e;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
@@ -26,17 +25,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import net.bytebuddy.agent.builder.AgentBuilder.LambdaInstrumentationStrategy;
 import org.apache.ignite.internal.e2e.core.CompleteStep;
 import org.apache.ignite.internal.e2e.core.History;
 import org.apache.ignite.internal.e2e.core.IncompleteStep;
 import org.apache.ignite.internal.e2e.core.Input;
 import org.apache.ignite.internal.e2e.core.StepCompleter;
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import picocli.CommandLine.Help.Ansi;
 
@@ -47,14 +43,14 @@ public class Cli {
     private final Gobbler serr;
     private int lastExitCode;
 
-    private Cli(PtyProcess process) {
-        this.history = History.empty();
+    private Cli(PtyProcess process, Consumer<String> logger) {
+        this.history = History.empty(logger);
         this.process = process;
-        this.sout = startStdoutGobbler(process);
-        this.serr = startStdoutGobbler(process);
+        this.sout = startStdoutGobbler(process); // must be only single gobbler per process, not per output stream
+        this.serr = null;
     }
 
-    public static Cli startInteractive(Path workDir) {
+    public static Cli startInteractive(Path workDir, Consumer<String> logger) {
         var envs = System.getenv();
         envs = new HashMap<>(System.getenv());
         envs.put("TERM", "xterm-256color");
@@ -69,7 +65,7 @@ public class Cli {
         } catch (IOException e) {
             throw new RuntimeException(e); // todo
         }
-        return new Cli(process);
+        return new Cli(process, logger);
     }
 
 
@@ -86,6 +82,7 @@ public class Cli {
     }
 
     public static Gobbler startStdoutGobbler(PtyProcess process) {
+        // close streams
         return new Gobbler(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8), process);
     }
 
@@ -108,7 +105,11 @@ public class Cli {
 
     public Cli assertThatOutput(Matcher<String> matcher) {
         String text = readCleanTextBlocking();
-        assertThat(text, matcher);
+        try {
+            assertThat(text, matcher);
+        } catch (Throwable e) {
+            throw e;
+        }
         return this;
     }
 
