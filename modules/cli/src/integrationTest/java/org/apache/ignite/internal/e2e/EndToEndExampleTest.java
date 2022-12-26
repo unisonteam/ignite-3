@@ -20,8 +20,6 @@ package org.apache.ignite.internal.e2e;
 import static java.util.stream.Collectors.toList;
 import static org.apache.ignite.internal.testframework.IgniteTestUtils.testNodeName;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.not;
 
 import java.nio.file.Path;
@@ -63,7 +61,7 @@ public class EndToEndExampleTest {
                 .collect(toList());
 
         IgniteUtils.closeAll(closeables);
-        cli.run("exit").assertThatOutput(not(emptyString())); // todo add wait
+        cli.run("exit").await();
         cli.stop();
     }
 
@@ -79,15 +77,13 @@ public class EndToEndExampleTest {
     @DisplayName("Can connect to already running node")
     void suggestToConnect() {
         cli.run("sh bin/ignite3")
-                .assertThatOutput(
-                        containsString("Do you want to reconnect to the last connected node"))
+                .output(containsString("Do you want to reconnect to the last connected node"))
                 .run("Y")
-                .assertThatOutput(
-                        containsString("Connected to"))
+                .output(containsString("Connected to"))
                 .run("node config show")
-                .assertThatOutput(containsString("rest"))
+                .output(containsString("rest"))
                 .run("node config show rest.port")
-                .assertThatOutput(containsString("10300"));
+                .output(containsString("10300"));
     }
 
     private void startIgniteNode(TestInfo testInfo, int nodesCount) {

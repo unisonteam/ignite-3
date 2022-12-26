@@ -19,6 +19,7 @@ package org.apache.ignite.internal.e2e.core;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Output {
     private final List<String> out;
@@ -62,6 +63,10 @@ public class Output {
 
     @Override
     public String toString() {
+        if (err.isEmpty()) {
+            return out.stream().collect(Collectors.joining(System.lineSeparator()));
+        }
+
         return "Output{" +
                 "out=" + out +
                 ", err=" + err +

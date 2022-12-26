@@ -47,9 +47,6 @@ public class Input {
 
     @Override
     public String toString() {
-        return "Input{" +
-                "text='" + text + '\'' +
-                ", hitEnter=" + hitEnter +
-                '}';
+        return text;
     }
 }

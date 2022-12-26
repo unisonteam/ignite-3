@@ -78,11 +78,6 @@ public class IncompleteStep {
 
     @Override
     public String toString() {
-        return "IncompleteStep{" +
-                "input=" + input +
-                ", out=" + out +
-                ", err=" + err +
-                ", exitCode=" + exitCode +
-                '}';
+        return input.toString();
     }
 }

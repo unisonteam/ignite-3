@@ -39,7 +39,7 @@ public class StepCompleter {
     }
 
     public void completeAsync() {
-        AtomicLong withoutUpdatesTime = new AtomicLong(Duration.ofSeconds(10).toNanos());
+        AtomicLong withoutUpdatesTime = new AtomicLong(Duration.ofSeconds(3).toNanos());
         AtomicLong lastUpdateTime = new AtomicLong(System.nanoTime());
         executor.execute(() -> {
             lastUpdateTime.set(System.nanoTime());

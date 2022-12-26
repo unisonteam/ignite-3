@@ -103,7 +103,7 @@ public class Cli {
         }
     }
 
-    public Cli assertThatOutput(Matcher<String> matcher) {
+    public Cli output(Matcher<String> matcher) {
         String text = readCleanTextBlocking();
         try {
             assertThat(text, matcher);
@@ -113,10 +113,15 @@ public class Cli {
         return this;
     }
 
-    String readCleanTextBlocking() {
+    public Cli await() {
         history.waitStepCompleted();
-        CompleteStep lastStep = history.findLastStep();
+        return this;
+    }
 
+    String readCleanTextBlocking() {
+        await();
+
+        CompleteStep lastStep = history.findLastStep();
         return Ansi.OFF.string(lastStep.output().out().stream().collect(Collectors.joining("\n")));
     }
 
