@@ -19,7 +19,9 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
     alias(libs.plugins.openapiGenerator)
+    id "com.github.johnrengelman.shadow" version "7.1.2"
     id 'idea'
+    id "application"
 }
 
 apply from: "$rootDir/buildscripts/java-core.gradle"
@@ -33,6 +35,9 @@ dependencies {
     annotationProcessor libs.picocli.annotation.processor
     annotationProcessor libs.micronaut.inject.annotation.processor
     annotationProcessor libs.micronaut.validation.annotation.processor
+    annotationProcessor("io.micronaut:micronaut-graal:3.5.3")
+    annotationProcessor("info.picocli:picocli-codegen:4.2.0")
+    compileOnly("org.graalvm.nativeimage:svm:22.1.0")
 
     implementation project(':ignite-core')
     implementation project(':ignite-api')
@@ -160,4 +165,10 @@ artifacts {
     cliScripts(new File("${buildDir}/ignite_completion.sh")) {
         builtBy(generateAutocompletionScript)
     }
+}
+
+mainClassName = "org.apache.ignite.internal.cli.Main"
+
+shadowJar {
+    mergeServiceFiles()
 }

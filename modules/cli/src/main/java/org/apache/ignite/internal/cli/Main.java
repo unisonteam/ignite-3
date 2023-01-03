@@ -60,6 +60,7 @@ public class Main {
                 try {
                     exitCode = executeCommand(args, micronautFactory);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     System.err.println("Error occurred during command execution");
                 }
             } else {

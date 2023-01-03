@@ -52,6 +52,7 @@ public class LogicalTopologyCommand extends BaseCommand implements Callable<Inte
     /** {@inheritDoc} */
     @Override
     public Integer call() {
+        System.out.println("lalala");
         TopologyDecorator topologyDecorator = plain ? new PlainTopologyDecorator() : new TopologyDecorator();
         return CallExecutionPipeline.builder(call)
                 .inputProvider(() -> new UrlCallInput(clusterUrl.getClusterUrl()))
