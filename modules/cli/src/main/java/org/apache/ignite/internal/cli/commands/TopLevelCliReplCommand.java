@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import org.apache.ignite.internal.cli.commands.cliconfig.CliReplCommand;
 import org.apache.ignite.internal.cli.commands.cluster.ClusterReplCommand;
 import org.apache.ignite.internal.cli.commands.connect.ConnectReplCommand;

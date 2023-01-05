@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.CliConfigShowCall;
@@ -30,6 +31,7 @@ import picocli.CommandLine.Command;
  * Command to get CLI configuration in REPL mode.
  */
 @Command(name = "show", description = "Shows currently activated config")
+@ReflectiveAccess
 public class CliConfigShowReplCommand extends BaseCommand implements Callable<Integer> {
     @Inject
     private CliConfigShowCall call;

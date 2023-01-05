@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import org.jline.reader.EndOfFileException;
 import picocli.CommandLine.Command;
 

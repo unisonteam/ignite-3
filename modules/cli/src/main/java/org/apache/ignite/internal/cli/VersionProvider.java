@@ -18,6 +18,7 @@
 package org.apache.ignite.internal.cli;
 
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import picocli.CommandLine;
@@ -27,6 +28,7 @@ import picocli.CommandLine;
  */
 @Singleton
 @Introspected
+@ReflectiveAccess
 public class VersionProvider implements CommandLine.IVersionProvider {
 
     /** Actual Ignite CLI version info. */

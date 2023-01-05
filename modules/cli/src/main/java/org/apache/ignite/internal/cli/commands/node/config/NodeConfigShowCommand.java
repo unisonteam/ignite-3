@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node.config;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.configuration.NodeConfigShowCall;
@@ -33,6 +34,7 @@ import picocli.CommandLine.Parameters;
  * Command that shows configuration from the cluster.
  */
 @Command(name = "show", description = "Shows node configuration")
+@ReflectiveAccess
 public class NodeConfigShowCommand extends BaseCommand implements Callable<Integer> {
     /** Node URL option. */
     @Mixin

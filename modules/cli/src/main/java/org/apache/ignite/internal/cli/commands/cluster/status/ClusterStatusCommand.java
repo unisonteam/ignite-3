@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cluster.status;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cluster.status.ClusterStatusCall;
@@ -34,6 +35,7 @@ import picocli.CommandLine.Mixin;
 @Command(name = "status",
         aliases = "cluster show", //TODO: https://issues.apache.org/jira/browse/IGNITE-17102
         description = "Prints status of the cluster")
+@ReflectiveAccess
 public class ClusterStatusCommand extends BaseCommand implements Callable<Integer> {
     /** Cluster endpoint URL option. */
     @Mixin

@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node.config;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.configuration.NodeConfigUpdateCall;
@@ -32,6 +33,7 @@ import picocli.CommandLine.Parameters;
  * Command that updates node configuration.
  */
 @Command(name = "update", description = "Updates node configuration")
+@ReflectiveAccess
 public class NodeConfigUpdateCommand extends BaseCommand implements Callable<Integer> {
     /** Node URL option. */
     @Mixin

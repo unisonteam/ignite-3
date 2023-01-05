@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.internal.cli.commands.TopLevelCliReplCommand;
@@ -33,6 +34,7 @@ import org.apache.ignite.internal.cli.core.repl.prompt.PromptProvider;
  * Class which runs main REPL mode, it's used both when starting directly into the REPL mode and from the `connect` command.
  */
 @Singleton
+@ReflectiveAccess
 public class ReplManager {
     @Inject
     private ReplExecutorProvider replExecutorProvider;

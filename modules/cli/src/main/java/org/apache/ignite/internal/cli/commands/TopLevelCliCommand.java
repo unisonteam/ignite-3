@@ -20,6 +20,7 @@ package org.apache.ignite.internal.cli.commands;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.VERSION_OPTION;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.VERSION_OPTION_DESC;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import org.apache.ignite.internal.cli.VersionProvider;
 import org.apache.ignite.internal.cli.commands.cliconfig.CliCommand;
 import org.apache.ignite.internal.cli.commands.cluster.ClusterCommand;
@@ -47,6 +48,7 @@ import picocli.CommandLine.Option;
                 NodeCommand.class,
                 ClusterCommand.class
         })
+@ReflectiveAccess
 public class TopLevelCliCommand extends BaseCommand {
     @SuppressWarnings("PMD.UnusedPrivateField")
     @Option(names = VERSION_OPTION, versionHelp = true, description = VERSION_OPTION_DESC)

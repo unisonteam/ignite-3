@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.call.cliconfig.profile;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.util.Collection;
@@ -31,6 +32,7 @@ import org.apache.ignite.internal.cli.core.call.EmptyCallInput;
  * List profiles call.
  */
 @Singleton
+@ReflectiveAccess
 public class CliConfigProfileListCall implements Call<EmptyCallInput, ProfileList> {
 
     @Inject

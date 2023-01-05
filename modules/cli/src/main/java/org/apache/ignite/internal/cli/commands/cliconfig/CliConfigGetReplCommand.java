@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.CliConfigGetCall;
@@ -30,6 +31,7 @@ import picocli.CommandLine.Parameters;
  * Command to get CLI configuration parameters in REPL mode.
  */
 @Command(name = "get", description = "Gets configuration parameters")
+@ReflectiveAccess
 public class CliConfigGetReplCommand extends BaseCommand implements Callable<Integer> {
     @Parameters(description = "Property name")
     private String key;

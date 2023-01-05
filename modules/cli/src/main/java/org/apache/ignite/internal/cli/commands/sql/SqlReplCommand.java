@@ -27,6 +27,7 @@ import static org.apache.ignite.internal.cli.commands.Options.Constants.SCRIPT_F
 import static org.apache.ignite.internal.cli.core.style.AnsiStringSupport.ansi;
 import static org.apache.ignite.internal.cli.core.style.AnsiStringSupport.fg;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +63,7 @@ import picocli.CommandLine.Parameters;
  * Command for sql execution in REPL mode.
  */
 @Command(name = "sql", description = "Executes SQL query")
+@ReflectiveAccess
 public class SqlReplCommand extends BaseCommand implements Runnable {
     @Option(names = {JDBC_URL_OPTION, JDBC_URL_OPTION_SHORT}, required = true,
             descriptionKey = "ignite.jdbc-url", description = JDBC_URL_OPTION_DESC)

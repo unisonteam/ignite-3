@@ -29,28 +29,28 @@ import org.apache.ignite.internal.cli.core.exception.IgniteCliException;
 @Singleton
 public class CliVersionInfo {
     /** Ignite CLI version. */
-    public final String ver;
+    public final String ver = "3.0.0";
 
     /**
      * Creates Ignite CLI version provider according to builtin version file.
      */
-    public CliVersionInfo() {
-        try (InputStream inputStream = CliVersionInfo.class.getResourceAsStream("/version.properties")) {
-            Properties prop = new Properties();
-            prop.load(inputStream);
+//    public CliVersionInfo() {
+//        try (InputStream inputStream = CliVersionInfo.class.getResourceAsStream("/version.properties")) {
+//            Properties prop = new Properties();
+//            prop.load(inputStream);
+//
+//            ver = prop.getProperty("version", "undefined");
+//        } catch (IOException e) {
+//            throw new IgniteCliException("Can' read ignite version info");
+//        }
+//    }
 
-            ver = prop.getProperty("version", "undefined");
-        } catch (IOException e) {
-            throw new IgniteCliException("Can' read ignite version info");
-        }
-    }
-
-    /**
-     * Creates Ignite CLI version provider from the manually setted version.
-     *
-     * @param ver Ignite CLI version
-     */
-    public CliVersionInfo(String ver) {
-        this.ver = ver;
-    }
+//    /**
+//     * Creates Ignite CLI version provider from the manually setted version.
+//     *
+//     * @param ver Ignite CLI version
+//     */
+//    public CliVersionInfo(String ver) {
+//        this.ver = "3.0.0";
+//    }
 }

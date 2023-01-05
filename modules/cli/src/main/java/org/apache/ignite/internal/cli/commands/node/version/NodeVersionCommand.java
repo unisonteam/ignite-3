@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node.version;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.node.version.NodeVersionCall;
@@ -29,6 +30,7 @@ import picocli.CommandLine.Mixin;
 
 /** Display the node build version. */
 @Command(name = "version", description = "Prints the node build version")
+@ReflectiveAccess
 public class NodeVersionCommand extends BaseCommand implements Callable<Integer> {
     @Mixin
     private NodeUrlProfileMixin nodeUrl;

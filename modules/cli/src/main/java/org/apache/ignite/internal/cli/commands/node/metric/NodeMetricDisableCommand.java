@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node.metric;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.node.metric.NodeMetricEnableCall;
@@ -29,6 +30,7 @@ import picocli.CommandLine.Mixin;
 
 /** Command that disables node metric source. */
 @Command(name = "disable", description = "Disables node metric source")
+@ReflectiveAccess
 public class NodeMetricDisableCommand extends BaseCommand implements Callable<Integer> {
     /** Node URL option. */
     @Mixin

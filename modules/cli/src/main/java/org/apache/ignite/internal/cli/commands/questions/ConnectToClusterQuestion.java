@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.questions;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.util.Objects;
@@ -38,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
  * Wrapper of command call to question with connection checking.
  */
 @Singleton
+@ReflectiveAccess
 public class ConnectToClusterQuestion {
     @Inject
     private ConnectCall connectCall;

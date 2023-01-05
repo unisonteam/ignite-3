@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.CliConfigShowCall;
@@ -32,6 +33,7 @@ import picocli.CommandLine.Mixin;
  * Command to get CLI configuration.
  */
 @Command(name = "show", description = "Shows config")
+@ReflectiveAccess
 public class CliConfigShowCommand extends BaseCommand implements Callable<Integer> {
     @Mixin
     private ProfileMixin profileName;

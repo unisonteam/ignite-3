@@ -18,6 +18,7 @@
 package org.apache.ignite.internal.cli.core.repl.executor;
 
 import io.micronaut.configuration.picocli.MicronautFactory;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.internal.cli.core.repl.registry.NodeNameRegistry;
@@ -28,6 +29,7 @@ import picocli.shell.jline3.PicocliCommands.PicocliCommandsFactory;
  * Provider of {@link ReplExecutor}.
  */
 @Singleton
+@ReflectiveAccess
 public class ReplExecutorProvider {
     private PicocliCommandsFactory factory;
 

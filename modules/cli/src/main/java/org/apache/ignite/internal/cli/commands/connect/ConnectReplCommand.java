@@ -20,6 +20,7 @@ package org.apache.ignite.internal.cli.commands.connect;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.CLUSTER_URL_KEY;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.NODE_URL_OR_NAME_DESC;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import org.apache.ignite.internal.cli.call.connect.ConnectCall;
 import org.apache.ignite.internal.cli.call.connect.ConnectCallInput;
@@ -34,6 +35,7 @@ import picocli.CommandLine.Parameters;
  * Connects to the Ignite 3 node in REPL mode.
  */
 @Command(name = "connect", description = "Connects to Ignite 3 node")
+@ReflectiveAccess
 public class ConnectReplCommand extends BaseCommand implements Runnable {
 
     /** Node URL option. */

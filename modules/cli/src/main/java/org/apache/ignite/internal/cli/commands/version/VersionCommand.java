@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.version;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.internal.cli.VersionProvider;
@@ -28,6 +29,7 @@ import picocli.CommandLine.Command;
  */
 @Command(name = "version", description = "Prints CLI version")
 @Singleton
+@ReflectiveAccess
 public class VersionCommand extends BaseCommand implements Runnable {
     @Inject
     private VersionProvider versionProvider;

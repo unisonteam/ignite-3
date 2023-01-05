@@ -23,6 +23,7 @@ import static org.apache.ignite.internal.cli.commands.Options.Constants.NODE_URL
 import static org.apache.ignite.internal.cli.commands.Options.Constants.NODE_URL_OPTION_DESC;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.URL_OPTION_SHORT;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.net.URL;
 import org.apache.ignite.internal.cli.core.converters.UrlConverter;
@@ -35,6 +36,7 @@ import picocli.CommandLine.Option;
 /**
  * Mixin class for node URL option.
  */
+@ReflectiveAccess
 public class NodeUrlMixin {
 
     @ArgGroup

@@ -19,6 +19,7 @@ package org.apache.ignite.internal.cli.commands.cliconfig.profile;
 
 import static picocli.CommandLine.Command;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.profile.CliConfigProfileShowCall;
@@ -30,6 +31,7 @@ import org.apache.ignite.internal.cli.core.call.EmptyCallInput;
  * Show current profile command.
  */
 @Command(name = "show", description = "Shows current profile")
+@ReflectiveAccess
 public class CliConfigProfileShowCommand extends BaseCommand implements Callable<Integer> {
     @Inject
     private CliConfigProfileShowCall call;

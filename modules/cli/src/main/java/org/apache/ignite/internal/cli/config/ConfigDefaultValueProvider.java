@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.config;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import picocli.CommandLine;
@@ -25,6 +26,7 @@ import picocli.CommandLine;
  * Implementation of {@link CommandLine.IDefaultValueProvider} based on CLI config API.
  */
 @Singleton
+@ReflectiveAccess
 public class ConfigDefaultValueProvider implements CommandLine.IDefaultValueProvider {
     @Inject
     private ConfigManagerProvider configManagerProvider;

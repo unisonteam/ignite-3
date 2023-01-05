@@ -20,6 +20,7 @@ package org.apache.ignite.internal.cli.commands.cluster.topology;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.PLAIN_OPTION;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.PLAIN_OPTION_DESC;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import org.apache.ignite.internal.cli.call.cluster.topology.LogicalTopologyCall;
 import org.apache.ignite.internal.cli.commands.BaseCommand;
@@ -38,6 +39,7 @@ import picocli.CommandLine.Option;
  * Command that show logical cluster topology in REPL mode.
  */
 @Command(name = "logical")
+@ReflectiveAccess
 public class LogicalTopologyReplCommand extends BaseCommand implements Runnable {
     /** Cluster endpoint URL option. */
     @Mixin

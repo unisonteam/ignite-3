@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig.profile;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.profile.CliConfigProfileListCall;
@@ -30,6 +31,7 @@ import picocli.CommandLine;
  * List profiles command.
  */
 @CommandLine.Command(name = "list", description = "Lists profiles")
+@ReflectiveAccess
 public class CliConfigProfileListCommand extends BaseCommand implements Callable<Integer> {
 
     @Inject

@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cluster.init;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cluster.ClusterInitCall;
@@ -31,6 +32,7 @@ import picocli.CommandLine.Mixin;
  * Initializes an Ignite cluster.
  */
 @Command(name = "init", description = "Initializes an Ignite cluster")
+@ReflectiveAccess
 public class ClusterInitCommand extends BaseCommand implements Callable<Integer> {
     /** Cluster endpoint URL option. */
     @Mixin

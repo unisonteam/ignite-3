@@ -24,6 +24,7 @@ import static org.apache.ignite.internal.cli.commands.Options.Constants.PROFILE_
 import static org.apache.ignite.internal.cli.commands.Options.Constants.PROFILE_COPY_FROM_OPTION_DESC;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.PROFILE_COPY_FROM_OPTION_SHORT;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.profile.CliConfigProfileCreateCall;
@@ -38,6 +39,7 @@ import picocli.CommandLine.Parameters;
  * Command for create CLI profile.
  */
 @Command(name = "create", description = "Creates profile")
+@ReflectiveAccess
 public class CliConfigProfileCreateCommand extends BaseCommand implements Callable<Integer> {
     @Parameters(arity = "1", description = "Name of new profile")
     private String profileName;

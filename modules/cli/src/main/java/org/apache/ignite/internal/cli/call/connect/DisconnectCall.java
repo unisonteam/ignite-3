@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.call.connect;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.internal.cli.core.call.Call;
@@ -32,6 +33,7 @@ import org.apache.ignite.internal.cli.core.style.element.UiElements;
  * Call for disconnect.
  */
 @Singleton
+@ReflectiveAccess
 public class DisconnectCall implements Call<EmptyCallInput, String> {
     @Inject
     private final Session session;

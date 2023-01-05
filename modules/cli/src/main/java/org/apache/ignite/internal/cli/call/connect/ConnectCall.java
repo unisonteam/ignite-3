@@ -85,8 +85,8 @@ public class ConnectCall implements Call<ConnectCallInput, String> {
 
     private String constructJdbcUrl(String configuration, String nodeUrl) {
         try {
-            int port = new Gson().fromJson(configuration, RootConfig.class).clientConnector.port;
-            return JdbcUrl.of(nodeUrl, port).toString();
+//            int port = new Gson().fromJson(configuration, RootConfig.class).clientConnector.port;
+            return JdbcUrl.of(nodeUrl, 10800).toString();
         } catch (MalformedURLException ignored) {
             // Shouldn't happen ever since we are now connected to this URL
             return null;

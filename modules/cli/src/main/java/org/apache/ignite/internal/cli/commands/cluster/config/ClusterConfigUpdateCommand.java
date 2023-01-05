@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cluster.config;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.configuration.ClusterConfigUpdateCall;
@@ -33,6 +34,7 @@ import picocli.CommandLine.Parameters;
  * Command that updates cluster configuration.
  */
 @Command(name = "update", description = "Updates cluster configuration")
+@ReflectiveAccess
 public class ClusterConfigUpdateCommand extends BaseCommand implements Callable<Integer> {
     /** Cluster endpoint URL option. */
     @Mixin

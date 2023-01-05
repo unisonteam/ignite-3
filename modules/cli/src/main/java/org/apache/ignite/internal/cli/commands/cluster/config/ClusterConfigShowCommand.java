@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cluster.config;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.configuration.ClusterConfigShowCall;
@@ -34,6 +35,7 @@ import picocli.CommandLine.Parameters;
  * Command that shows configuration from the cluster.
  */
 @Command(name = "show", description = "Shows cluster configuration")
+@ReflectiveAccess
 public class ClusterConfigShowCommand extends BaseCommand implements Callable<Integer> {
     /**
      * Cluster endpoint URL option.

@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import org.apache.ignite.internal.cli.commands.ProfileMixin;
 import org.apache.ignite.internal.cli.config.ConfigConstants;
@@ -27,6 +28,7 @@ import picocli.CommandLine.Mixin;
 /**
  * Mixin class to combine node URL and profile options.
  */
+@ReflectiveAccess
 public class NodeUrlProfileMixin {
     /** Node URL option. */
     @Mixin

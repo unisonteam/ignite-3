@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import org.apache.ignite.internal.cli.commands.BaseCommand;
 import picocli.CommandLine.Command;
 

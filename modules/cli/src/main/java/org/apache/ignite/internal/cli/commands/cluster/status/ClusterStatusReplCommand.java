@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cluster.status;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import org.apache.ignite.internal.cli.call.cluster.status.ClusterStatusCall;
 import org.apache.ignite.internal.cli.commands.BaseCommand;
@@ -31,6 +32,7 @@ import picocli.CommandLine.Mixin;
  * Command that prints status of ignite cluster.
  */
 @Command(name = "status", description = "Prints status of the cluster")
+@ReflectiveAccess
 public class ClusterStatusReplCommand extends BaseCommand implements Runnable {
     /** Cluster endpoint URL option. */
     @Mixin

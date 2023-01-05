@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig.profile;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.cliconfig.profile.CliConfigProfileActivateCall;
@@ -30,6 +31,7 @@ import picocli.CommandLine.Parameters;
  * Command for activating a CLI profile.
  */
 @Command(name = "activate", description = "Activates profile")
+@ReflectiveAccess
 public class CliConfigProfileActivateCommand extends BaseCommand implements Callable<Integer> {
     @Parameters(arity = "1", description = "Name of profile to activate")
     private String profileName;

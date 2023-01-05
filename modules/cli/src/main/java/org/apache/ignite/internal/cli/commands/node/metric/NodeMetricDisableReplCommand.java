@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node.metric;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import org.apache.ignite.internal.cli.call.node.metric.NodeMetricEnableCall;
 import org.apache.ignite.internal.cli.commands.BaseCommand;
@@ -29,6 +30,7 @@ import picocli.CommandLine.Mixin;
 
 /** Command that disables node metric source in REPL mode. */
 @Command(name = "disable", description = "Disables node metric source")
+@ReflectiveAccess
 public class NodeMetricDisableReplCommand extends BaseCommand implements Runnable {
     /** Node URL option. */
     @Mixin

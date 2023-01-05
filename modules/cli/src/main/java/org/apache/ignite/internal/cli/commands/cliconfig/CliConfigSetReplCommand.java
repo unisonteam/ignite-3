@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.cliconfig;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -31,6 +32,7 @@ import picocli.CommandLine.Parameters;
  * Command to set CLI configuration parameters in REPL mode.
  */
 @Command(name = "set", description = "Sets configuration parameters")
+@ReflectiveAccess
 public class CliConfigSetReplCommand extends BaseCommand implements Callable<Integer> {
     @Parameters(arity = "1..*", description = "Key-value pairs")
     private Map<String, String> parameters;

@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.node.status;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import java.util.concurrent.Callable;
 import org.apache.ignite.internal.cli.call.node.status.NodeStatusCall;
@@ -32,6 +33,7 @@ import picocli.CommandLine.Mixin;
  * Display the node status.
  */
 @Command(name = "status", description = "Prints status of the node")
+@ReflectiveAccess
 public class NodeStatusCommand extends BaseCommand implements Callable<Integer> {
     /** Node URL option. */
     @Mixin

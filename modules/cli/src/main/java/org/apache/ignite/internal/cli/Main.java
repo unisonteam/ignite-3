@@ -23,6 +23,7 @@ import io.micronaut.configuration.picocli.MicronautFactory;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.context.env.Environment;
+import io.micronaut.core.annotation.TypeHint;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +34,9 @@ import org.apache.ignite.internal.cli.commands.TopLevelCliCommand;
 import org.apache.ignite.internal.cli.config.ConfigDefaultValueProvider;
 import org.apache.ignite.internal.cli.config.StateFolderProvider;
 import org.apache.ignite.internal.cli.core.exception.handler.PicocliExecutionExceptionHandler;
+import org.apache.ignite.internal.cli.core.repl.config.RootConfig;
 import org.apache.ignite.internal.cli.core.repl.executor.ReplExecutorProvider;
+import org.apache.ignite.rest.client.model.NodeState;
 import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
@@ -42,6 +45,13 @@ import picocli.CommandLine.Help.Ansi;
 /**
  * Ignite cli entry point.
  */
+@TypeHint(
+        value = {
+                NodeState.class,
+                RootConfig.class
+        },
+        accessType = TypeHint.AccessType.ALL_DECLARED_CONSTRUCTORS
+)
 public class Main {
     /**
      * Entry point.

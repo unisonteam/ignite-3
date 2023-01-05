@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.call.cliconfig;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.ignite.internal.cli.config.ConfigManager;
@@ -30,6 +31,7 @@ import org.apache.ignite.internal.cli.core.call.StringCallInput;
  * Gets entire CLI configuration.
  */
 @Singleton
+@ReflectiveAccess
 public class CliConfigShowCall implements Call<StringCallInput, Profile> {
     @Inject
     private ConfigManagerProvider configManagerProvider;

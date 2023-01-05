@@ -17,6 +17,7 @@
 
 package org.apache.ignite.internal.cli.commands.connect;
 
+import io.micronaut.core.annotation.ReflectiveAccess;
 import jakarta.inject.Inject;
 import org.apache.ignite.internal.cli.call.connect.DisconnectCall;
 import org.apache.ignite.internal.cli.commands.BaseCommand;
@@ -28,6 +29,7 @@ import picocli.CommandLine.Command;
  * Connects to the Ignite 3 node.
  */
 @Command(name = "disconnect", description = "Disconnects from Ignite 3 node")
+@ReflectiveAccess
 public class DisconnectCommand extends BaseCommand implements Runnable {
     @Inject
     private DisconnectCall disconnectCall;
