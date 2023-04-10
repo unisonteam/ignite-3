@@ -33,7 +33,6 @@ import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.to
 import static org.apache.ignite.internal.util.CollectionUtils.difference;
 import static org.apache.ignite.internal.util.CollectionUtils.viewReadOnly;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -67,9 +66,7 @@ import org.apache.ignite.internal.configuration.tree.ConfigurationSource;
 import org.apache.ignite.internal.configuration.tree.ConfigurationVisitor;
 import org.apache.ignite.internal.configuration.tree.ConstructableTreeNode;
 import org.apache.ignite.internal.configuration.tree.InnerNode;
-import org.apache.ignite.internal.configuration.tree.TraversableTreeNode;
 import org.apache.ignite.internal.configuration.util.ConfigurationUtil;
-import org.apache.ignite.internal.configuration.util.KeyNotFoundException;
 import org.apache.ignite.internal.configuration.validation.ExceptKeysValidator;
 import org.apache.ignite.internal.configuration.validation.ImmutableValidator;
 import org.apache.ignite.internal.configuration.validation.OneOfValidator;
@@ -206,6 +203,10 @@ public class ConfigurationRegistry implements IgniteComponent, ConfigurationStor
         storageRevisionListeners.clear();
     }
 
+    public SuperRoot superRoot() {
+        return changer.superRoot();
+    }
+
     /**
      * Initializes the configuration storage - reads data and sets default values for missing configuration properties.
      */
@@ -230,34 +231,6 @@ public class ConfigurationRegistry implements IgniteComponent, ConfigurationStor
      */
     public <V, C, T extends ConfigurationTree<V, C>> T getConfiguration(RootKey<T, V> rootKey) {
         return (T) configs.get(rootKey.key());
-    }
-
-    /**
-     * Convert configuration subtree into a user-defined representation.
-     *
-     * @param path    Path to configuration subtree. Can be empty, can't be {@code null}.
-     * @param visitor Visitor that will be applied to the subtree and build the representation.
-     * @param <T>     Type of the representation.
-     * @return User-defined representation constructed by {@code visitor}.
-     * @throws IllegalArgumentException If {@code path} is not found in current configuration.
-     */
-    public <T> T represent(List<String> path, ConfigurationVisitor<T> visitor) throws IllegalArgumentException {
-        SuperRoot superRoot = changer.superRoot();
-
-        Object node;
-        try {
-            node = ConfigurationUtil.find(path, superRoot, false);
-        } catch (KeyNotFoundException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
-
-        if (node instanceof TraversableTreeNode) {
-            return ((TraversableTreeNode) node).accept(null, visitor);
-        }
-
-        assert node == null || node instanceof Serializable;
-
-        return visitor.visitLeafNode(null, (Serializable) node);
     }
 
     /**

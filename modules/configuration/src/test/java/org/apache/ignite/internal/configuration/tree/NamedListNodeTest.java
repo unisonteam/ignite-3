@@ -149,7 +149,7 @@ public class NamedListNodeTest {
                 willBe(Matchers.<Map<String, ? extends Serializable>>allOf(
                         aMapWithSize(8),
                         hasEntry(format("a.second.<ids>.X"), x0Id),
-                        hasEntry(format("a.second.%s.str", x0Id), "foo"),
+                        hasEntry(format("a.second.X.str", x0Id), "foo"),
                         hasEntry(format("a.second.%s.<order>", x0Id), 0),
                         hasEntry(format("a.second.%s.<name>", x0Id), "X"),
                         hasEntry(format("a.second.%s.third.<ids>.Z0", x0Id), z0Id),

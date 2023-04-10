@@ -29,6 +29,7 @@ import java.util.concurrent.CompletionException;
 import org.apache.ignite.configuration.ConfigurationChangeException;
 import org.apache.ignite.configuration.validation.ConfigurationValidationException;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.SuperRoot;
 import org.apache.ignite.internal.configuration.hocon.HoconConverter;
 import org.apache.ignite.internal.rest.configuration.ConfigurationPresentation;
 import org.apache.ignite.lang.IgniteException;
@@ -59,7 +60,9 @@ public class HoconPresentation implements ConfigurationPresentation<String> {
     /** {@inheritDoc} */
     @Override
     public String representByPath(@Nullable String path) {
-        return HoconConverter.represent(registry, path == null ? List.of() : split(path)).render(concise());
+        SuperRoot superRoot = registry.superRoot();
+
+        return HoconConverter.represent(superRoot, path == null ? List.of() : split(path)).render(concise());
     }
 
     /** {@inheritDoc} */

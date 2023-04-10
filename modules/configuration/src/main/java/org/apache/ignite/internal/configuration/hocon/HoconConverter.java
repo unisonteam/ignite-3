@@ -21,7 +21,8 @@ import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.impl.ConfigImpl;
 import java.util.List;
-import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.ConfigurationRepresenter;
+import org.apache.ignite.internal.configuration.SuperRoot;
 import org.apache.ignite.internal.configuration.tree.ConfigurationSource;
 import org.apache.ignite.internal.configuration.tree.ConverterToMapVisitor;
 import org.jetbrains.annotations.NotNull;
@@ -33,16 +34,16 @@ public class HoconConverter {
     /**
      * Converts configuration subtree to a HOCON {@link ConfigValue} instance.
      *
-     * @param registry Configuration registry instance.
+     * @param node
      * @param path     Path to the configuration subtree. Can be empty, can't be {@code null}.
      * @return {@link ConfigValue} instance that represents configuration subtree.
      * @throws IllegalArgumentException If {@code path} is not found in current configuration.
      */
     public static ConfigValue represent(
-            ConfigurationRegistry registry,
+            SuperRoot node,
             @NotNull List<String> path
     ) throws IllegalArgumentException {
-        Object res = registry.represent(path, new ConverterToMapVisitor(false));
+        Object res = new ConfigurationRepresenter().represent(node, path, new ConverterToMapVisitor(false));
 
         return ConfigImpl.fromAnyRef(res, null);
     }
