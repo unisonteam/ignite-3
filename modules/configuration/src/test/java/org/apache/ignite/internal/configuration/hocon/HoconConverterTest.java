@@ -18,6 +18,8 @@
 package org.apache.ignite.internal.configuration.hocon;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.ignite.configuration.annotation.ConfigurationType.LOCAL;
 import static org.apache.ignite.internal.configuration.hocon.HoconConverter.hoconSource;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -33,12 +35,15 @@ import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.ignite.configuration.ConfigurationChangeException;
+import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.configuration.annotation.Config;
 import org.apache.ignite.configuration.annotation.ConfigurationRoot;
 import org.apache.ignite.configuration.annotation.InjectedName;
@@ -49,7 +54,12 @@ import org.apache.ignite.configuration.annotation.PolymorphicConfigInstance;
 import org.apache.ignite.configuration.annotation.PolymorphicId;
 import org.apache.ignite.configuration.annotation.Value;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.RootInnerNode;
+import org.apache.ignite.internal.configuration.SuperRoot;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGenerator;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
+import org.apache.ignite.internal.configuration.tree.InnerNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -202,20 +212,32 @@ public class HoconConverterTest {
 
     private static HoconInjectedNameRootConfiguration injectedNameRootConfig;
 
+    private static Map<String, RootKey<?, ?>> rootKeys;
+
+    private static ConfigurationAsmGenerator asmg = new ConfigurationAsmGenerator();
     /**
      * Before all.
      */
     @BeforeAll
     public static void beforeAll() {
-        registry = new ConfigurationRegistry(
+        rootKeys = List.of(HoconRootConfiguration.KEY, HoconInjectedNameRootConfiguration.KEY)
+                .stream().collect(toMap(RootKey::key, identity()));
+
+        var compiler = new ConfigurationAsmGeneratorCompiler(
                 List.of(HoconRootConfiguration.KEY, HoconInjectedNameRootConfiguration.KEY),
-                Set.of(),
-                new TestConfigurationStorage(LOCAL),
                 List.of(),
                 List.of(
                         HoconFirstPolymorphicInstanceConfigurationSchema.class,
                         HoconSecondPolymorphicInstanceConfigurationSchema.class
                 )
+        );
+        compiler.compile(asmg);
+
+        registry = new ConfigurationRegistry(
+                List.of(HoconRootConfiguration.KEY, HoconInjectedNameRootConfiguration.KEY),
+                Set.of(),
+                new TestConfigurationStorage(LOCAL),
+                compiler
         );
 
         registry.start();
@@ -266,16 +288,34 @@ public class HoconConverterTest {
         assertEquals("[]", asHoconStr(List.of("root", "arraysList")));
 
         assertThrowsIllegalArgException(
-                () -> HoconConverter.represent(registry.superRoot(), List.of("doot")),
+                () -> HoconConverter.represent(superRoot(), List.of("doot")),
                 "Configuration value 'doot' has not been found"
         );
 
         assertThrowsIllegalArgException(
-                () -> HoconConverter.represent(registry.superRoot(), List.of("root", "x")),
+                () -> HoconConverter.represent(superRoot(), List.of("root", "x")),
                 "Configuration value 'root.x' has not been found"
         );
 
         assertEquals("null", asHoconStr(List.of("root", "primitivesList", "foo")));
+    }
+
+
+    private SuperRoot superRoot() {
+        return new SuperRoot(rootCreator());
+    }
+
+
+    private Function<String, RootInnerNode> rootCreator() {
+        return key -> {
+            RootKey<?, ?> rootKey = rootKeys.get(key);
+
+            return rootKey == null ? null : new RootInnerNode(rootKey, createRootNode(rootKey));
+        };
+    }
+
+    private InnerNode createRootNode(RootKey<?, ?> rootKey) {
+        return asmg.instantiateNode(rootKey.schemaClass());
     }
 
     /**
@@ -349,10 +389,10 @@ public class HoconConverterTest {
     /**
      * Retrieves the HOCON configuration located at the given path.
      */
-    private static String asHoconStr(List<String> basePath, String... path) {
+    private String asHoconStr(List<String> basePath, String... path) {
         List<String> fullPath = Stream.concat(basePath.stream(), Arrays.stream(path)).collect(Collectors.toList());
 
-        ConfigValue hoconCfg = HoconConverter.represent(registry.superRoot(), fullPath);
+        ConfigValue hoconCfg = HoconConverter.represent(superRoot(), fullPath);
 
         return hoconCfg.render(ConfigRenderOptions.concise().setJson(false));
     }

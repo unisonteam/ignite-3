@@ -24,11 +24,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.apache.ignite.configuration.RootKey;
-import org.apache.ignite.configuration.annotation.Config;
-import org.apache.ignite.configuration.annotation.ConfigurationRoot;
-import org.apache.ignite.configuration.annotation.InternalConfiguration;
-import org.apache.ignite.configuration.annotation.PolymorphicConfigInstance;
 import org.apache.ignite.configuration.validation.Validator;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.hocon.HoconConverter;
 import org.apache.ignite.internal.configuration.storage.ConfigurationStorage;
 import org.apache.ignite.internal.manager.IgniteComponent;
@@ -46,9 +43,7 @@ public class ConfigurationManager implements IgniteComponent {
      * @param rootKeys                    Configuration root keys.
      * @param validators                  Validators.
      * @param storage                     Configuration storage.
-     * @param internalSchemaExtensions    Internal extensions ({@link InternalConfiguration}) of configuration schemas ({@link
-     *                                    ConfigurationRoot} and {@link Config}).
-     * @param polymorphicSchemaExtensions Polymorphic extensions ({@link PolymorphicConfigInstance}) of configuration schemas.
+     * @param compiler                    Configuration compiler.
      * @throws IllegalArgumentException If the configuration type of the root keys is not equal to the storage type, or if the schema or its
      *                                  extensions are not valid.
      */
@@ -56,15 +51,13 @@ public class ConfigurationManager implements IgniteComponent {
             Collection<RootKey<?, ?>> rootKeys,
             Set<Validator<?, ?>> validators,
             ConfigurationStorage storage,
-            Collection<Class<?>> internalSchemaExtensions,
-            Collection<Class<?>> polymorphicSchemaExtensions
+            ConfigurationAsmGeneratorCompiler compiler
     ) {
         registry = new ConfigurationRegistry(
                 rootKeys,
                 validators,
                 storage,
-                internalSchemaExtensions,
-                polymorphicSchemaExtensions
+                compiler
         );
     }
 

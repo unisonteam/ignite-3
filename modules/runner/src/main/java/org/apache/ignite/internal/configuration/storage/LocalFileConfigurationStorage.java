@@ -17,12 +17,8 @@
 
 package org.apache.ignite.internal.configuration.storage;
 
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.addDefaults;
 import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.fillFromPrefixMap;
-import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.internalSchemaExtensions;
-import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.polymorphicSchemaExtensions;
 import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.toPrefixMap;
 
 import com.typesafe.config.Config;
@@ -38,12 +34,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -52,17 +45,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.configuration.annotation.ConfigurationType;
 import org.apache.ignite.internal.configuration.NodeConfigCreateException;
 import org.apache.ignite.internal.configuration.NodeConfigWriteException;
-import org.apache.ignite.internal.configuration.RootInnerNode;
 import org.apache.ignite.internal.configuration.SuperRoot;
-import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGenerator;
 import org.apache.ignite.internal.configuration.hocon.HoconConverter;
-import org.apache.ignite.internal.configuration.tree.InnerNode;
+import org.apache.ignite.internal.configuration.tree.SuperRootGenerator;
 import org.apache.ignite.internal.future.InFlightFutures;
 import org.apache.ignite.internal.logger.IgniteLogger;
 import org.apache.ignite.internal.logger.Loggers;
@@ -85,17 +74,14 @@ public class LocalFileConfigurationStorage implements ConfigurationStorage {
      */
     private final Path tempConfigPath;
 
+    private final SuperRootGenerator superRootGenerator;
+
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
      * Latest state of last applied configuration.
      */
     private final Map<String, Serializable> latest = new ConcurrentHashMap<>();
-
-    /** Configuration generator. */
-    private final ConfigurationAsmGenerator cgen = new ConfigurationAsmGenerator();
-
-    private final Map<String, RootKey<?, ?>> rootKeys;
 
     /**
      *  Configuration changes listener.
@@ -113,25 +99,10 @@ public class LocalFileConfigurationStorage implements ConfigurationStorage {
      *
      * @param configPath Path to node bootstrap configuration file.
      */
-    public LocalFileConfigurationStorage(Path configPath, Collection<RootKey<?, ?>> rootKeys) {
-        this(configPath, rootKeys, Collections.emptyList(), Collections.emptyList());
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param configPath Path to node bootstrap configuration file.
-     */
-    public LocalFileConfigurationStorage(Path configPath, Collection<RootKey<?, ?>> rootKeys,
-            Collection<Class<?>> internalSchemaExtensions, Collection<Class<?>> polymorphicSchemaExtensions) {
+    public LocalFileConfigurationStorage(Path configPath, SuperRootGenerator superRootGenerator) {
         this.configPath = configPath;
-        this.rootKeys = rootKeys.stream().collect(toMap(RootKey::key, identity()));
-        tempConfigPath = configPath.resolveSibling(configPath.getFileName() + ".tmp");
-
-        Map<Class<?>, Set<Class<?>>> internalExtensions = internalSchemaExtensions(internalSchemaExtensions);
-        Map<Class<?>, Set<Class<?>>> polymorphicExtensions = polymorphicSchemaExtensions(polymorphicSchemaExtensions);
-
-        rootKeys.forEach(key -> cgen.compileRootSchema(key.schemaClass(), internalExtensions, polymorphicExtensions));
+        this.tempConfigPath = configPath.resolveSibling(configPath.getFileName() + ".tmp");
+        this.superRootGenerator = superRootGenerator;
 
         checkAndRestoreConfigFile();
     }
@@ -244,7 +215,7 @@ public class LocalFileConfigurationStorage implements ConfigurationStorage {
      */
     private String renderHoconString(Map<String, ? extends Serializable> values) {
         // Super root that'll be filled from the storage data.
-        SuperRoot rootNode = new SuperRoot(rootCreator());
+        SuperRoot rootNode = superRootGenerator.generate();
 
         fillFromPrefixMap(rootNode, toPrefixMap(values));
 
@@ -256,18 +227,6 @@ public class LocalFileConfigurationStorage implements ConfigurationStorage {
         return newConfig.isEmpty()
                 ? ""
                 : newConfig.root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(false));
-    }
-
-    public Function<String, RootInnerNode> rootCreator() {
-        return key -> {
-            RootKey<?, ?> rootKey = rootKeys.get(key);
-
-            return rootKey == null ? null : new RootInnerNode(rootKey, createRootNode(rootKey));
-        };
-    }
-
-    public InnerNode createRootNode(RootKey<?, ?> rootKey) {
-        return cgen.instantiateNode(rootKey.schemaClass());
     }
 
     private Config parseConfigOptions() {
