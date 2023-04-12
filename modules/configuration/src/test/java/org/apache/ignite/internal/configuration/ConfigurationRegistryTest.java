@@ -22,7 +22,6 @@ import static org.apache.ignite.configuration.annotation.ConfigurationType.LOCAL
 import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willCompleteSuccessfully;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -41,6 +40,7 @@ import org.apache.ignite.configuration.annotation.PolymorphicConfig;
 import org.apache.ignite.configuration.annotation.PolymorphicConfigInstance;
 import org.apache.ignite.configuration.annotation.PolymorphicId;
 import org.apache.ignite.configuration.annotation.Value;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.junit.jupiter.api.Test;
 
@@ -56,8 +56,11 @@ public class ConfigurationRegistryTest {
                         List.of(SecondRootConfiguration.KEY),
                         Set.of(),
                         new TestConfigurationStorage(LOCAL),
-                        List.of(ExtendedFirstRootConfigurationSchema.class),
-                        List.of()
+                        new ConfigurationAsmGeneratorCompiler(
+                                List.of(SecondRootConfiguration.KEY),
+                                List.of(ExtendedFirstRootConfigurationSchema.class),
+                                List.of()
+                        )
                 )
         );
 
@@ -66,8 +69,11 @@ public class ConfigurationRegistryTest {
                 List.of(FirstRootConfiguration.KEY, SecondRootConfiguration.KEY),
                 Set.of(),
                 new TestConfigurationStorage(LOCAL),
-                List.of(ExtendedFirstRootConfigurationSchema.class),
-                List.of()
+                new ConfigurationAsmGeneratorCompiler(
+                        List.of(FirstRootConfiguration.KEY, SecondRootConfiguration.KEY),
+                        List.of(ExtendedFirstRootConfigurationSchema.class),
+                        List.of()
+                )
         );
 
         configRegistry.stop();
@@ -82,8 +88,11 @@ public class ConfigurationRegistryTest {
                         List.of(ThirdRootConfiguration.KEY),
                         Set.of(),
                         new TestConfigurationStorage(LOCAL),
-                        List.of(),
-                        List.of(Second0PolymorphicConfigurationSchema.class)
+                        new ConfigurationAsmGeneratorCompiler(
+                                List.of(ThirdRootConfiguration.KEY),
+                                List.of(),
+                                List.of(Second0PolymorphicConfigurationSchema.class)
+                        )
                 )
         );
 
@@ -94,8 +103,11 @@ public class ConfigurationRegistryTest {
                         List.of(ThirdRootConfiguration.KEY),
                         Set.of(),
                         new TestConfigurationStorage(LOCAL),
-                        List.of(),
-                        List.of(First0PolymorphicConfigurationSchema.class, ErrorFirst0PolymorphicConfigurationSchema.class)
+                        new ConfigurationAsmGeneratorCompiler(
+                                List.of(ThirdRootConfiguration.KEY),
+                                List.of(First0PolymorphicConfigurationSchema.class, ErrorFirst0PolymorphicConfigurationSchema.class),
+                                List.of()
+                        )
                 )
         );
 
@@ -104,13 +116,16 @@ public class ConfigurationRegistryTest {
                 List.of(ThirdRootConfiguration.KEY, FourthRootConfiguration.KEY, FifthRootConfiguration.KEY),
                 Set.of(),
                 new TestConfigurationStorage(LOCAL),
-                List.of(),
-                List.of(
-                        First0PolymorphicConfigurationSchema.class,
-                        First1PolymorphicConfigurationSchema.class,
-                        Second0PolymorphicConfigurationSchema.class,
-                        Third0PolymorphicConfigurationSchema.class,
-                        Third1PolymorphicConfigurationSchema.class
+                new ConfigurationAsmGeneratorCompiler(
+                        List.of(ThirdRootConfiguration.KEY, FourthRootConfiguration.KEY, FifthRootConfiguration.KEY),
+                        List.of(),
+                        List.of(
+                                First0PolymorphicConfigurationSchema.class,
+                                First1PolymorphicConfigurationSchema.class,
+                                Second0PolymorphicConfigurationSchema.class,
+                                Third0PolymorphicConfigurationSchema.class,
+                                Third1PolymorphicConfigurationSchema.class
+                        )
                 )
         );
 
@@ -125,8 +140,11 @@ public class ConfigurationRegistryTest {
                         List.of(ThirdRootConfiguration.KEY),
                         Set.of(),
                         new TestConfigurationStorage(LOCAL),
-                        List.of(),
-                        List.of()
+                        new ConfigurationAsmGeneratorCompiler(
+                                List.of(ThirdRootConfiguration.KEY),
+                                List.of(),
+                                List.of()
+                        )
                 )
         );
 
@@ -141,8 +159,11 @@ public class ConfigurationRegistryTest {
                 List.of(SixthRootConfiguration.KEY),
                 Set.of(),
                 new TestConfigurationStorage(LOCAL),
-                List.of(),
-                List.of(Fourth0PolymorphicConfigurationSchema.class)
+                new ConfigurationAsmGeneratorCompiler(
+                        List.of(SixthRootConfiguration.KEY),
+                        List.of(),
+                        List.of(Fourth0PolymorphicConfigurationSchema.class)
+                )
         );
 
         registry.start();
@@ -170,8 +191,11 @@ public class ConfigurationRegistryTest {
                 List.of(FirstRootConfiguration.KEY, SecondRootConfiguration.KEY),
                 Set.of(),
                 storage,
-                List.of(),
-                List.of()
+                new ConfigurationAsmGeneratorCompiler(
+                        List.of(FirstRootConfiguration.KEY, SecondRootConfiguration.KEY),
+                        List.of(),
+                        List.of()
+                )
         );
 
         registry.start();

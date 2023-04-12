@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -35,6 +36,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.apache.ignite.configuration.ConfigurationListenOnlyException;
 import org.apache.ignite.configuration.NamedConfigurationTree;
+import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.configuration.annotation.Config;
 import org.apache.ignite.configuration.annotation.ConfigValue;
 import org.apache.ignite.configuration.annotation.ConfigurationRoot;
@@ -44,6 +46,7 @@ import org.apache.ignite.configuration.annotation.Name;
 import org.apache.ignite.configuration.annotation.NamedConfigValue;
 import org.apache.ignite.configuration.annotation.Value;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,16 +102,21 @@ public class DirectPropertiesTest {
         public String str = "bar";
     }
 
-    private final ConfigurationRegistry registry = new ConfigurationRegistry(
-            List.of(DirectConfiguration.KEY),
-            Set.of(),
-            new TestConfigurationStorage(LOCAL),
-            List.of(),
-            List.of()
-    );
+    private ConfigurationRegistry registry;
 
     @BeforeEach
     void setUp() {
+        Collection<RootKey<?, ?>> rootKeys = List.of(DirectConfiguration.KEY);
+
+        var compiler = new ConfigurationAsmGeneratorCompiler(rootKeys, List.of(), List.of());
+
+        registry = new ConfigurationRegistry(
+                rootKeys,
+                Set.of(),
+                new TestConfigurationStorage(LOCAL),
+                compiler
+        );
+
         registry.start();
 
         registry.initializeDefaults();

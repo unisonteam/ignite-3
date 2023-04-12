@@ -25,10 +25,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.configuration.annotation.ConfigurationRoot;
 import org.apache.ignite.configuration.annotation.InternalConfiguration;
 import org.apache.ignite.configuration.annotation.InternalId;
@@ -37,6 +39,7 @@ import org.apache.ignite.configuration.annotation.PolymorphicConfig;
 import org.apache.ignite.configuration.annotation.PolymorphicConfigInstance;
 import org.apache.ignite.configuration.annotation.PolymorphicId;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.direct.DirectPropertiesTest;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.apache.ignite.internal.testframework.IgniteTestUtils;
@@ -77,16 +80,25 @@ public class InternalIdTest {
     public static class InternalIdFooConfigurationSchema extends InternalIdPolymorphicConfigurationSchema {
     }
 
-    private final ConfigurationRegistry registry = new ConfigurationRegistry(
-            List.of(InternalIdParentConfiguration.KEY),
-            Set.of(),
-            new TestConfigurationStorage(LOCAL),
-            List.of(InternalIdInternalConfigurationSchema.class),
-            List.of(InternalIdFooConfigurationSchema.class)
-    );
+    private ConfigurationRegistry registry;
 
     @BeforeEach
     void setUp() {
+        Collection<RootKey<?, ?>> rootKeys = List.of(InternalIdParentConfiguration.KEY);
+
+        var compiler = new ConfigurationAsmGeneratorCompiler(
+                rootKeys,
+                List.of(InternalIdInternalConfigurationSchema.class),
+                List.of(InternalIdFooConfigurationSchema.class)
+        );
+
+        registry = new ConfigurationRegistry(
+                rootKeys,
+                Set.of(),
+                new TestConfigurationStorage(LOCAL),
+                compiler
+        );
+
         registry.start();
 
         registry.initializeDefaults();

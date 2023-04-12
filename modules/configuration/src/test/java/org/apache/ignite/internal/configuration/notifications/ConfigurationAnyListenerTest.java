@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -42,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.apache.ignite.configuration.ConfigurationListenOnlyException;
 import org.apache.ignite.configuration.NamedConfigurationTree;
+import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.configuration.annotation.Config;
 import org.apache.ignite.configuration.annotation.ConfigValue;
 import org.apache.ignite.configuration.annotation.ConfigurationRoot;
@@ -54,6 +56,7 @@ import org.apache.ignite.configuration.notifications.ConfigurationListener;
 import org.apache.ignite.configuration.notifications.ConfigurationNamedListListener;
 import org.apache.ignite.configuration.notifications.ConfigurationNotificationEvent;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,12 +155,18 @@ public class ConfigurationAnyListenerTest {
      */
     @BeforeEach
     public void before() throws Exception {
-        registry = new ConfigurationRegistry(
-                List.of(RootConfiguration.KEY),
-                Set.of(),
-                new TestConfigurationStorage(LOCAL),
+        Collection<RootKey<?, ?>> rootKeys = List.of(RootConfiguration.KEY);
+        var compiler = new ConfigurationAsmGeneratorCompiler(
+                rootKeys,
                 List.of(),
                 List.of(FirstPolyAnyConfigurationSchema.class, SecondPolyAnyConfigurationSchema.class)
+        );
+
+        registry = new ConfigurationRegistry(
+                rootKeys,
+                Set.of(),
+                new TestConfigurationStorage(LOCAL),
+                compiler
         );
 
         registry.start();

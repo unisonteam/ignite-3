@@ -22,6 +22,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.ignite.configuration.annotation.ConfigurationType.LOCAL;
 import static org.apache.ignite.internal.configuration.hocon.HoconConverter.hoconSource;
+import static org.apache.ignite.internal.configuration.util.ConfigurationUtil.addDefaults;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -392,7 +393,10 @@ public class HoconConverterTest {
     private String asHoconStr(List<String> basePath, String... path) {
         List<String> fullPath = Stream.concat(basePath.stream(), Arrays.stream(path)).collect(Collectors.toList());
 
-        ConfigValue hoconCfg = HoconConverter.represent(superRoot(), fullPath);
+        SuperRoot node = superRoot();
+        addDefaults(node);
+
+        ConfigValue hoconCfg = HoconConverter.represent(node, fullPath);
 
         return hoconCfg.render(ConfigRenderOptions.concise().setJson(false));
     }

@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.configuration.annotation.Config;
 import org.apache.ignite.configuration.annotation.ConfigValue;
 import org.apache.ignite.configuration.annotation.ConfigurationRoot;
@@ -71,6 +72,7 @@ import org.apache.ignite.configuration.notifications.ConfigurationNamedListListe
 import org.apache.ignite.configuration.notifications.ConfigurationNotificationEvent;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
 import org.apache.ignite.internal.configuration.DynamicConfiguration;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.storage.ConfigurationStorage;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.apache.ignite.internal.configuration.tree.InnerNode;
@@ -164,12 +166,18 @@ public class ConfigurationListenerTest {
     public void before() {
         storage = new TestConfigurationStorage(LOCAL);
 
-        registry = new ConfigurationRegistry(
-                List.of(ParentConfiguration.KEY),
-                Set.of(),
-                storage,
+        Collection<RootKey<?, ?>> rootKeys = List.of(ParentConfiguration.KEY);
+        var compiler = new ConfigurationAsmGeneratorCompiler(
+                rootKeys,
                 List.of(InternalChildConfigurationSchema.class),
                 List.of(StringPolyConfigurationSchema.class, LongPolyConfigurationSchema.class)
+        );
+
+        registry = new ConfigurationRegistry(
+                rootKeys,
+                Set.of(),
+                storage,
+                compiler
         );
 
         registry.start();

@@ -19,14 +19,14 @@ package org.apache.ignite.internal.configuration.sample;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.ignite.configuration.annotation.ConfigurationType.LOCAL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.apache.ignite.configuration.RootKey;
 import org.apache.ignite.internal.configuration.ConfigurationRegistry;
+import org.apache.ignite.internal.configuration.asm.ConfigurationAsmGeneratorCompiler;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -47,12 +47,15 @@ public class UsageTest {
      */
     @Test
     public void test() throws Exception {
+        Collection<RootKey<?, ?>> rootKeys = List.of(LocalConfiguration.KEY);
+
+        var compiler = new ConfigurationAsmGeneratorCompiler(rootKeys, List.of(), List.of());
+
         registry = new ConfigurationRegistry(
-                List.of(LocalConfiguration.KEY),
+                rootKeys,
                 Set.of(),
                 new TestConfigurationStorage(LOCAL),
-                List.of(),
-                List.of()
+                compiler
         );
 
         registry.start();
@@ -109,12 +112,13 @@ public class UsageTest {
 
         long autoAdjustTimeout = 30_000L;
 
+        Collection<RootKey<?, ?>> rootKeys = List.of(NetworkConfiguration.KEY, LocalConfiguration.KEY);
+        var compiler = new ConfigurationAsmGeneratorCompiler(rootKeys, List.of(), List.of());
         registry = new ConfigurationRegistry(
-                List.of(NetworkConfiguration.KEY, LocalConfiguration.KEY),
+                rootKeys,
                 Set.of(),
                 new TestConfigurationStorage(LOCAL),
-                List.of(),
-                List.of()
+                compiler
         );
 
         registry.start();
