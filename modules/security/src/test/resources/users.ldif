@@ -1,0 +1,32 @@
+version: 1
+dn: dc=baeldung,dc=com
+objectClass: domain
+objectClass: top
+dc: baeldung
+
+dn: ou=Users,dc=baeldung,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: Users
+
+dn: cn=Joe Simms,ou=Users,dc=baeldung,dc=com
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: Joe Simms
+sn: Simms
+uid: user1
+userPassword: 12345
+memberOf: ADMIN
+
+dn: cn=Will Smith,ou=Users,dc=baeldung,dc=com
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+objectClass: top
+cn: Will Smith
+sn: Smith
+uid: user2
+userPassword: 12345
+memberOf: COMMON

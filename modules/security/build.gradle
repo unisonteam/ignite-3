@@ -37,4 +37,5 @@ dependencies {
     testImplementation libs.mockito.core
     testImplementation libs.hamcrest.core
     testImplementation libs.hamcrest.optional
+    testImplementation 'org.apache.directory.server:apacheds-test-framework:2.0.0.AM26'
 }

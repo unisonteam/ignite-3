@@ -211,8 +211,12 @@ public class RestComponent implements IgniteComponent {
                 result.put("micronaut.server.ssl.ciphers", restSslView.ciphers());
             }
             result.put("micronaut.server.ssl.enabled", sslEnabled);
-            result.put("micronaut.server.ssl.key-store.path", "file:" + keyStore.path());
-            result.put("micronaut.server.ssl.key-store.password", keyStore.password());
+            if (!keyStore.path().isBlank()) {
+                result.put("micronaut.server.ssl.key-store.path", "file:" + keyStore.path());
+            }
+            if (!keyStore.password().isBlank()) {
+                result.put("micronaut.server.ssl.key-store.password", keyStore.password());
+            }
             result.put("micronaut.server.ssl.key-store.type", keyStore.type());
 
             ClientAuth clientAuth = ClientAuth.valueOf(restSslView.clientAuth().toUpperCase());
@@ -223,8 +227,12 @@ public class RestComponent implements IgniteComponent {
             KeyStoreView trustStore = restSslView.trustStore();
 
             result.put("micronaut.server.ssl.client-authentication", toMicronautClientAuth(clientAuth));
-            result.put("micronaut.server.ssl.trust-store.path", "file:" + trustStore.path());
-            result.put("micronaut.server.ssl.trust-store.password", trustStore.password());
+            if (!trustStore.path().isBlank()) {
+                result.put("micronaut.server.ssl.trust-store.path", "file:" + trustStore.path());
+            }
+            if (!trustStore.password().isBlank()) {
+                result.put("micronaut.server.ssl.trust-store.password", trustStore.password());
+            }
             result.put("micronaut.server.ssl.trust-store.type", trustStore.type());
         }
 
