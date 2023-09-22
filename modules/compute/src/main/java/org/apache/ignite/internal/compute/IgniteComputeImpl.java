@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -50,6 +51,8 @@ public class IgniteComputeImpl implements IgniteCompute {
     private final IgniteTablesInternal tables;
     private final ComputeComponent computeComponent;
 
+    private PriorityQueue queue;
+
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
 
     /**
@@ -59,6 +62,8 @@ public class IgniteComputeImpl implements IgniteCompute {
         this.topologyService = topologyService;
         this.tables = tables;
         this.computeComponent = computeComponent;
+
+//        queue.add
     }
 
     /** {@inheritDoc} */
