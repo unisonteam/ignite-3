@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.compute.v2.IgniteComputeV2;
 import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.sql.IgniteSql;
 import org.apache.ignite.table.manager.IgniteTables;
@@ -66,6 +67,8 @@ public interface Ignite extends AutoCloseable {
      * @see ComputeJob
      */
     IgniteCompute compute();
+
+    IgniteComputeV2 computeV2();
 
     /**
      * Gets the cluster nodes.

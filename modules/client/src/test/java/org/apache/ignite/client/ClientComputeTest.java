@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import org.apache.ignite.client.fakes.FakeCompute;
@@ -162,21 +163,50 @@ public class ClientComputeTest extends BaseIgniteAbstractTest {
     void testExecuteColocatedUpdatesTableCacheOnTableDrop() throws Exception {
         String tableName = "drop-me";
 
-        initServers(reqId -> false);
-        ((FakeIgniteTables) ignite.tables()).createTable(tableName);
-
         try (var client = getClient(server3)) {
             Tuple key = Tuple.create().set("key", "k");
 
             String res1 = client.compute()
                     .<String>executeColocatedAsync(tableName, key, List.of(), "job").join();
 
-            // Drop table and create a new one with a different ID.
-            ((FakeIgniteTables) ignite.tables()).dropTable(tableName);
-            ((FakeIgniteTables) ignite.tables()).createTable(tableName);
-
             String res2 = client.compute()
                     .<Long, String>executeColocatedAsync(tableName, 1L, Mapper.of(Long.class), List.of(), "job").join();
+
+            CompletableFuture<String> res3 = client.compute()
+                    .<Long, String>executeColocatedAsync(tableName,
+                            1L,
+                            Mapper.of(Long.class),
+                            List.of(new DeploymentUnit("unit1", "1.1.1")),
+                            "job",
+                            "arg1",
+                            "arg2");
+
+            assertEquals("s3", res1);
+            assertEquals("s3", res2);
+            assertEquals("s3", res3);
+        }
+    }
+
+    @Test
+    void testExecuteColocatedUpdatesTableCacheOnTableDropV2() throws Exception {
+        String tableName = "drop-me";
+
+        try (var client = getClient(server3)) {
+            Tuple key = Tuple.create().set("key", "k");
+
+            String res1 = client.computeV2().<String>executor("job")
+                    .colocated(collocator -> collocator.table(tableName).toTuple(key))
+                    .call();
+
+            String res2 = client.computeV2().<String>executor("job")
+                    .colocated(collocator -> collocator.table(tableName).toKey(1L, Mapper.of(Long.class)))
+                    .call();
+
+            CompletableFuture<String> res3 = client.computeV2().<String>executor("job")
+                    .colocated(collocator -> collocator.table(tableName).toKey(1L, Mapper.of(Long.class)))
+                    .deploymentUnits(new DeploymentUnit("unit1", "1.1.1"))
+                    .async()
+                    .call("arg1", "arg2");
 
             assertEquals("s3", res1);
             assertEquals("s3", res2);
