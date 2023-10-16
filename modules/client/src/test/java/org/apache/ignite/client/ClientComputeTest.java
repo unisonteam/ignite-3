@@ -177,6 +177,7 @@ public class ClientComputeTest extends BaseIgniteAbstractTest {
                             1L,
                             Mapper.of(Long.class),
                             List.of(new DeploymentUnit("unit1", "1.1.1")),
+                            "asdas",
                             "job",
                             "arg1",
                             "arg2");
@@ -203,7 +204,7 @@ public class ClientComputeTest extends BaseIgniteAbstractTest {
                     .call();
 
             CompletableFuture<String> res3 = client.computeV2().<String>executor("job")
-                    .colocated(collocator -> collocator.table(tableName).toKey(1L, Mapper.of(Long.class)))
+                    .colocated(collocator -> collocator.nodes("node1", "node2")))
                     .deploymentUnits(new DeploymentUnit("unit1", "1.1.1"))
                     .async()
                     .call("arg1", "arg2");

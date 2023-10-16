@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 public interface ComputeManagement {
 
-    CompletableFuture<Void> changeJobPriority(UUID uuid, Priority priority);
+    CompletableFuture<Void> changeJobPriority(UUID uuid, long priority);
 
     default CompletableFuture<List<JobStatus>> list() {
         return list(s -> true);

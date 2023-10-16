@@ -144,6 +144,7 @@ public interface IgniteCompute {
             K key,
             Mapper<K> keyMapper,
             List<DeploymentUnit> units,
+            String mapperClass,
             String jobClassName,
             Object... args);
 
