@@ -15,19 +15,22 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.network;
 
-import java.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.Nullable;
+import java.util.Collection;
 
-/**
- * Job control object, provides information about the job execution process and result, allows cancelling the job.
- *
- * @param <R> Job result type.
- */
-public interface JobExecution<R> extends JobResult<CompletableFuture<R>> {
+public interface TopologyProvider {
     /**
-     * Cancels the job.
+     * Returns information about the current node.
+     *
+     * @return Information about the local network member.
      */
-    void cancel();
+    ClusterNode localMember();
+
+    /**
+     * Returns a list of all discovered cluster members, including the local member itself.
+     *
+     * @return List of the discovered cluster members.
+     */
+    Collection<ClusterNode> allMembers();
 }

@@ -167,4 +167,19 @@ public interface IgniteCompute {
             String jobClassName,
             Object... args
     );
+
+    /**
+     * Executes a {@link ComputeTask} map reduce task of then given class.
+     *
+     * @param units Deployment units.
+     * @param taskClassName Map reduce task class name.
+     * @param args Task arguments.
+     * @param <R> Task result type.
+     * @return Task execution interface.
+     */
+    <R> TaskExecution<R> mapReduceAsync(
+            List<DeploymentUnit> units,
+            String taskClassName,
+            Object... args
+    );
 }

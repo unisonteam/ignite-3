@@ -17,17 +17,27 @@
 
 package org.apache.ignite.compute;
 
-import java.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.Nullable;
+import static java.util.stream.Collectors.toMap;
 
-/**
- * Job control object, provides information about the job execution process and result, allows cancelling the job.
- *
- * @param <R> Job result type.
- */
-public interface JobExecution<R> extends JobResult<CompletableFuture<R>> {
-    /**
-     * Cancels the job.
-     */
-    void cancel();
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import org.apache.ignite.network.ClusterNode;
+
+public interface TaskExecution<R> {
+
+    CompletableFuture<R> resultAsync();
+
+    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
+
+    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
+        return statusesAsync().thenApply(statuses ->
+                statuses != null
+                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
+                        : null
+        );
+    }
+
+    CompletableFuture<Void> cancelAsync();
 }

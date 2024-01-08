@@ -18,19 +18,27 @@
 package org.apache.ignite.internal.compute;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
+import org.apache.ignite.compute.ComputeJob;
+import org.apache.ignite.compute.ComputeTask;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.compute.JobExecution;
 import org.apache.ignite.internal.lang.IgniteExceptionMapperUtil;
+import org.apache.ignite.compute.JobStatus;
+import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.internal.lang.IgniteInternalException;
 import org.apache.ignite.internal.table.IgniteTablesInternal;
 import org.apache.ignite.internal.table.TableViewInternal;
@@ -39,6 +47,7 @@ import org.apache.ignite.lang.ErrorGroups.Common;
 import org.apache.ignite.lang.TableNotFoundException;
 import org.apache.ignite.lang.util.IgniteNameUtils;
 import org.apache.ignite.network.ClusterNode;
+import org.apache.ignite.network.TopologyProvider;
 import org.apache.ignite.network.TopologyService;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.table.mapper.Mapper;
@@ -49,7 +58,7 @@ import org.apache.ignite.table.mapper.Mapper;
 public class IgniteComputeImpl implements IgniteCompute {
     private static final String DEFAULT_SCHEMA_NAME = "PUBLIC";
 
-    private final TopologyService topologyService;
+    private final TopologyProvider topologyProvider;
     private final IgniteTablesInternal tables;
     private final ComputeComponent computeComponent;
 
@@ -58,8 +67,8 @@ public class IgniteComputeImpl implements IgniteCompute {
     /**
      * Create new instance.
      */
-    public IgniteComputeImpl(TopologyService topologyService, IgniteTablesInternal tables, ComputeComponent computeComponent) {
-        this.topologyService = topologyService;
+    public IgniteComputeImpl(TopologyProvider topologyProvider, IgniteTablesInternal tables, ComputeComponent computeComponent) {
+        this.topologyProvider = topologyProvider;
         this.tables = tables;
         this.computeComponent = computeComponent;
     }
@@ -118,7 +127,7 @@ public class IgniteComputeImpl implements IgniteCompute {
     }
 
     private boolean isLocal(ClusterNode targetNode) {
-        return targetNode.equals(topologyService.localMember());
+        return targetNode.equals(topologyProvider.localMember());
     }
 
     /** {@inheritDoc} */
@@ -238,5 +247,93 @@ public class IgniteComputeImpl implements IgniteCompute {
         return nodes.stream()
                 .collect(toUnmodifiableMap(identity(),
                         node -> IgniteExceptionMapperUtil.convertToPublicFuture(executeOnOneNode(node, units, jobClassName, args))));
+    }
+
+    @Override
+    public <R> TaskExecution<R> mapReduceAsync(
+            List<DeploymentUnit> units,
+            String taskClassName,
+            Object... args
+    ) {
+        Objects.requireNonNull(units);
+        Objects.requireNonNull(taskClassName);
+
+        try {
+            Class<? extends ComputeTask<R>> taskClass = (Class<? extends ComputeTask<R>>) Class.forName(taskClassName);
+
+            ComputeTask<R> computeTask = taskClass.getDeclaredConstructor().newInstance();
+
+            Map<ComputeJob<?>, ClusterNode> result = computeTask.map(topologyProvider, args);
+
+            Map<JobExecution<Object>, ClusterNode> executions = result.entrySet().stream()
+                    .collect(toMap(
+                            entry -> executeOnOneNode(entry.getValue(), units, entry.getKey().getClass().getName(), args),
+                            e -> e.getValue()
+                    ));
+
+            return new TaskExecution<>() {
+                @Override
+                public CompletableFuture<R> resultAsync() {
+                    Map<ClusterNode, CompletableFuture<?>> collect = executions.entrySet().stream()
+                            .collect(toMap(Entry::getKey, e -> e.getValue().resultAsync()));
+
+                    CompletableFuture<R> result = new CompletableFuture<>();
+
+                    CompletableFuture.allOf(collect.values().toArray(CompletableFuture[]::new)).whenComplete(
+                            (unused, throwable) -> {
+                                if (throwable != null) {
+                                    result.completeExceptionally(throwable);
+                                } else {
+                                    result.complete(computeTask.reduce(collect.entrySet().stream()
+                                            .collect(toMap(Entry::getKey, e -> e.getValue().join())))
+                                    );
+                                }
+                            });
+
+                    return result;
+                }
+
+                @Override
+                public CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync() {
+                    Map<ClusterNode, CompletableFuture<JobStatus>> collect = executions.entrySet().stream()
+                            .collect(toMap(Entry::getKey, e -> e.getValue().statusAsync()));
+
+                    CompletableFuture<Map<ClusterNode, JobStatus>> result = new CompletableFuture<>();
+
+                    CompletableFuture.allOf(collect.values().toArray(CompletableFuture[]::new)).whenComplete(
+                            (unused, throwable) -> {
+                                if (throwable != null) {
+                                    result.completeExceptionally(throwable);
+                                } else {
+                                    result.complete(collect.entrySet().stream()
+                                            .collect(toMap(Entry::getKey, e -> e.getValue().join()))
+                                    );
+                                }
+                            });
+
+                    return result;
+                }
+
+                @Override
+                public CompletableFuture<Void> cancelAsync() {
+                    CompletableFuture<?>[] arr = new CompletableFuture[executions.size()];
+                    for (int i = 0, collectSize = executions.size(); i < collectSize; i++) {
+                        JobExecution<Object> jobExecution = executions.get(i);
+                        arr[i] = jobExecution.cancelAsync();
+                    }
+
+                    return CompletableFuture.allOf(arr);
+                }
+            };
+
+        } catch (ClassNotFoundException
+                 | NoSuchMethodException
+                 | InstantiationException
+                 | IllegalAccessException
+                 | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 }

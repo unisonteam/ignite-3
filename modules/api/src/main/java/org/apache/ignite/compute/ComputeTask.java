@@ -17,17 +17,22 @@
 
 package org.apache.ignite.compute;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.Map;
+import org.apache.ignite.network.ClusterNode;
+import org.apache.ignite.network.TopologyProvider;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Job control object, provides information about the job execution process and result, allows cancelling the job.
+ * Compute task interface.
  *
- * @param <R> Job result type.
+ * @param <R> Result type.
  */
-public interface JobExecution<R> extends JobResult<CompletableFuture<R>> {
-    /**
-     * Cancels the job.
-     */
-    void cancel();
+public interface ComputeTask<R> {
+    Map<ComputeJob<?>, ClusterNode> map(
+            TopologyProvider topologyProvider,
+            @Nullable Object[] args
+    );
+
+    R reduce(List<JobResult<?>> results);
 }
