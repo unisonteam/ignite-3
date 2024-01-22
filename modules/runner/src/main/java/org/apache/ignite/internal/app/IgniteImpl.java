@@ -164,6 +164,7 @@ import org.apache.ignite.internal.vault.VaultManager;
 import org.apache.ignite.internal.vault.VaultService;
 import org.apache.ignite.internal.vault.persistence.PersistentVaultService;
 import org.apache.ignite.lang.IgniteException;
+import org.apache.ignite.network.ChannelType;
 import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.network.ClusterService;
 import org.apache.ignite.network.DefaultMessagingService;
@@ -458,7 +459,6 @@ public class IgniteImpl implements Ignite {
         );
 
         metaStorageMgr = new MetaStorageManagerImpl(
-                vaultMgr,
                 clusterSvc,
                 cmgMgr,
                 logicalTopologyService,
@@ -568,7 +568,6 @@ public class IgniteImpl implements Ignite {
                 registry,
                 metaStorageMgr,
                 logicalTopologyService,
-                vaultMgr,
                 catalogManager
         );
 
@@ -610,7 +609,8 @@ public class IgniteImpl implements Ignite {
                 schemaSyncService,
                 catalogManager,
                 observableTimestampTracker,
-                placementDriverMgr.placementDriver()
+                placementDriverMgr.placementDriver(),
+                this::sql
         );
 
         indexManager = new IndexManager(schemaManager, distributedTblMgr, catalogManager, metaStorageMgr, registry);
@@ -815,7 +815,7 @@ public class IgniteImpl implements Ignite {
 
             return cmgMgr.joinFuture()
                     //Disable REST component during initialization.
-                    .thenAcceptAsync(unused -> restComponent.disable())
+                    .thenAcceptAsync(unused -> restComponent.disable(), startupExecutor)
                     .thenComposeAsync(unused -> {
                         LOG.info("Join complete, starting MetaStorage");
 
@@ -866,7 +866,7 @@ public class IgniteImpl implements Ignite {
                     .thenComposeAsync(v -> {
                         LOG.info("Components started, performing recovery");
 
-                        return recoverComponentsStateOnStart(startupExecutor);
+                        return recoverComponentsStateOnStart(startupExecutor, lifecycleManager.allComponentsStartFuture());
                     }, startupExecutor)
                     .thenComposeAsync(v -> clusterCfgMgr.configurationRegistry().onDefaultsPersisted(), startupExecutor)
                     // Signal that local recovery is complete and the node is ready to join the cluster.
@@ -1097,11 +1097,11 @@ public class IgniteImpl implements Ignite {
      * Recovers components state on start by invoking configuration listeners ({@link #notifyConfigurationListeners()} and deploying watches
      * after that.
      */
-    private CompletableFuture<?> recoverComponentsStateOnStart(ExecutorService startupExecutor) {
+    private CompletableFuture<?> recoverComponentsStateOnStart(ExecutorService startupExecutor, CompletableFuture<Void> startFuture) {
         CompletableFuture<Void> startupConfigurationUpdate = notifyConfigurationListeners();
         CompletableFuture<Void> startupRevisionUpdate = metaStorageMgr.notifyRevisionUpdateListenerOnStart();
 
-        return CompletableFuture.allOf(startupConfigurationUpdate, startupRevisionUpdate)
+        return CompletableFuture.allOf(startupConfigurationUpdate, startupRevisionUpdate, startFuture)
                 .thenComposeAsync(t -> {
                     // Deploy all registered watches because all components are ready and have registered their listeners.
                     return metaStorageMgr.deployWatches();
@@ -1187,6 +1187,12 @@ public class IgniteImpl implements Ignite {
     @Nullable
     public BiPredicate<String, NetworkMessage> dropMessagesPredicate() {
         return ((DefaultMessagingService) clusterSvc.messagingService()).dropMessagesPredicate();
+    }
+
+    // TODO IGNITE-18493 - remove/move this
+    @TestOnly
+    public void sendFakeMessage(String recipientConsistentId, NetworkMessage msg) {
+        clusterSvc.messagingService().send(recipientConsistentId, ChannelType.DEFAULT, msg);
     }
 
     // TODO: IGNITE-18493 - remove/move this

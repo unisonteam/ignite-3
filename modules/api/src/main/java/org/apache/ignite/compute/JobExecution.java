@@ -18,7 +18,6 @@
 package org.apache.ignite.compute;
 
 import java.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Job control object, provides information about the job execution process and result, allows cancelling the job.
@@ -28,6 +27,16 @@ import org.jetbrains.annotations.Nullable;
 public interface JobExecution<R> extends JobResult<CompletableFuture<R>> {
     /**
      * Cancels the job.
+     *
+     * @return The future which will be completed when cancel request is processed.
      */
-    void cancel();
+    CompletableFuture<Void> cancelAsync();
+
+    /**
+     * Changes job priority. After priority change job will be the last in the queue of jobs with the same priority.
+     *
+     * @param newPriority new priority.
+     * @return The future which will be completed when change priority request is processed.
+     */
+    CompletableFuture<Void> changePriorityAsync(int newPriority);
 }

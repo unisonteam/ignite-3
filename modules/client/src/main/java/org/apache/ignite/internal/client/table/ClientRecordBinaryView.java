@@ -39,10 +39,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Client record view implementation for binary user-object representation.
  */
-public class ClientRecordBinaryView implements RecordView<Tuple> {
-    /** Underlying table. */
-    private final ClientTable tbl;
-
+public class ClientRecordBinaryView extends AbstractClientView<Tuple> implements RecordView<Tuple> {
     /** Tuple serializer. */
     private final ClientTupleSerializer ser;
 
@@ -52,9 +49,8 @@ public class ClientRecordBinaryView implements RecordView<Tuple> {
      * @param tbl Table.
      */
     public ClientRecordBinaryView(ClientTable tbl) {
-        assert tbl != null;
+        super(tbl);
 
-        this.tbl = tbl;
         ser = new ClientTupleSerializer(tbl.tableId());
     }
 

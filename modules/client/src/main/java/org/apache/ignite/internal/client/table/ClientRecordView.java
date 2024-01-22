@@ -27,10 +27,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow.Publisher;
+import java.util.function.Function;
 import org.apache.ignite.client.RetryLimitPolicy;
 import org.apache.ignite.internal.client.proto.ClientOp;
 import org.apache.ignite.internal.client.proto.TuplePart;
+import org.apache.ignite.internal.marshaller.Marshaller;
+import org.apache.ignite.internal.marshaller.MarshallerException;
+import org.apache.ignite.internal.marshaller.TupleReader;
 import org.apache.ignite.internal.streamer.StreamerBatchSender;
+import org.apache.ignite.internal.table.criteria.SqlRowProjection;
+import org.apache.ignite.sql.ResultSetMetadata;
+import org.apache.ignite.sql.SqlRow;
 import org.apache.ignite.table.DataStreamerOptions;
 import org.apache.ignite.table.RecordView;
 import org.apache.ignite.table.mapper.Mapper;
@@ -40,10 +47,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Client record view implementation.
  */
-public class ClientRecordView<R> implements RecordView<R> {
-    /** Underlying table. */
-    private final ClientTable tbl;
-
+public class ClientRecordView<R> extends AbstractClientView<R> implements RecordView<R> {
     /** Serializer. */
     private final ClientRecordSerializer<R> ser;
 
@@ -54,7 +58,8 @@ public class ClientRecordView<R> implements RecordView<R> {
      * @param recMapper Mapper.
      */
     ClientRecordView(ClientTable tbl, Mapper<R> recMapper) {
-        this.tbl = tbl;
+        super(tbl);
+
         ser = new ClientRecordSerializer<>(tbl.tableId(), recMapper);
     }
 
@@ -374,5 +379,20 @@ public class ClientRecordView<R> implements RecordView<R> {
                 new RetryLimitPolicy().retryLimit(opts.retryLimit()));
 
         return ClientDataStreamer.streamData(publisher, opts, batchSender, provider, tbl);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected Function<SqlRow, R> queryMapper(ResultSetMetadata meta, ClientSchema schema) {
+        String[] cols = columnNames(schema.columns(), 0, schema.columns().length);
+        Marshaller marsh = schema.getMarshaller(ser.mapper(), TuplePart.KEY_AND_VAL, true);
+
+        return (row) -> {
+            try {
+                return (R) marsh.readObject(new TupleReader(new SqlRowProjection(row, meta, cols)), null);
+            } catch (MarshallerException e) {
+                throw new org.apache.ignite.lang.MarshallerException(e);
+            }
+        };
     }
 }
