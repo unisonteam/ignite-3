@@ -46,6 +46,9 @@ import org.apache.ignite.client.handler.ClientHandlerModule;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.configuration.ConfigurationDynamicDefaultsPatcher;
 import org.apache.ignite.configuration.ConfigurationModule;
+import org.apache.ignite.ddl.IgniteDdl;
+import org.apache.ignite.ddl.Options;
+import org.apache.ignite.ddl.sql.IgniteDdlSqlImpl;
 import org.apache.ignite.internal.catalog.CatalogManager;
 import org.apache.ignite.internal.catalog.CatalogManagerImpl;
 import org.apache.ignite.internal.catalog.ClockWaiter;
@@ -1013,6 +1016,11 @@ public class IgniteImpl implements Ignite {
     @Override
     public CompletableFuture<Collection<ClusterNode>> clusterNodesAsync() {
         return completedFuture(clusterNodes());
+    }
+
+    @Override
+    public IgniteDdl ddl(Options options) {
+        return new IgniteDdlSqlImpl(sql(), options);
     }
 
     /**

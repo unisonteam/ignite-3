@@ -79,6 +79,7 @@ dependencies {
     implementation project(':ignite-catalog')
     implementation project(':ignite-system-view-api')
     implementation project(':ignite-system-view')
+    implementation project(':ignite-ddl')
     implementation libs.jetbrains.annotations
     implementation libs.micronaut.inject
     implementation libs.micronaut.validation

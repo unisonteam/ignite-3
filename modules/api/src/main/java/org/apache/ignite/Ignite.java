@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.ddl.IgniteDdl;
+import org.apache.ignite.ddl.Options;
 import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.sql.IgniteSql;
 import org.apache.ignite.table.manager.IgniteTables;
@@ -82,4 +84,10 @@ public interface Ignite extends AutoCloseable {
      * @return Collection of cluster nodes.
      */
     CompletableFuture<Collection<ClusterNode>> clusterNodesAsync();
+
+    default IgniteDdl ddl() {
+        return ddl(Options.defaultOptions());
+    }
+
+    IgniteDdl ddl(Options options);
 }
