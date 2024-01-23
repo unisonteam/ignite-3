@@ -15,24 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.compute.task;
 
-import java.util.List;
-import java.util.Map;
-import org.apache.ignite.network.ClusterNode;
-import org.apache.ignite.network.TopologyProvider;
-import org.jetbrains.annotations.Nullable;
+import org.apache.ignite.compute.ComputeJob;
 
-/**
- * Compute task interface.
- *
- * @param <R> Result type.
- */
-public interface ComputeTask<R> {
-    Map<ComputeJob<?>, ClusterNode> map(
-            TopologyProvider topologyProvider,
-            @Nullable Object[] args
-    );
-
-    R reduce(List<JobResult<?>> results);
+public interface JobProvider {
+    <R> ComputeJob<R> getJob(String className);
 }

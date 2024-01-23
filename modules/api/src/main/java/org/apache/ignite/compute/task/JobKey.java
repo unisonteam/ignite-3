@@ -15,24 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.compute.task;
 
-import org.jetbrains.annotations.Nullable;
+import java.util.Random;
 
-public interface JobResult<R> {
-    /**
-     * Returns job's execution result.
-     *
-     * @return Job's execution result.
-     */
-    R resultAsync();
+public interface JobKey {
+    String SEPARATOR = ":";
 
-    /**
-     * Returns the current status of the job. The job status may be deleted and thus return {@code null} if the time for retaining job
-     * status has been exceeded.
-     *
-     * @return The current status of the job, or {@code null} if the job status no longer exists due to exceeding the retention time limit.
-     */
-    @Nullable
-    JobStatus status();
+    String taskClassName();
+
+    static JobKey fromClassName(String className) {
+        return () -> new Random().nextLong() + ":" + className;
+    }
 }

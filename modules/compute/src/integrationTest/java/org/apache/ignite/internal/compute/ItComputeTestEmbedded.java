@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -43,9 +44,16 @@ import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.JobExecution;
 import org.apache.ignite.compute.JobExecutionContext;
 import org.apache.ignite.compute.JobState;
+import org.apache.ignite.compute.TaskExecution;
+import org.apache.ignite.compute.task.ComputeTask;
+import org.apache.ignite.compute.task.JobKey;
+import org.apache.ignite.compute.task.JobResult;
+import org.apache.ignite.compute.task.TaskOptions;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.lang.ErrorGroup;
 import org.apache.ignite.lang.IgniteException;
+import org.apache.ignite.network.TopologyProvider;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -206,6 +214,13 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
         assertThat(execution2.resultAsync().isDone(), is(false));
     }
 
+    @Test
+    void mapReduceTest() {
+        IgniteImpl entryNode = node(0);
+
+        TaskExecution<Object> taskExecution = entryNode.compute().mapReduceAsync(units(), MapReduce.class.getName());
+    }
+
     private static class ConcatJob implements ComputeJob<String> {
         /** {@inheritDoc} */
         @Override
@@ -291,6 +306,21 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            return null;
+        }
+    }
+
+    private static class MapReduce implements ComputeTask<Integer> {
+        @Override
+        public Map<JobKey, TaskOptions> map(TopologyProvider topologyProvider, @Nullable Object[] args) {
+            topologyProvider.allMembers().stream().map(clusterNode -> clusterNode.)
+            return Map.of(
+
+            );
+        }
+
+        @Override
+        public Integer reduce(List<JobResult<?>> results) {
             return null;
         }
     }

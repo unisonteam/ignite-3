@@ -20,6 +20,7 @@ package org.apache.ignite.compute;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.ignite.compute.task.ComputeTask;
 import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.table.mapper.Mapper;

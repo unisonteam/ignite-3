@@ -17,6 +17,7 @@
 
 package org.apache.ignite.compute;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -24,7 +25,32 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <R> Job result type.
  */
-public interface JobExecution<R> extends JobResult<CompletableFuture<R>> {
+public interface JobExecution<R> {
+    /**
+     * Returns job's execution result.
+     *
+     * @return Job's execution result.
+     */
+    CompletableFuture<R> resultAsync();
+
+    /**
+     * Returns the current status of the job. The job status may be deleted and thus return {@code null} if the time for retaining job
+     * status has been exceeded.
+     *
+     * @return The current status of the job, or {@code null} if the job status no longer exists due to exceeding the retention time limit.
+     */
+    CompletableFuture<JobStatus> statusAsync();
+
+    /**
+     * Returns the id of the job. The job status may be deleted and thus return {@code null} if the time for retaining job status has been
+     * exceeded.
+     *
+     * @return The id of the job, or {@code null} if the job status no longer exists due to exceeding the retention time limit.
+     */
+    default CompletableFuture<UUID> idAsync() {
+        return statusAsync().thenApply(status -> status != null ? status.id() : null);
+    }
+
     /**
      * Cancels the job.
      *

@@ -22,6 +22,9 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,14 +35,13 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
-import org.apache.ignite.compute.ComputeJob;
-import org.apache.ignite.compute.ComputeTask;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.compute.JobExecution;
-import org.apache.ignite.compute.JobExecution;
 import org.apache.ignite.compute.JobStatus;
 import org.apache.ignite.compute.TaskExecution;
+import org.apache.ignite.compute.task.ComputeTask;
+import org.apache.ignite.compute.task.TaskOptions;
 import org.apache.ignite.internal.lang.IgniteInternalException;
 import org.apache.ignite.internal.table.IgniteTablesInternal;
 import org.apache.ignite.internal.table.TableViewInternal;
@@ -60,6 +62,7 @@ public class IgniteComputeImpl implements IgniteCompute {
     private static final String DEFAULT_SCHEMA_NAME = "PUBLIC";
 
     private final TopologyProvider topologyProvider;
+
     private final IgniteTablesInternal tables;
 
     private final ComputeComponent computeComponent;
@@ -71,8 +74,18 @@ public class IgniteComputeImpl implements IgniteCompute {
     /**
      * Create new instance.
      */
-    public IgniteComputeImpl(TopologyProvider topologyProvider, IgniteTablesInternal tables, ComputeComponent computeComponent) {
-        this.topologyProvider = topologyProvider;
+    public IgniteComputeImpl(TopologyService topologyService, IgniteTablesInternal tables, ComputeComponent computeComponent) {
+        this.topologyProvider = new TopologyProvider() {
+            @Override
+            public ClusterNode localMember() {
+                return topologyService.localMember();
+            }
+
+            @Override
+            public Collection<ClusterNode> allMembers() {
+                return topologyService.allMembers();
+            }
+        };
         this.tables = tables;
         this.computeComponent = computeComponent;
         this.nodeLeftEventsSource = new NodeLeftEventsSource(topologyService);
@@ -294,30 +307,38 @@ public class IgniteComputeImpl implements IgniteCompute {
 
             ComputeTask<R> computeTask = taskClass.getDeclaredConstructor().newInstance();
 
-            Map<ComputeJob<?>, ClusterNode> result = computeTask.map(topologyProvider, args);
+            Map<String, List<TaskOptions>> result = computeTask.map(topologyProvider, args);
 
-            Map<JobExecution<Object>, ClusterNode> executions = result.entrySet().stream()
-                    .collect(toMap(
-                            entry -> executeOnOneNode(entry.getValue(), units, entry.getKey().getClass().getName(), args),
-                            e -> e.getValue()
-                    ));
+            Map<JobExecution<Object>, Set<ClusterNode>> executions = new HashMap<>();
+
+            for (Entry<String, List<TaskOptions>> entry : result.entrySet()) {
+                String jobClassName = entry.getKey();
+                List<TaskOptions> options = entry.getValue();
+                for (TaskOptions option : options) {
+                    JobExecution<Object> jobExecution = executeAsync(
+                            option.nodes(),
+                            units,
+                            jobClassName,
+                            option.args()
+                    );
+                    executions.put(jobExecution, option.nodes());
+                }
+            }
 
             return new TaskExecution<>() {
                 @Override
                 public CompletableFuture<R> resultAsync() {
-                    Map<ClusterNode, CompletableFuture<?>> collect = executions.entrySet().stream()
-                            .collect(toMap(Entry::getKey, e -> e.getValue().resultAsync()));
+                    CompletableFuture<?>[] collect = executions.keySet().stream()
+                            .map(JobExecution::resultAsync).toArray(CompletableFuture[]::new);
 
                     CompletableFuture<R> result = new CompletableFuture<>();
 
-                    CompletableFuture.allOf(collect.values().toArray(CompletableFuture[]::new)).whenComplete(
+                    CompletableFuture.allOf(collect).whenComplete(
                             (unused, throwable) -> {
                                 if (throwable != null) {
                                     result.completeExceptionally(throwable);
                                 } else {
-                                    result.complete(computeTask.reduce(collect.entrySet().stream()
-                                            .collect(toMap(Entry::getKey, e -> e.getValue().join())))
-                                    );
+                                    result.complete(computeTask.reduce(new ArrayList<>(executions.keySet())));
                                 }
                             });
 
@@ -326,18 +347,18 @@ public class IgniteComputeImpl implements IgniteCompute {
 
                 @Override
                 public CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync() {
-                    Map<ClusterNode, CompletableFuture<JobStatus>> collect = executions.entrySet().stream()
-                            .collect(toMap(Entry::getKey, e -> e.getValue().statusAsync()));
+                    Map<CompletableFuture<JobStatus>, ClusterNode> collect = executions.entrySet().stream()
+                            .collect(toMap(e -> e.getKey().statusAsync(), Entry::getValue));
 
-                    CompletableFuture<Map<ClusterNode, JobStatus>> result = new CompletableFuture<>();
+                    CompletableFuture<Map<JobStatus, ClusterNode>> result = new CompletableFuture<>();
 
-                    CompletableFuture.allOf(collect.values().toArray(CompletableFuture[]::new)).whenComplete(
+                    CompletableFuture.allOf(collect.keySet().toArray(CompletableFuture[]::new)).whenComplete(
                             (unused, throwable) -> {
                                 if (throwable != null) {
                                     result.completeExceptionally(throwable);
                                 } else {
                                     result.complete(collect.entrySet().stream()
-                                            .collect(toMap(Entry::getKey, e -> e.getValue().join()))
+                                            .collect(toMap(e -> e.getKey().join(), Entry::getValue))
                                     );
                                 }
                             });
@@ -348,15 +369,15 @@ public class IgniteComputeImpl implements IgniteCompute {
                 @Override
                 public CompletableFuture<Void> cancelAsync() {
                     CompletableFuture<?>[] arr = new CompletableFuture[executions.size()];
-                    for (int i = 0, collectSize = executions.size(); i < collectSize; i++) {
-                        JobExecution<Object> jobExecution = executions.get(i);
+                    int i = 0;
+                    for (JobExecution<Object> jobExecution : executions.keySet()) {
                         arr[i] = jobExecution.cancelAsync();
+                        i++;
                     }
 
                     return CompletableFuture.allOf(arr);
                 }
             };
-
         } catch (ClassNotFoundException
                  | NoSuchMethodException
                  | InstantiationException
@@ -364,7 +385,5 @@ public class IgniteComputeImpl implements IgniteCompute {
                  | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 }
