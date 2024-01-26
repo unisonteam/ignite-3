@@ -26,15 +26,14 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.ignite.network.ClusterNode;
 
 public interface TaskExecution<R> {
-
     CompletableFuture<R> resultAsync();
 
-    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
+    CompletableFuture<Map<ClusterNode, JobStatus>> statusesAsync();
 
-    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
+    default CompletableFuture<Map<ClusterNode, UUID>> idsAsync() {
         return statusesAsync().thenApply(statuses ->
                 statuses != null
-                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
+                        ? statuses.entrySet().stream().collect(toMap(Entry::getKey, entry -> entry.getValue().id()))
                         : null
         );
     }

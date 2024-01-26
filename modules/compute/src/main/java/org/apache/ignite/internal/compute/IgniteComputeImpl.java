@@ -20,6 +20,7 @@ package org.apache.ignite.internal.compute;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
+import static org.apache.ignite.internal.compute.ComputeUtils.taskClass;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.compute.JobExecution;
@@ -42,6 +44,7 @@ import org.apache.ignite.compute.JobStatus;
 import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.compute.task.ComputeTask;
 import org.apache.ignite.compute.task.TaskOptions;
+import org.apache.ignite.internal.compute.loader.JobContextManager;
 import org.apache.ignite.internal.lang.IgniteInternalException;
 import org.apache.ignite.internal.table.IgniteTablesInternal;
 import org.apache.ignite.internal.table.TableViewInternal;
@@ -71,10 +74,17 @@ public class IgniteComputeImpl implements IgniteCompute {
 
     private final NodeLeftEventsSource nodeLeftEventsSource;
 
+    private final JobContextManager jobContextManager;
+
     /**
      * Create new instance.
      */
-    public IgniteComputeImpl(TopologyService topologyService, IgniteTablesInternal tables, ComputeComponent computeComponent) {
+    public IgniteComputeImpl(
+            TopologyService topologyService,
+            IgniteTablesInternal tables,
+            ComputeComponent computeComponent,
+            JobContextManager jobContextManager
+    ) {
         this.topologyProvider = new TopologyProvider() {
             @Override
             public ClusterNode localMember() {
@@ -88,6 +98,7 @@ public class IgniteComputeImpl implements IgniteCompute {
         };
         this.tables = tables;
         this.computeComponent = computeComponent;
+        this.jobContextManager = jobContextManager;
         this.nodeLeftEventsSource = new NodeLeftEventsSource(topologyService);
     }
 
@@ -302,88 +313,85 @@ public class IgniteComputeImpl implements IgniteCompute {
         Objects.requireNonNull(units);
         Objects.requireNonNull(taskClassName);
 
-        try {
-            Class<? extends ComputeTask<R>> taskClass = (Class<? extends ComputeTask<R>>) Class.forName(taskClassName);
+        ComputeTask<R> computeTask = jobContextManager.acquireClassLoader(units)
+                .thenApply(context -> ComputeUtils.<R>instantiateTask(context.classLoader(), taskClassName))
+                .join();
 
-            ComputeTask<R> computeTask = taskClass.getDeclaredConstructor().newInstance();
+        Map<String, List<TaskOptions>> result = computeTask.map(topologyProvider, args);
 
-            Map<String, List<TaskOptions>> result = computeTask.map(topologyProvider, args);
+        Map<JobExecution<Object>, Set<ClusterNode>> executions = new HashMap<>();
 
-            Map<JobExecution<Object>, Set<ClusterNode>> executions = new HashMap<>();
+        for (Entry<String, List<TaskOptions>> entry : result.entrySet()) {
+            String jobClassName = entry.getKey();
+            List<TaskOptions> options = entry.getValue();
+            for (TaskOptions option : options) {
+                JobExecution<Object> jobExecution = executeAsync(
+                        option.nodes(),
+                        option.units(),
+                        jobClassName,
+                        option.args()
+                );
+                executions.put(jobExecution, option.nodes());
+            }
+        }
 
-            for (Entry<String, List<TaskOptions>> entry : result.entrySet()) {
-                String jobClassName = entry.getKey();
-                List<TaskOptions> options = entry.getValue();
-                for (TaskOptions option : options) {
-                    JobExecution<Object> jobExecution = executeAsync(
-                            option.nodes(),
-                            units,
-                            jobClassName,
-                            option.args()
-                    );
-                    executions.put(jobExecution, option.nodes());
-                }
+        return new TaskExecution<>() {
+
+            @Override
+            public CompletableFuture<R> resultAsync() {
+                CompletableFuture<?>[] collect = executions.keySet().stream()
+                        .map(JobExecution::resultAsync).toArray(CompletableFuture[]::new);
+
+                CompletableFuture<R> result = new CompletableFuture<>();
+
+                CompletableFuture.allOf(collect).whenComplete(
+                        (unused, throwable) -> {
+                            if (throwable != null) {
+                                result.completeExceptionally(throwable);
+                            } else {
+                                result.complete(computeTask.reduce(executions.entrySet().stream()
+                                        .collect(toMap(e -> e.getKey().idAsync().join(),
+                                                e -> e.getKey().resultAsync().join())
+                                        )
+                                ));
+                            }
+                        });
+
+                return result;
             }
 
-            return new TaskExecution<>() {
-                @Override
-                public CompletableFuture<R> resultAsync() {
-                    CompletableFuture<?>[] collect = executions.keySet().stream()
-                            .map(JobExecution::resultAsync).toArray(CompletableFuture[]::new);
+            @Override
+            public CompletableFuture<Map<ClusterNode, JobStatus>> statusesAsync() {
+                Map<CompletableFuture<JobStatus>, ClusterNode> collect = executions.entrySet().stream()
+                        .collect(toMap(e -> e.getKey().statusAsync(), e -> e.getValue().iterator().next()));
 
-                    CompletableFuture<R> result = new CompletableFuture<>();
+                CompletableFuture<Map<ClusterNode, JobStatus>> result = new CompletableFuture<>();
 
-                    CompletableFuture.allOf(collect).whenComplete(
-                            (unused, throwable) -> {
-                                if (throwable != null) {
-                                    result.completeExceptionally(throwable);
-                                } else {
-                                    result.complete(computeTask.reduce(new ArrayList<>(executions.keySet())));
-                                }
-                            });
+                CompletableFuture.allOf(collect.keySet().toArray(CompletableFuture[]::new)).whenComplete(
+                        (unused, throwable) -> {
+                            if (throwable != null) {
+                                result.completeExceptionally(throwable);
+                            } else {
+                                result.complete(collect.entrySet().stream()
+                                        .collect(toMap(Entry::getValue, e -> e.getKey().join()))
+                                );
+                            }
+                        });
 
-                    return result;
+                return result;
+            }
+
+            @Override
+            public CompletableFuture<Void> cancelAsync() {
+                CompletableFuture<?>[] arr = new CompletableFuture[executions.size()];
+                int i = 0;
+                for (JobExecution<Object> jobExecution : executions.keySet()) {
+                    arr[i] = jobExecution.cancelAsync();
+                    i++;
                 }
 
-                @Override
-                public CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync() {
-                    Map<CompletableFuture<JobStatus>, ClusterNode> collect = executions.entrySet().stream()
-                            .collect(toMap(e -> e.getKey().statusAsync(), Entry::getValue));
-
-                    CompletableFuture<Map<JobStatus, ClusterNode>> result = new CompletableFuture<>();
-
-                    CompletableFuture.allOf(collect.keySet().toArray(CompletableFuture[]::new)).whenComplete(
-                            (unused, throwable) -> {
-                                if (throwable != null) {
-                                    result.completeExceptionally(throwable);
-                                } else {
-                                    result.complete(collect.entrySet().stream()
-                                            .collect(toMap(e -> e.getKey().join(), Entry::getValue))
-                                    );
-                                }
-                            });
-
-                    return result;
-                }
-
-                @Override
-                public CompletableFuture<Void> cancelAsync() {
-                    CompletableFuture<?>[] arr = new CompletableFuture[executions.size()];
-                    int i = 0;
-                    for (JobExecution<Object> jobExecution : executions.keySet()) {
-                        arr[i] = jobExecution.cancelAsync();
-                        i++;
-                    }
-
-                    return CompletableFuture.allOf(arr);
-                }
-            };
-        } catch (ClassNotFoundException
-                 | NoSuchMethodException
-                 | InstantiationException
-                 | IllegalAccessException
-                 | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+                return CompletableFuture.allOf(arr);
+            }
+        };
     }
 }

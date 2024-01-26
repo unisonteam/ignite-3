@@ -18,23 +18,39 @@
 package org.apache.ignite.compute.task;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.network.ClusterNode;
+import org.apache.ignite.table.Tuple;
+import org.apache.ignite.table.mapper.Mapper;
 import org.jetbrains.annotations.Nullable;
 
 public class TaskOptions {
     private final Set<ClusterNode> nodes;
 
-    private final JobExecutionOptions options;
+    private final JobExecutionOptions jobOptions;
+
+    private final ColocationOption colocationOption;
+
+    private final List<DeploymentUnit> units;
 
     @Nullable
     private final Object[] args;
 
-    private TaskOptions(Set<ClusterNode> nodes, JobExecutionOptions options, Object[] args) {
+    private TaskOptions(
+            Set<ClusterNode> nodes,
+            JobExecutionOptions jobOptions,
+            ColocationOption colocationOption,
+            List<DeploymentUnit> units,
+            Object[] args
+    ) {
         this.nodes = Collections.unmodifiableSet(nodes);
-        this.options = options;
+        this.jobOptions = jobOptions;
+        this.colocationOption = colocationOption;
+        this.units = units;
         this.args = args;
     }
 
@@ -43,7 +59,11 @@ public class TaskOptions {
     }
 
     public JobExecutionOptions options() {
-        return options;
+        return jobOptions;
+    }
+
+    public List<DeploymentUnit> units() {
+        return units;
     }
 
     @Nullable
@@ -51,29 +71,48 @@ public class TaskOptions {
         return args;
     }
 
-    public static TaskArgsBuilder builder() {
-        return new TaskArgsBuilder();
+    public static TaskOptionsBuilder builder() {
+        return new TaskOptionsBuilder();
     }
 
-    public static class TaskArgsBuilder {
+    public static class TaskOptionsBuilder {
         private Set<ClusterNode> nodes;
 
-        private JobExecutionOptions options = JobExecutionOptions.DEFAULT;
+        private ColocationOption colocationOptions;
+
+        private JobExecutionOptions jobOptions = JobExecutionOptions.DEFAULT;
+
+        private List<DeploymentUnit> units = Collections.emptyList();
 
         @Nullable
         private Object[] args;
 
-        public TaskArgsBuilder nodes(Set<ClusterNode> nodes) {
+        public TaskOptionsBuilder nodes(Set<ClusterNode> nodes) {
             this.nodes = nodes;
             return this;
         }
 
-        public TaskArgsBuilder options(JobExecutionOptions options) {
-            this.options = options;
+        public TaskOptionsBuilder options(JobExecutionOptions options) {
+            this.jobOptions = options;
             return this;
         }
 
-        public TaskArgsBuilder args(Object[] args) {
+        public TaskOptionsBuilder units(List<DeploymentUnit> units) {
+            this.units = units;
+            return this;
+        }
+
+        public TaskOptionsBuilder colocatedWith(String tableName, Tuple tuple) {
+            colocationOptions = new TupleColocationOption(tableName, tuple);
+            return this;
+        }
+
+        public <T> TaskOptionsBuilder colocatedWith(String tableName, T key, Mapper<T> mapper) {
+            colocationOptions = new KeyColocationOption<>(tableName, key, mapper);
+            return this;
+        }
+
+        public TaskOptionsBuilder args(Object[] args) {
             this.args = args;
             return this;
         }
@@ -84,7 +123,50 @@ public class TaskOptions {
                 throw new IllegalArgumentException();
             }
 
-            return new TaskOptions(nodes, options, args);
+            return new TaskOptions(nodes, jobOptions, colocationOptions, units, args);
+        }
+    }
+
+    private abstract static class ColocationOption {
+        protected final String tableName;
+
+        private ColocationOption(String tableName) {
+            this.tableName = tableName;
+        }
+
+        public abstract ClusterNode resolve();
+    }
+
+    private static class TupleColocationOption extends ColocationOption {
+        private final Tuple tuple;
+
+
+        private TupleColocationOption(String tableName, Tuple tuple) {
+            super(tableName);
+            this.tuple = tuple;
+        }
+
+        @Override
+        public ClusterNode resolve() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static class KeyColocationOption<T> extends ColocationOption {
+        private final T key;
+
+        private final Mapper<T> mapper;
+
+
+        private KeyColocationOption(String tableName, T key, Mapper<T> mapper) {
+            super(tableName);
+            this.key = key;
+            this.mapper = mapper;
+        }
+
+        @Override
+        public ClusterNode resolve() {
+            throw new UnsupportedOperationException();
         }
     }
 }

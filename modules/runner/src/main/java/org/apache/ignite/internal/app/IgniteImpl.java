@@ -658,13 +658,15 @@ public class IgniteImpl implements Ignite {
 
         ComputeConfiguration computeCfg = nodeConfigRegistry.getConfiguration(ComputeConfiguration.KEY);
         InMemoryComputeStateMachine stateMachine = new InMemoryComputeStateMachine(computeCfg);
+        JobContextManager jobContextManager = new JobContextManager(deploymentManagerImpl, deploymentManagerImpl.deploymentUnitAccessor(),
+                new JobClassLoaderFactory());
         computeComponent = new ComputeComponentImpl(
                 clusterSvc.messagingService(),
-                new JobContextManager(deploymentManagerImpl, deploymentManagerImpl.deploymentUnitAccessor(), new JobClassLoaderFactory()),
+                jobContextManager,
                 new ComputeExecutorImpl(this, stateMachine, computeCfg)
         );
 
-        compute = new IgniteComputeImpl(clusterSvc.topologyService(), distributedTblMgr, computeComponent);
+        compute = new IgniteComputeImpl(clusterSvc.topologyService(), distributedTblMgr, computeComponent, jobContextManager);
 
         authenticationManager = createAuthenticationManager();
 

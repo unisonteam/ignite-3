@@ -31,6 +31,7 @@ import org.apache.ignite.compute.ComputeException;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.JobStatus;
+import org.apache.ignite.compute.task.ComputeTask;
 import org.apache.ignite.compute.version.Version;
 import org.apache.ignite.internal.compute.message.DeploymentUnitMsg;
 import org.apache.ignite.internal.compute.message.ExecuteResponse;
@@ -92,6 +93,44 @@ public class ComputeUtils {
             throw new ComputeException(
                     CLASS_INITIALIZATION_ERR,
                     "Cannot load job class by name '" + jobClassName + "'",
+                    e
+            );
+        }
+    }
+
+    public static <R> Class<ComputeTask<R>> taskClass(ClassLoader jobClassLoader, String jobClassName) {
+        try {
+            return (Class<ComputeTask<R>>) Class.forName(jobClassName, true, jobClassLoader);
+        } catch (ClassNotFoundException e) {
+            throw new ComputeException(
+                    CLASS_INITIALIZATION_ERR,
+                    "Cannot load task class by name '" + jobClassName + "'",
+                    e
+            );
+        }
+    }
+
+    public static <R> ComputeTask<R> instantiateTask(ClassLoader jobClassLoader, String jobClassName) {
+        Class<ComputeTask<R>> computeTaskClass = taskClass(jobClassLoader, jobClassName);
+        if (!(ComputeTask.class.isAssignableFrom(computeTaskClass))) {
+            throw new ComputeException(
+                    CLASS_INITIALIZATION_ERR,
+                    "'" + computeTaskClass.getName() + "' does not implement ComputeTask interface"
+            );
+        }
+
+        try {
+            Constructor<? extends ComputeTask<R>> constructor = computeTaskClass.getDeclaredConstructor();
+
+            if (!constructor.canAccess(null)) {
+                constructor.setAccessible(true);
+            }
+
+            return constructor.newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new ComputeException(
+                    CLASS_INITIALIZATION_ERR,
+                    "Cannot instantiate job",
                     e
             );
         }

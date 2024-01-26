@@ -27,6 +27,7 @@ import static org.apache.ignite.lang.ErrorGroups.Compute.CLASS_INITIALIZATION_ER
 import static org.apache.ignite.lang.ErrorGroups.Compute.COMPUTE_ERR_GROUP;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -34,20 +35,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.compute.ComputeException;
 import org.apache.ignite.compute.ComputeJob;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.JobExecution;
 import org.apache.ignite.compute.JobExecutionContext;
+import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.compute.JobState;
 import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.compute.task.ComputeTask;
-import org.apache.ignite.compute.task.JobKey;
-import org.apache.ignite.compute.task.JobResult;
 import org.apache.ignite.compute.task.TaskOptions;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.lang.ErrorGroup;
@@ -218,7 +221,9 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
     void mapReduceTest() {
         IgniteImpl entryNode = node(0);
 
-        TaskExecution<Object> taskExecution = entryNode.compute().mapReduceAsync(units(), MapReduce.class.getName());
+        TaskExecution<Integer> taskExecution = entryNode.compute().mapReduceAsync(units(), MapReduce.class.getName());
+
+        assertThat(taskExecution.resultAsync(), willBe(runningNodes().map(IgniteImpl::name).map(String::length).reduce(Integer::sum).get()));
     }
 
     private static class ConcatJob implements ComputeJob<String> {
@@ -312,16 +317,31 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
 
     private static class MapReduce implements ComputeTask<Integer> {
         @Override
-        public Map<JobKey, TaskOptions> map(TopologyProvider topologyProvider, @Nullable Object[] args) {
-            topologyProvider.allMembers().stream().map(clusterNode -> clusterNode.)
+        public Map<String, List<TaskOptions>> map(
+                TopologyProvider topologyProvider,
+                @Nullable Object[] args
+        ) {
             return Map.of(
-
+                    GetNodeNameJob.class.getName(),
+                    topologyProvider.allMembers().stream().map(node ->
+                            TaskOptions.builder()
+                                    .nodes(Set.of(node))
+                                    .options(JobExecutionOptions.builder()
+                                            .maxRetries(10)
+                                            .priority(Integer.MAX_VALUE)
+                                            .build()
+                                    ).build()
+                            ).collect(Collectors.toList())
             );
         }
 
         @Override
-        public Integer reduce(List<JobResult<?>> results) {
-            return null;
+        public Integer reduce(Map<UUID, ?> results) {
+            return results.values().stream()
+                    .map(String.class::cast)
+                    .map(String::length)
+                    .reduce(Integer::sum)
+                    .get();
         }
     }
 }

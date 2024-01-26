@@ -19,6 +19,7 @@ package org.apache.ignite.compute.task;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.ignite.network.TopologyProvider;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,5 +34,5 @@ public interface ComputeTask<R> {
             @Nullable Object[] args
     );
 
-    R reduce(List<?> results);
+    R reduce(Map<UUID, ?> results);
 }
