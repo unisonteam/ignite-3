@@ -18,6 +18,7 @@
 package org.apache.ignite.ddl.sql;
 
 import java.util.Objects;
+import org.apache.ignite.ddl.SortOrder;
 
 class IndexColumn {
 
@@ -32,39 +33,71 @@ class IndexColumn {
         this.columnName = columnName;
     }
 
-    public static IndexColumn col(String name) {
+    static IndexColumn col(String name) {
         return new IndexColumn(name);
     }
 
-    public IndexColumn asc() {
+    static IndexColumn col(String name, SortOrder sortOrder) {
+        return new IndexColumn(name).sort(sortOrder);
+    }
+
+    IndexColumn sort(SortOrder sortOrder) {
+        switch (sortOrder) {
+            case DEFAULT:
+                break;
+            case ASC:
+                this.asc();
+                break;
+            case ASC_NULLS_FIRST:
+                this.asc().nullsFirst();
+                break;
+            case ASC_NULLS_LAST:
+                this.asc().nullsLast();
+                break;
+            case DESC:
+                this.desc();
+                break;
+            case DESC_NULLS_FIRST:
+                this.desc().nullsFirst();
+                break;
+            case DESC_NULLS_LAST:
+                this.desc().nullsLast();
+                break;
+            default:
+                throw new IllegalStateException("Unexpected sort order: " + sortOrder);
+        }
+        return this;
+    }
+
+    IndexColumn asc() {
         this.sortOrder = "asc";
         return this;
     }
 
-    public IndexColumn desc() {
+    IndexColumn desc() {
         this.sortOrder = "desc";
         return this;
     }
 
-    public IndexColumn nullsFirst() {
+    IndexColumn nullsFirst() {
         this.nullsOrder = "nulls first";
         return this;
     }
 
-    public IndexColumn nullsLast() {
+    IndexColumn nullsLast() {
         this.nullsOrder = "nulls last";
         return this;
     }
 
-    public String getColumnName() {
+    String getColumnName() {
         return columnName;
     }
 
-    public String getSortOrder() {
+    String getSortOrder() {
         return sortOrder;
     }
 
-    public String getNullsOrder() {
+    String getNullsOrder() {
         return nullsOrder;
     }
 

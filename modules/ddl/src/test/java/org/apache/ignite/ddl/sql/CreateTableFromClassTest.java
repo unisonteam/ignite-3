@@ -24,8 +24,11 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
 import java.util.Objects;
+import org.apache.ignite.ddl.IndexType;
 import org.apache.ignite.ddl.Options;
+import org.apache.ignite.ddl.SortOrder;
 import org.apache.ignite.ddl.ZoneEngine;
+import org.apache.ignite.ddl.annotations.Col;
 import org.apache.ignite.ddl.annotations.ColocateBy;
 import org.apache.ignite.ddl.annotations.Column;
 import org.apache.ignite.ddl.annotations.Id;
@@ -46,7 +49,7 @@ class CreateTableFromClassTest {
     }
 
     private static CreateTableFromClassImpl createTable(Options options) {
-        return new CreateTableFromClassImpl(null, options);
+        return new CreateTableFromClassImpl(null, options).ifNotExists();
     }
 
     @Test
@@ -103,6 +106,19 @@ class CreateTableFromClassTest {
         assertThat(sql, containsString("CREATE INDEX IF NOT EXISTS \"ix_pojo\" ON \"pojo_test\" (\"f_name\", \"l_name\" desc);"));
     }
 
+    @Test
+    void testNameGeneration() {
+        var sql = createTable().recordView(NameGeneration.class).getSql();
+        assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS NameGeneration ();"));
+        assertThat(sql, containsString("CREATE INDEX IF NOT EXISTS ix_col1_col2 ON NameGeneration (col1, col2);"));
+    }
+
+    @Test
+    void testPrimaryKey() {
+        var sql = createTable().recordView(PkSort.class).getSql();
+        assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS PkSort (id int, PRIMARY KEY USING TREE (id desc))"));
+    }
+
     @Zone(
             name = "zone_test",
             replicas = 3,
@@ -148,9 +164,15 @@ class CreateTableFromClassTest {
     @Table(
             name = "pojo_value_test",
             zone = ZoneTest.class,
-            colocateBy = @ColocateBy(columnList = "id, id_str"),
+            colocateBy = @ColocateBy(columns = {
+                    @Col(name = "id"),
+                    @Col(name = "id_str")
+            }),
             indexes = {
-                    @Index(name = "ix_pojo", columnList = "f_name, l_name desc")
+                    @Index(name = "ix_pojo", columns = {
+                            @Col(name = "f_name"),
+                            @Col(name = "l_name", sort = SortOrder.DESC),
+                    })
             }
     )
     static class PojoValue {
@@ -190,9 +212,15 @@ class CreateTableFromClassTest {
     @Table(
             name = "pojo_test",
             zone = ZoneTest.class,
-            colocateBy = @ColocateBy(columnList = "id, id_str"),
+            colocateBy = @ColocateBy(columns = {
+                    @Col(name = "id"),
+                    @Col(name = "id_str")
+            }),
             indexes = {
-                    @Index(name = "ix_pojo", columnList = "f_name, l_name desc")
+                    @Index(name = "ix_pojo", columns = {
+                            @Col(name = "f_name"),
+                            @Col(name = "l_name", sort = SortOrder.DESC),
+                    })
             }
     )
     static class Pojo {
@@ -238,5 +266,14 @@ class CreateTableFromClassTest {
         public int hashCode() {
             return Objects.hash(id, idStr, firstName, lastName, str);
         }
+    }
+
+    @Table(indexes = @Index(columns = { @Col(name = "col1"), @Col(name = "col2") }))
+    static class NameGeneration {}
+
+    @Table(primaryKeyType = IndexType.TREE)
+    static class PkSort {
+        @Id(sort = SortOrder.DESC)
+        Integer id;
     }
 }

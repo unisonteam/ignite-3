@@ -19,6 +19,8 @@ package org.apache.ignite.ddl.sql;
 
 import static org.apache.ignite.ddl.sql.QueryPartCollection.wrap;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class Colocate extends QueryPart {
@@ -26,7 +28,15 @@ class Colocate extends QueryPart {
     private final List<Name> names;
 
     Colocate(String... columns) {
-        names = map(columns, Name::new);
+        this(Arrays.asList(columns));
+    }
+
+    Colocate(List<String> columns) {
+        var result = new ArrayList<Name>();
+        for (var column : columns) {
+            result.add(new Name(column));
+        }
+        names = result;
     }
 
     @Override

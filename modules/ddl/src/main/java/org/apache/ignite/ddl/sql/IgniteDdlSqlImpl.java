@@ -33,27 +33,27 @@ public class IgniteDdlSqlImpl implements IgniteDdl {
     }
 
     @Override
-    public Query createTable(Class<?> key, Class<?> value) {
-        return new CreateTableFromClassImpl(sql, options).keyValueView(key, value);
+    public Query createIfNotExists(Class<?> key, Class<?> value) {
+        return new CreateTableFromClassImpl(sql, options).ifNotExists().keyValueView(key, value);
     }
 
     @Override
-    public Query createTable(Class<?> recCls) {
-        return new CreateTableFromClassImpl(sql, options).recordView(recCls);
+    public Query createIfNotExists(Class<?> recCls) {
+        return new CreateTableFromClassImpl(sql, options).ifNotExists().recordView(recCls);
     }
 
     @Override
-    public Query dropTable(String name) {
+    public Query dropTableIfExists(String name) {
         return new DropTableImpl(sql, options).name(name).ifExists();
     }
 
     @Override
-    public Query dropIndex(String name) {
+    public Query dropIndexIfExists(String name) {
         throw new RuntimeException("NOT YET IMPLEMENTED");
     }
 
     @Override
-    public Query dropZone(String name) {
+    public Query dropZoneIfExists(String name) {
         throw new RuntimeException("NOT YET IMPLEMENTED");
     }
 }

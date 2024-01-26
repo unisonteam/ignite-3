@@ -19,14 +19,14 @@ package org.apache.ignite.ddl;
 
 public interface IgniteDdl {
 
-    Query createTable(Class<?> recCls);
+    Query createIfNotExists(Class<?> recCls);
 
-    Query createTable(Class<?> key, Class<?> value);
+    Query createIfNotExists(Class<?> key, Class<?> value);
 
-    Query dropTable(String name);
+    Query dropTableIfExists(String name);
 
-    Query dropIndex(String name);
+    Query dropIndexIfExists(String name);
 
-    Query dropZone(String name);
+    Query dropZoneIfExists(String name);
 
 }

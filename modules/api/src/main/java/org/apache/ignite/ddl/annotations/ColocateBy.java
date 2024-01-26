@@ -25,5 +25,5 @@ import java.lang.annotation.Target;
 @Target({})
 @Retention(RUNTIME)
 public @interface ColocateBy {
-    String columnList();
+    Col[] columns();
 }

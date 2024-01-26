@@ -28,7 +28,6 @@ import static org.hamcrest.Matchers.is;
 
 import org.apache.ignite.ddl.IndexType;
 import org.apache.ignite.ddl.Options;
-import org.apache.ignite.ddl.sql.CreateTableImpl;
 import org.junit.jupiter.api.Test;
 
 class CreateTableTest {
@@ -98,9 +97,15 @@ class CreateTableTest {
         sql = createTable().name("table1")
                 .column("col1", INTEGER)
                 .column("col2", INTEGER)
-                .primaryKey("col1", "col2")
+                .primaryKey("col1, col2")
                 .getSql();
         assertThat(sql, is("CREATE TABLE table1 (col1 int, col2 int, PRIMARY KEY (col1, col2));"));
+
+        sql = createTable().name("table1")
+                .column("col1", INTEGER)
+                .primaryKey(IndexType.TREE, "col1 nUlls First   ASC")
+                .getSql();
+        assertThat(sql, is("CREATE TABLE table1 (col1 int, PRIMARY KEY USING TREE (col1 asc nulls first));"));
 
         // quote identifiers
         sql = createTable(quoteIdentifiers).name("table1")
@@ -112,9 +117,15 @@ class CreateTableTest {
         sql = createTable(quoteIdentifiers).name("table1")
                 .column("col1", INTEGER)
                 .column("col2", INTEGER)
-                .primaryKey("col1", "col2")
+                .primaryKey("col1, col2")
                 .getSql();
         assertThat(sql, is("CREATE TABLE \"table1\" (\"col1\" int, \"col2\" int, PRIMARY KEY (\"col1\", \"col2\"));"));
+
+        sql = createTable(quoteIdentifiers).name("table1")
+                .column("col1", INTEGER)
+                .primaryKey(IndexType.TREE, "col1 nUlls First   ASC")
+                .getSql();
+        assertThat(sql, is("CREATE TABLE \"table1\" (\"col1\" int, PRIMARY KEY USING TREE (\"col1\" asc nulls first));"));
     }
 
     @Test
@@ -177,7 +188,7 @@ class CreateTableTest {
                 .column("col", VARCHAR(36).defaultValue("default1").notNull())
                 .column("col", UUID.notNull().defaultExpression("gen_random_uuid"))
                 .column("col", UUID.defaultValue(java.util.UUID.randomUUID()).defaultExpression("gen_random_uuid"))
-                .primaryKey("col1", "col2", "col3")
+                .primaryKey("col1, col2, col3")
                 .colocateBy("col1", "col2", "col3")
                 .zone("zone1")
                 .index("ix_test1", "col1, col2 asc, col3 desc nulls first")

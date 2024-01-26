@@ -22,8 +22,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import org.apache.ignite.ddl.SortOrder;
 
 @Target(ElementType.FIELD)
 @Retention(RUNTIME)
 public @interface Id {
+    SortOrder sort() default SortOrder.DEFAULT;
 }

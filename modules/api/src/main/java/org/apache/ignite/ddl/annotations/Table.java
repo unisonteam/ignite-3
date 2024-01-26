@@ -23,6 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import org.apache.ignite.ddl.DefaultZone;
+import org.apache.ignite.ddl.IndexType;
 
 
 @Target(TYPE)
@@ -30,6 +31,7 @@ import org.apache.ignite.ddl.DefaultZone;
 public @interface Table {
     String name() default "";
     Index[] indexes() default {};
-    ColocateBy colocateBy() default @ColocateBy(columnList = "");
-    Class<?> zone() default DefaultZone.class; // todo perhaps use @Zone directly here
+    IndexType primaryKeyType() default IndexType.DEFAULT;
+    ColocateBy colocateBy() default @ColocateBy(columns = {});
+    Class<?> zone() default DefaultZone.class;
 }

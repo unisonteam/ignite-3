@@ -15,19 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.ddl.annotations;
+package org.apache.ignite.ddl;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import org.apache.ignite.ddl.IndexType;
-
-@Target({})
-@Retention(RUNTIME)
-public @interface Index {
-    String name() default "";
-    Col[] columns();
-    boolean unique() default false;
-    IndexType type() default IndexType.DEFAULT;
+public enum SortOrder {
+    DEFAULT,
+    ASC,
+    ASC_NULLS_FIRST,
+    ASC_NULLS_LAST,
+    DESC,
+    DESC_NULLS_FIRST,
+    DESC_NULLS_LAST,
 }

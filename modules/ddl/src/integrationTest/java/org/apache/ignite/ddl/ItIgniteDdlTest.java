@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Objects;
 import java.util.UUID;
+import org.apache.ignite.ddl.annotations.Col;
 import org.apache.ignite.ddl.annotations.ColocateBy;
 import org.apache.ignite.ddl.annotations.Column;
 import org.apache.ignite.ddl.annotations.Id;
@@ -43,30 +44,30 @@ class ItIgniteDdlTest extends ClusterPerTestIntegrationTest {
         var expectedValue = new PojoValue("fname", "lname", UUID.randomUUID().toString());
 
         // key boxed primitive
-        node(0).ddl().createTable(Integer.class, PojoValue.class).execute();
+        node(0).ddl().createIfNotExists(Integer.class, PojoValue.class).execute();
         KeyValueView<Integer, PojoValue> kv = node(0).tables().table("pojo_value_test")
                 .keyValueView(Integer.class, PojoValue.class);
         kv.put(null, key, expectedValue);
         var actual = kv.get(null, key);
         assertThat(actual, is(expectedValue));
 
-        node(0).ddl().dropTable("pojo_value_test").execute();
+        node(0).ddl().dropTableIfExists("pojo_value_test").execute();
 
         // key pojo
-        node(0).ddl().createTable(PojoKey.class, PojoValue.class).execute();
+        node(0).ddl().createIfNotExists(PojoKey.class, PojoValue.class).execute();
         KeyValueView<PojoKey, PojoValue> kv2 = node(0).tables().table("pojo_value_test")
                 .keyValueView(PojoKey.class, PojoValue.class);
         kv2.put(null, expectedKey, expectedValue);
         var actualValue = kv2.get(null, expectedKey);
         assertThat(actualValue, is(expectedValue));
 
-        node(0).ddl().dropTable("pojo_value_test").execute();
+        node(0).ddl().dropTableIfExists("pojo_value_test").execute();
     }
 
     @Test
     void testMapperRecordView() {
         var expected = new Pojo(1, "1", "fname", "lname", UUID.randomUUID().toString());
-        node(0).ddl().createTable(Pojo.class).execute();
+        node(0).ddl().createIfNotExists(Pojo.class).execute();
 
         RecordView<Pojo> rec = node(0).tables().table("pojo_test").recordView(Pojo.class);
         var ins = rec.insert(null, expected);
@@ -75,12 +76,12 @@ class ItIgniteDdlTest extends ClusterPerTestIntegrationTest {
         var actual = rec.get(null, expected);
         assertThat(actual, is(expected))
         ;
-        node(0).ddl().dropTable("pojo_test").execute();
+        node(0).ddl().dropTableIfExists("pojo_test").execute();
     }
 
     @Test
     void testSqlInsertSelect() {
-        node(0).ddl().createTable(Pojo.class).execute();
+        node(0).ddl().createIfNotExists(Pojo.class).execute();
 
         try (var session = node(0).sql().createSession()) {
             session.execute(null, "insert into pojo_test (id, id_str, f_name, l_name, str) values (1, '1', 'f', 'l', 's')");
@@ -97,7 +98,7 @@ class ItIgniteDdlTest extends ClusterPerTestIntegrationTest {
             }
         }
 
-        node(0).ddl().dropTable("pojo_test").execute();
+        node(0).ddl().dropTableIfExists("pojo_test").execute();
     }
 
     @Zone(
@@ -142,9 +143,12 @@ class ItIgniteDdlTest extends ClusterPerTestIntegrationTest {
     @Table(
             name = "pojo_value_test",
             zone = ZoneTest.class,
-            colocateBy = @ColocateBy(columnList = "id"),
+            colocateBy = @ColocateBy(columns = @Col(name = "id")),
             indexes = {
-                    @Index(name = "ix_pojo", columnList = "f_name, l_name desc")
+                    @Index(name = "ix_pojo", columns = {
+                            @Col(name = "f_name"),
+                            @Col(name = "l_name", sort = SortOrder.DESC),
+                    })
             }
     )
     static class PojoValue {
@@ -186,9 +190,12 @@ class ItIgniteDdlTest extends ClusterPerTestIntegrationTest {
     @Table(
             name = "pojo_test",
             zone = ZoneTest.class,
-            colocateBy = @ColocateBy(columnList = "id"),
+            colocateBy = @ColocateBy(columns = @Col(name = "id")),
             indexes = {
-                    @Index(name = "ix_pojo", columnList = "f_name, l_name desc")
+                    @Index(name = "ix_pojo", columns = {
+                            @Col(name = "f_name"),
+                            @Col(name = "l_name", sort = SortOrder.DESC),
+                    })
             }
     )
     static class Pojo {

@@ -73,12 +73,16 @@ class CreateTableImpl extends AbstractDdlQuery {
     }
 
     CreateTableImpl primaryKey(String columnList) {
-        return primaryKey(columnList.split("\\s*,\\s*"));
+        return primaryKey(IndexType.DEFAULT, columnList);
     }
 
-    CreateTableImpl primaryKey(String... columns) {
+    CreateTableImpl primaryKey(IndexType type, String columnList) {
+        return primaryKey(type, parseIndexColumnList(columnList));
+    }
+
+    CreateTableImpl primaryKey(IndexType type, List<IndexColumn> columns) {
         Objects.requireNonNull(columns, "pk columns is null");
-        constraints.add(new Constraint().primaryKey(columns));
+        constraints.add(new Constraint().primaryKey(type, columns));
         return this;
     }
 
@@ -87,6 +91,10 @@ class CreateTableImpl extends AbstractDdlQuery {
     }
 
     CreateTableImpl colocateBy(String... columns) {
+        return colocateBy(asList(columns));
+    }
+
+    CreateTableImpl colocateBy(List<String> columns) {
         Objects.requireNonNull(columns, "colocate columns is null");
         colocate = new Colocate(columns);
         return this;
@@ -110,7 +118,7 @@ class CreateTableImpl extends AbstractDdlQuery {
         return index(name, type, asList(columns));
     }
 
-    private CreateTableImpl index(String name, IndexType type, List<IndexColumn> columns) {
+    CreateTableImpl index(String name, IndexType type, List<IndexColumn> columns) {
         Objects.requireNonNull("index name is null");
         Objects.requireNonNull(columns);
         indexes.add(new CreateIndexImpl(sql, options()).ifNotExists().name(name).using(type).on(tableName, columns));

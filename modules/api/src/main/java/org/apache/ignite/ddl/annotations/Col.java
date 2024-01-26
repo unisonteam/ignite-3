@@ -21,13 +21,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import org.apache.ignite.ddl.IndexType;
+import org.apache.ignite.ddl.SortOrder;
 
+/**
+ * Specifies columns in other annotations.
+ */
 @Target({})
 @Retention(RUNTIME)
-public @interface Index {
-    String name() default "";
-    Col[] columns();
-    boolean unique() default false;
-    IndexType type() default IndexType.DEFAULT;
+public @interface Col {
+    String name();
+    SortOrder sort() default SortOrder.DEFAULT;
 }

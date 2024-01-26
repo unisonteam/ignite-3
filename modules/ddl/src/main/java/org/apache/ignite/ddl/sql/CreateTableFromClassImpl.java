@@ -17,14 +17,18 @@
 
 package org.apache.ignite.ddl.sql;
 
+import static org.apache.ignite.ddl.sql.IndexColumn.*;
 import static org.apache.ignite.table.mapper.Mapper.nativelySupported;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.ignite.ddl.DefaultZone;
+import org.apache.ignite.ddl.IndexType;
 import org.apache.ignite.ddl.Options;
 import org.apache.ignite.ddl.Query;
+import org.apache.ignite.ddl.annotations.Col;
 import org.apache.ignite.ddl.annotations.Column;
 import org.apache.ignite.ddl.annotations.Id;
 import org.apache.ignite.ddl.annotations.Index;
@@ -34,12 +38,18 @@ import org.apache.ignite.sql.IgniteSql;
 
 class CreateTableFromClassImpl extends AbstractDdlQuery {
 
+    private boolean ifNotExists;
     private CreateZoneImpl createZone;
-    private final CreateTableImpl createTable;
+    private CreateTableImpl createTable;
+    private IndexType pkType;
 
     CreateTableFromClassImpl(IgniteSql sql, Options options) {
         super(sql, options);
-        createTable = new CreateTableImpl(sql, options).ifNotExists();
+    }
+
+    CreateTableFromClassImpl ifNotExists() {
+        this.ifNotExists = true;
+        return this;
     }
 
     Query keyValueView(Class<?> key, Class<?> value) {
@@ -62,6 +72,12 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
     }
 
     private void processAnnotations(Class<?> clazz) {
+        if (createTable == null) {
+            createTable = new CreateTableImpl(sql, options());
+            if (ifNotExists) {
+                createTable.ifNotExists();
+            }
+        }
         var table = clazz.getAnnotation(Table.class);
         if (table != null) {
             processZone(table);
@@ -79,7 +95,10 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
         }
         var zone = zoneRef.getAnnotation(Zone.class);
         if (zone != null) {
-            createZone = new CreateZoneImpl(sql, options()).ifNotExists();
+            createZone = new CreateZoneImpl(sql, options());
+            if (ifNotExists) {
+                createZone.ifNotExists();
+            }
 
             var zoneName = zone.name().isEmpty() ? zoneRef.getSimpleName() : zone.name();
             createTable.zone(zoneName);
@@ -98,32 +117,48 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
     private void processTable(Table table) {
         var indexes = table.indexes();
         for (Index ix : indexes) {
-            createTable.index(ix.name(), ix.type(), ix.columnList());
+            var indexColumns = map(ix.columns(), col -> col(col.name(), col.sort()));
+            var name = toIndexName(ix);
+            createTable.index(name, ix.type(), indexColumns);
         }
 
-        var colocateBy = table.colocateBy().columnList();
-        if (!colocateBy.isEmpty()) {
-            createTable.colocateBy(colocateBy);
+        var colocateBy = table.colocateBy().columns();
+        if (colocateBy != null && colocateBy.length > 0) {
+            createTable.colocateBy(map(colocateBy, Col::name));
         }
+
+        pkType = table.primaryKeyType();
+    }
+
+    private String toIndexName(Index ix) {
+        if (!ix.name().isEmpty()) {
+            return ix.name();
+        }
+        var list = new ArrayList<String>();
+        list.add("ix");
+        for (var col : ix.columns()) {
+            list.add(col.name());
+        }
+        return String.join("_", list);
     }
 
     private void processColumns(Class<?> clazz) {
-        var pkColumns = new ArrayList<String>();
+        var idColumns = new ArrayList<IndexColumn>();
 
         if (nativelySupported(clazz)) {
             // e.g. primitive boxed key in keyValueView
-            pkColumns.add("id");
+            idColumns.add(col("id"));
             createTable.column("id", ColumnType.of(clazz));
         } else {
-            processColumnsInPojo(clazz, pkColumns);
+            processColumnsInPojo(clazz, idColumns);
         }
 
-        if (!pkColumns.isEmpty()) {
-            createTable.primaryKey(pkColumns.toArray(new String[0]));
+        if (!idColumns.isEmpty()) {
+            createTable.primaryKey(pkType, idColumns);
         }
     }
 
-    private void processColumnsInPojo(Class<?> clazz, ArrayList<String> pkColumns) {
+    private void processColumnsInPojo(Class<?> clazz, List<IndexColumn> idColumns) {
         for (Field f : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) {
                 continue;
@@ -135,8 +170,8 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
             if (column == null) {
                 columnName = f.getName();
                 createTable.column(columnName, ColumnType.of(f.getType()));
-            } else {
 
+            } else {
                 columnName = column.name().isEmpty() ? f.getName() : column.name();
 
                 if (!column.columnDefinition().isEmpty()) {
@@ -151,8 +186,9 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
                 }
             }
 
-            if (f.getAnnotation(Id.class) != null) {
-                pkColumns.add(columnName);
+            var id = f.getAnnotation(Id.class);
+            if (id != null) {
+                idColumns.add(col(columnName).sort(id.sort()));
             }
         }
     }

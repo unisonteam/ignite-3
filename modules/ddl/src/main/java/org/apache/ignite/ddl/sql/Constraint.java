@@ -19,22 +19,37 @@ package org.apache.ignite.ddl.sql;
 
 import static org.apache.ignite.ddl.sql.QueryPartCollection.wrap;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import org.apache.ignite.ddl.IndexType;
 
 class Constraint extends QueryPart {
 
-    private List<Name> primaryKey;
+    private IndexType pkType;
+    private final List<IndexColumnImpl> pkColumns = new ArrayList<>();
 
-    Constraint primaryKey(String... columns) {
-        primaryKey = map(columns, Name::new);
+    Constraint primaryKey(IndexColumn... columns) {
+        return primaryKey(IndexType.DEFAULT, Arrays.asList(columns));
+    }
+
+    Constraint primaryKey(IndexType type, List<IndexColumn> columns) {
+        pkType = type;
+        for (var column : columns) {
+            this.pkColumns.add(IndexColumnImpl.wrap(column));
+        }
         return this;
     }
 
     @Override
     protected void accept(QueryContext ctx) {
-        if (primaryKey != null) {
-            ctx.sql("PRIMARY KEY (");
-            ctx.visit(wrap(primaryKey).separator(", "));
+        if (!pkColumns.isEmpty()) {
+            ctx.sql("PRIMARY KEY");
+            if (pkType != null && pkType != IndexType.DEFAULT) {
+                ctx.sql(" USING ").sql(pkType.name());
+            }
+            ctx.sql(" (");
+            ctx.visit(wrap(pkColumns).separator(", "));
             ctx.sql(")");
         }
     }
