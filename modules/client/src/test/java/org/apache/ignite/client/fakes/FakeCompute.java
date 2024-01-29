@@ -32,6 +32,7 @@ import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.compute.JobExecution;
 import org.apache.ignite.compute.JobStatus;
+import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.internal.util.ExceptionUtils;
 import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.table.Tuple;
@@ -155,6 +156,11 @@ public class FakeCompute implements IgniteCompute {
             String jobClassName,
             Object... args
     ) {
+        return null;
+    }
+
+    @Override
+    public <R> TaskExecution<R> mapReduceAsync(List<DeploymentUnit> units, String taskClassName, Object... args) {
         return null;
     }
 

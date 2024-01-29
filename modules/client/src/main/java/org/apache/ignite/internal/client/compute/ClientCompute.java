@@ -33,6 +33,7 @@ import java.util.function.BiConsumer;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.compute.JobExecution;
+import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.internal.client.ClientUtils;
 import org.apache.ignite.internal.client.PayloadInputChannel;
 import org.apache.ignite.internal.client.PayloadOutputChannel;
@@ -239,6 +240,11 @@ public class ClientCompute implements IgniteCompute {
         }
 
         return map;
+    }
+
+    @Override
+    public <R> TaskExecution<R> mapReduceAsync(List<DeploymentUnit> units, String taskClassName, Object... args) {
+        return null;
     }
 
     private <R> CompletableFuture<R> executeOnOneNode(ClusterNode node, List<DeploymentUnit> units, String jobClassName, Object[] args) {
