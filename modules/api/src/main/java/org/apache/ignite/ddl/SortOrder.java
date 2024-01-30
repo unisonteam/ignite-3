@@ -25,4 +25,6 @@ public enum SortOrder {
     DESC,
     DESC_NULLS_FIRST,
     DESC_NULLS_LAST,
+    NULLS_FIRST,
+    NULLS_LAST
 }

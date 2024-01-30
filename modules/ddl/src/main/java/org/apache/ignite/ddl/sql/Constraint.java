@@ -22,6 +22,7 @@ import static org.apache.ignite.ddl.sql.QueryPartCollection.wrap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.ignite.ddl.IndexColumn;
 import org.apache.ignite.ddl.IndexType;
 
 class Constraint extends QueryPart {

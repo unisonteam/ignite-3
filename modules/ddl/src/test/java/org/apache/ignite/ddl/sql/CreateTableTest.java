@@ -21,13 +21,14 @@ import static org.apache.ignite.ddl.sql.ColumnType.DECIMAL;
 import static org.apache.ignite.ddl.sql.ColumnType.INTEGER;
 import static org.apache.ignite.ddl.sql.ColumnType.UUID;
 import static org.apache.ignite.ddl.sql.ColumnType.VARCHAR;
-import static org.apache.ignite.ddl.sql.IndexColumn.col;
+import static org.apache.ignite.ddl.IndexColumn.col;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.ignite.ddl.IndexType;
 import org.apache.ignite.ddl.Options;
+import org.apache.ignite.ddl.SortOrder;
 import org.junit.jupiter.api.Test;
 
 class CreateTableTest {
@@ -192,7 +193,7 @@ class CreateTableTest {
                 .colocateBy("col1", "col2", "col3")
                 .zone("zone1")
                 .index("ix_test1", "col1, col2 asc, col3 desc nulls first")
-                .index("ix_test2", IndexType.HASH, col("col1").asc().nullsFirst(), col("col2").desc().nullsLast())
+                .index("ix_test2", IndexType.HASH, col("col1").sort(SortOrder.ASC_NULLS_FIRST), col("col2").sort(SortOrder.DESC_NULLS_LAST))
                 .getSql();
         System.out.println(createTable);
     }

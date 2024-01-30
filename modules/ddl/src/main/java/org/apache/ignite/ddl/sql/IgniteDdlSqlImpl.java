@@ -17,6 +17,7 @@
 
 package org.apache.ignite.ddl.sql;
 
+import org.apache.ignite.ddl.CreateTable;
 import org.apache.ignite.ddl.IgniteDdl;
 import org.apache.ignite.ddl.Options;
 import org.apache.ignite.ddl.Query;
@@ -55,5 +56,10 @@ public class IgniteDdlSqlImpl implements IgniteDdl {
     @Override
     public Query dropZoneIfExists(String name) {
         throw new RuntimeException("NOT YET IMPLEMENTED");
+    }
+
+    @Override
+    public CreateTable createTable(String name) {
+        return new CreateTableFromClassExtendedImpl(sql, options).name(name); // builder alternative for @Table
     }
 }

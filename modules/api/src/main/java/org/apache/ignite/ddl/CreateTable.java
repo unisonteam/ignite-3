@@ -17,18 +17,20 @@
 
 package org.apache.ignite.ddl;
 
-public interface IgniteDdl {
+public interface CreateTable extends Query {
 
-    Query createIfNotExists(Class<?> recCls);
+    CreateTable ifNotExists();
 
-    Query createIfNotExists(Class<?> key, Class<?> value);
+    CreateTable primaryKeyType(IndexType pkType); // @Id in classes
 
-    Query dropTableIfExists(String name);
+    CreateTable index(IndexType type, IndexColumn... columns);
 
-    Query dropIndexIfExists(String name);
+    CreateTable colocateBy(String... columns);
 
-    Query dropZoneIfExists(String name);
+    CreateTable zone(String name);
 
-    CreateTable createTable(String name); // builder alternative for @Table
+    CreateTable recordView(Class<?> recCls);
+
+    CreateTable keyValueView(Class<?> key, Class<?> value);
 
 }

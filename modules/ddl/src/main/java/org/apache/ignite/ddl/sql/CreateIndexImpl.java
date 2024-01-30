@@ -23,6 +23,7 @@ import static org.apache.ignite.ddl.sql.QueryPartCollection.wrap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.ignite.ddl.IndexColumn;
 import org.apache.ignite.ddl.IndexType;
 import org.apache.ignite.ddl.Options;
 import org.apache.ignite.sql.IgniteSql;

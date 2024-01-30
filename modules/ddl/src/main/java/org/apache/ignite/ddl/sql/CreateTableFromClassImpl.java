@@ -17,7 +17,7 @@
 
 package org.apache.ignite.ddl.sql;
 
-import static org.apache.ignite.ddl.sql.IndexColumn.*;
+import static org.apache.ignite.ddl.IndexColumn.col;
 import static org.apache.ignite.table.mapper.Mapper.nativelySupported;
 
 import java.lang.reflect.Field;
@@ -25,9 +25,9 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.ignite.ddl.DefaultZone;
+import org.apache.ignite.ddl.IndexColumn;
 import org.apache.ignite.ddl.IndexType;
 import org.apache.ignite.ddl.Options;
-import org.apache.ignite.ddl.Query;
 import org.apache.ignite.ddl.annotations.Col;
 import org.apache.ignite.ddl.annotations.Column;
 import org.apache.ignite.ddl.annotations.Id;
@@ -52,13 +52,13 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
         return this;
     }
 
-    Query keyValueView(Class<?> key, Class<?> value) {
+    CreateTableFromClassImpl keyValueView(Class<?> key, Class<?> value) {
         processAnnotations(key);
         processAnnotations(value);
         return this;
     }
 
-    Query recordView(Class<?> recCls) {
+    CreateTableFromClassImpl recordView(Class<?> recCls) {
         processAnnotations(recCls);
         return this;
     }
@@ -85,7 +85,7 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
             createTable.name(table.name().isEmpty() ? clazz.getSimpleName() : table.name());
             processTable(table);
         }
-        processColumns(clazz);
+        processColumns(createTable, pkType, clazz);
     }
 
     private void processZone(Table table) {
@@ -142,7 +142,7 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
         return String.join("_", list);
     }
 
-    private void processColumns(Class<?> clazz) {
+    static void processColumns(CreateTableImpl createTable, IndexType pkType, Class<?> clazz) {
         var idColumns = new ArrayList<IndexColumn>();
 
         if (nativelySupported(clazz)) {
@@ -150,7 +150,7 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
             idColumns.add(col("id"));
             createTable.column("id", ColumnType.of(clazz));
         } else {
-            processColumnsInPojo(clazz, idColumns);
+            processColumnsInPojo(createTable, clazz, idColumns);
         }
 
         if (!idColumns.isEmpty()) {
@@ -158,7 +158,7 @@ class CreateTableFromClassImpl extends AbstractDdlQuery {
         }
     }
 
-    private void processColumnsInPojo(Class<?> clazz, List<IndexColumn> idColumns) {
+    private static void processColumnsInPojo(CreateTableImpl createTable, Class<?> clazz, List<IndexColumn> idColumns) {
         for (Field f : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) {
                 continue;

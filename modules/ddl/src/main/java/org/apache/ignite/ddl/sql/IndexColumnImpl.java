@@ -19,6 +19,8 @@ package org.apache.ignite.ddl.sql;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.ignite.ddl.IndexColumn;
+import org.apache.ignite.ddl.SortOrder;
 
 class IndexColumnImpl extends QueryPart {
 
@@ -43,31 +45,45 @@ class IndexColumnImpl extends QueryPart {
     private static IndexColumn parseCol(String columnRaw) {
         String columnName = columnRaw.split("\\s+", 2)[0];
         var lower = columnRaw.toLowerCase();
-        var result = IndexColumn.col(columnName);
+        var col = IndexColumn.col(columnName);
 
-        if (lower.contains("asc")) {
-            result.asc();
+        if (containsAll(lower, "asc", "nulls", "first")) {
+            col.sort(SortOrder.ASC_NULLS_FIRST);
+        } else if (containsAll(lower, "asc", "nulls", "last")) {
+            col.sort(SortOrder.ASC_NULLS_LAST);
+        } else if (containsAll(lower, "desc", "nulls", "first")) {
+            col.sort(SortOrder.DESC_NULLS_FIRST);
+        } else if (containsAll(lower, "desc", "nulls", "last")) {
+            col.sort(SortOrder.DESC_NULLS_LAST);
+        } else if (lower.contains("asc")) {
+            col.sort(SortOrder.ASC);
+        } else if (lower.contains("desc")) {
+            col.sort(SortOrder.DESC);
+        } else if (containsAll(lower, "nulls", "first")) {
+            col.sort(SortOrder.NULLS_FIRST);
+        } else if (containsAll(lower, "nulls", "last")) {
+            col.sort(SortOrder.NULLS_LAST);
+        } else {
+            col.sort(SortOrder.DEFAULT);
         }
-        if (lower.contains("desc")) {
-            result.desc();
+        return col;
+    }
+
+    private static boolean containsAll(String in, String... keywords) {
+        for (String k : keywords) {
+            if (!in.contains(k)) {
+                return false;
+            }
         }
-        if (lower.contains("nulls first")) {
-            result.nullsFirst();
-        }
-        if (lower.contains("nulls last")) {
-            result.nullsLast();
-        }
-        return result;
+        return true;
     }
 
     @Override
     protected void accept(QueryContext ctx) {
         ctx.visit(new Name(wrapped.getColumnName()));
-        if (wrapped.getSortOrder() != null) {
-            ctx.sql(" ").sql(wrapped.getSortOrder());
-        }
-        if (wrapped.getNullsOrder() != null) {
-            ctx.sql(" ").sql(wrapped.getNullsOrder());
+        if (wrapped.getSortOrder() != SortOrder.DEFAULT) {
+            var sortOrderStr = wrapped.getSortOrder().name().replaceAll("_", " ").toLowerCase();
+            ctx.sql(" ").sql(sortOrderStr);
         }
     }
 }

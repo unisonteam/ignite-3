@@ -37,7 +37,7 @@ import static org.apache.ignite.ddl.sql.ColumnType.UUID;
 import static org.apache.ignite.ddl.sql.ColumnType.VARBINARY;
 import static org.apache.ignite.ddl.sql.ColumnType.VARCHAR;
 import static org.apache.ignite.ddl.sql.ColumnTypeImpl.wrap;
-import static org.apache.ignite.ddl.sql.IndexColumn.col;
+import static org.apache.ignite.ddl.IndexColumn.col;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -45,6 +45,7 @@ import static org.hamcrest.Matchers.is;
 import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ignite.ddl.Options;
+import org.apache.ignite.ddl.SortOrder;
 import org.junit.jupiter.api.Test;
 
 class QueryPartTest {
@@ -269,11 +270,11 @@ class QueryPartTest {
         var sql = sql(IndexColumnImpl.wrap(col));
         assertThat(sql, is("col1"));
 
-        col = col("col1").asc().nullsFirst();
+        col = col("col1").sort(SortOrder.ASC_NULLS_FIRST);
         sql = sql(IndexColumnImpl.wrap(col));
         assertThat(sql, is("col1 asc nulls first"));
 
-        col = col("col1").nullsLast().desc();
+        col = col("col1").sort(SortOrder.DESC_NULLS_LAST);
         sql = sql(IndexColumnImpl.wrap(col));
         assertThat(sql, is("col1 desc nulls last"));
 
@@ -282,11 +283,11 @@ class QueryPartTest {
         sql = sql(quoteIdentifiers, IndexColumnImpl.wrap(col));
         assertThat(sql, is("\"col1\""));
 
-        col = col("col1").asc().nullsFirst();
+        col = col("col1").sort(SortOrder.ASC_NULLS_FIRST);
         sql = sql(quoteIdentifiers, IndexColumnImpl.wrap(col));
         assertThat(sql, is("\"col1\" asc nulls first"));
 
-        col = col("col1").nullsLast().desc();
+        col = col("col1").sort(SortOrder.DESC_NULLS_LAST);
         sql = sql(quoteIdentifiers, IndexColumnImpl.wrap(col));
         assertThat(sql, is("\"col1\" desc nulls last"));
     }
@@ -299,9 +300,9 @@ class QueryPartTest {
         cols = IndexColumnImpl.parseIndexColumnList("col1, COL_UPPER_CASE ASC, col3 nulls first, col4 desc nulls last");
         assertThat(cols, containsInAnyOrder(
                 col("col1"),
-                col("COL_UPPER_CASE").asc(),
-                col("col3").nullsFirst(),
-                col("col4").desc().nullsLast()
+                col("COL_UPPER_CASE").sort(SortOrder.ASC),
+                col("col3").sort(SortOrder.NULLS_FIRST),
+                col("col4").sort(SortOrder.DESC_NULLS_LAST)
         ));
 
         cols = IndexColumnImpl.parseIndexColumnList("col1 unexpectedKeyword");
