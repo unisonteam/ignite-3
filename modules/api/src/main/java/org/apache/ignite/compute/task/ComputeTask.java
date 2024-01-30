@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <R> Result type.
  */
 public interface ComputeTask<R> {
-    Map<String, List<TaskOptions>> map(
+    List<JobExecutionParameters> map(
             TopologyProvider topologyProvider,
             @Nullable Object[] args
     );

@@ -28,7 +28,9 @@ import org.apache.ignite.table.Tuple;
 import org.apache.ignite.table.mapper.Mapper;
 import org.jetbrains.annotations.Nullable;
 
-public class TaskOptions {
+public class JobExecutionParameters {
+    private final String jobClassName;
+
     private final Set<ClusterNode> nodes;
 
     private final JobExecutionOptions jobOptions;
@@ -40,18 +42,24 @@ public class TaskOptions {
     @Nullable
     private final Object[] args;
 
-    private TaskOptions(
+    private JobExecutionParameters(
+            String jobClassName,
             Set<ClusterNode> nodes,
             JobExecutionOptions jobOptions,
             ColocationOption colocationOption,
             List<DeploymentUnit> units,
             Object[] args
     ) {
+        this.jobClassName = jobClassName;
         this.nodes = Collections.unmodifiableSet(nodes);
         this.jobOptions = jobOptions;
         this.colocationOption = colocationOption;
         this.units = units;
         this.args = args;
+    }
+
+    public String jobClassName() {
+        return jobClassName;
     }
 
     public Set<ClusterNode> nodes() {
@@ -71,11 +79,13 @@ public class TaskOptions {
         return args;
     }
 
-    public static TaskOptionsBuilder builder() {
-        return new TaskOptionsBuilder();
+    public static JobExecutionParametersBuilder builder() {
+        return new JobExecutionParametersBuilder();
     }
 
-    public static class TaskOptionsBuilder {
+    public static class JobExecutionParametersBuilder {
+        private String jobClassName;
+
         private Set<ClusterNode> nodes;
 
         private ColocationOption colocationOptions;
@@ -87,43 +97,55 @@ public class TaskOptions {
         @Nullable
         private Object[] args;
 
-        public TaskOptionsBuilder nodes(Set<ClusterNode> nodes) {
+        public JobExecutionParametersBuilder jobClassName(String jobClassName) {
+            this.jobClassName = jobClassName;
+            return this;
+        }
+
+        public JobExecutionParametersBuilder nodes(Set<ClusterNode> nodes) {
             this.nodes = nodes;
             return this;
         }
 
-        public TaskOptionsBuilder options(JobExecutionOptions options) {
+        public JobExecutionParametersBuilder options(JobExecutionOptions options) {
             this.jobOptions = options;
             return this;
         }
 
-        public TaskOptionsBuilder units(List<DeploymentUnit> units) {
+        public JobExecutionParametersBuilder units(List<DeploymentUnit> units) {
             this.units = units;
             return this;
         }
 
-        public TaskOptionsBuilder colocatedWith(String tableName, Tuple tuple) {
+        public JobExecutionParametersBuilder colocatedWith(String tableName, Tuple tuple) {
             colocationOptions = new TupleColocationOption(tableName, tuple);
             return this;
         }
 
-        public <T> TaskOptionsBuilder colocatedWith(String tableName, T key, Mapper<T> mapper) {
+        public <T> JobExecutionParametersBuilder colocatedWith(String tableName, T key, Mapper<T> mapper) {
             colocationOptions = new KeyColocationOption<>(tableName, key, mapper);
             return this;
         }
 
-        public TaskOptionsBuilder args(Object[] args) {
+        public JobExecutionParametersBuilder args(Object[] args) {
             this.args = args;
             return this;
         }
 
-        public TaskOptions build() {
+        public JobExecutionParameters build() {
             Objects.requireNonNull(nodes);
             if (nodes.isEmpty()) {
                 throw new IllegalArgumentException();
             }
 
-            return new TaskOptions(nodes, jobOptions, colocationOptions, units, args);
+            return new JobExecutionParameters(
+                    jobClassName,
+                    nodes,
+                    jobOptions,
+                    colocationOptions,
+                    units,
+                    args
+            );
         }
     }
 

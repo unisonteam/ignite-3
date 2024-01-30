@@ -51,6 +51,7 @@ import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.compute.JobState;
 import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.compute.task.ComputeTask;
+import org.apache.ignite.compute.task.JobExecutionParameters;
 import org.apache.ignite.compute.task.TaskOptions;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.lang.ErrorGroup;
@@ -317,22 +318,20 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
 
     private static class MapReduce implements ComputeTask<Integer> {
         @Override
-        public Map<String, List<TaskOptions>> map(
+        public List<JobExecutionParameters> map(
                 TopologyProvider topologyProvider,
                 @Nullable Object[] args
         ) {
-            return Map.of(
-                    GetNodeNameJob.class.getName(),
-                    topologyProvider.allMembers().stream().map(node ->
-                            TaskOptions.builder()
+            return topologyProvider.allMembers().stream().map(node ->
+                            JobExecutionParameters.builder()
+                                    .jobClassName(GetNodeNameJob.class.getName())
                                     .nodes(Set.of(node))
                                     .options(JobExecutionOptions.builder()
                                             .maxRetries(10)
                                             .priority(Integer.MAX_VALUE)
                                             .build()
                                     ).build()
-                            ).collect(Collectors.toList())
-            );
+            ).collect(Collectors.toList());
         }
 
         @Override
