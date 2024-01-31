@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import org.apache.ignite.ddl.annotations.Column;
+import org.apache.ignite.catalog.annotations.Column;
 import org.apache.ignite.lang.util.IgniteNameUtils;
 
 /**
