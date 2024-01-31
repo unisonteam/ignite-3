@@ -127,6 +127,11 @@ public class JobExecutionParameters {
             return this;
         }
 
+        public JobExecutionParametersBuilder colocatedWith(String tableName) {
+            colocationOptions = new TableColocationOption(tableName);
+            return this;
+        }
+
         public JobExecutionParametersBuilder args(Object[] args) {
             this.args = args;
             return this;
@@ -147,6 +152,10 @@ public class JobExecutionParameters {
                     args
             );
         }
+    }
+
+    public interface JobExecutionSplitter {
+        List<JobExecutionParameters> split(JobExecutionParameters parameters, String table);
     }
 
     private abstract static class ColocationOption {
@@ -189,6 +198,17 @@ public class JobExecutionParameters {
         @Override
         public ClusterNode resolve() {
             throw new UnsupportedOperationException();
+        }
+    }
+
+    private static class TableColocationOption extends ColocationOption {
+        private TableColocationOption(String tableName) {
+            super(tableName);
+        }
+
+        @Override
+        public ClusterNode resolve() {
+            return null;
         }
     }
 }
