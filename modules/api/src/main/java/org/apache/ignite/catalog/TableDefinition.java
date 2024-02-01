@@ -59,8 +59,8 @@ public class TableDefinition {
         this.indexes = indexes;
     }
 
-    public static Builder tableBuilder(String name) {
-        return new Builder().tableName(name);
+    public static Builder builder(String tableName) {
+        return new Builder().tableName(tableName);
     }
 
     public String getTableName() {
@@ -122,8 +122,7 @@ public class TableDefinition {
         private List<Class<?>> annotatedClasses;
         private List<IndexDefinition> indexes = new ArrayList<>();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         private Builder(TableDefinition definition) {
             tableName = definition.tableName;

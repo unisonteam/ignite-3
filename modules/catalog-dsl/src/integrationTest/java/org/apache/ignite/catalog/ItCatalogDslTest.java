@@ -17,7 +17,6 @@
 
 package org.apache.ignite.catalog;
 
-import static org.apache.ignite.catalog.TableDefinition.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -62,7 +61,7 @@ class ItCatalogDslTest extends ClusterPerTestIntegrationTest {
         node(0).catalog().dropTable(tableName).execute();
 
         // key boxed primitive - builder
-        var definition = tableBuilder(tableName).ifNotExists()
+        var definition = TableDefinition.builder(tableName).ifNotExists()
                 .keyValueView(Integer.class, PojoValue.class).build();
         node(0).catalog().create(definition).execute();
         var kv3 = node(0).tables().table(tableName)
@@ -73,7 +72,7 @@ class ItCatalogDslTest extends ClusterPerTestIntegrationTest {
         node(0).catalog().dropTable(tableName).execute();
 
         // key pojo - builder
-        definition = tableBuilder(tableName).ifNotExists()
+        definition = TableDefinition.builder(tableName).ifNotExists()
                 .keyValueView(PojoKey.class, PojoValue.class).build();
         node(0).catalog().create(definition).execute();
         var kv4 = node(0).tables().table(tableName)
@@ -97,7 +96,7 @@ class ItCatalogDslTest extends ClusterPerTestIntegrationTest {
         node(0).catalog().dropTable(tableName).execute();
 
         // builder
-        var definition = tableBuilder(tableName).ifNotExists().recordView(Pojo.class).build();
+        var definition = TableDefinition.builder(tableName).ifNotExists().recordView(Pojo.class).build();
         node(0).catalog().create(definition).execute();
         rec = node(0).tables().table(tableName).recordView(Pojo.class);
         assertTrue(rec.insert(null, expected));

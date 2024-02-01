@@ -17,29 +17,47 @@
 
 package org.apache.ignite.catalog.sql;
 
-import static org.apache.ignite.catalog.sql.CreateTableFromAnnotationsImpl.processColumns;
+import static org.apache.ignite.catalog.sql.CreateFromAnnotationsImpl.processColumns;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Optional;
 import org.apache.ignite.catalog.IndexDefinition;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.Query;
 import org.apache.ignite.catalog.TableDefinition;
+import org.apache.ignite.catalog.ZoneDefinition;
 import org.apache.ignite.catalog.annotations.Table;
 import org.apache.ignite.sql.IgniteSql;
 
-class CreateTableFromBuilderImpl extends AbstractCatalogQuery {
+class CreateFromDefinitionImpl extends AbstractCatalogQuery {
 
-    private final CreateTableImpl createTable;
+    private CreateZoneImpl createZone;
+    private CreateTableImpl createTable;
 
-    CreateTableFromBuilderImpl(IgniteSql sql, Options options) {
+    CreateFromDefinitionImpl(IgniteSql sql, Options options) {
         super(sql, options);
-        createTable = new CreateTableImpl(sql, options);
+    }
+
+    Query from(ZoneDefinition def) {
+        createZone = new CreateZoneImpl(sql, options());
+        createZone.name(def.getZoneName());
+        if (def.ifNotExists()) {
+            createZone.ifNotExists();
+        }
+        if (isGreaterThanZero(def.getPartitions())) {
+            createZone.partitions(def.getPartitions());
+        }
+        if (isGreaterThanZero(def.getReplicas())) {
+            createZone.replicas(def.getReplicas());
+        }
+        createZone.engine(def.getEngine());
+        // todo complete building filter, region, adjust etc.
+        return this;
     }
 
     Query from(TableDefinition def) {
+        createTable = new CreateTableImpl(sql, options());
         createTable.name(def.getSchemaName(), def.getTableName());
         if (def.ifNotExists()) {
             createTable.ifNotExists();
@@ -80,11 +98,14 @@ class CreateTableFromBuilderImpl extends AbstractCatalogQuery {
 
     @Override
     protected void accept(QueryContext ctx) {
-        ctx.visit(createTable);
-    }
-
-    private static boolean isEmpty(Collection<?> c) {
-        return c == null || c.isEmpty();
+        var separator = "";
+        for (var create : new QueryPart[]{createZone, createTable}) {
+            if (create == null) {
+                continue;
+            }
+            ctx.visit(create).formatSeparator().sql(separator);
+            separator = "\n";
+        }
     }
 
     private static String toIndexName(IndexDefinition ix) {

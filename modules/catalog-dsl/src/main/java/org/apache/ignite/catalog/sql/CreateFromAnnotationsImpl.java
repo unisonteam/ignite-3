@@ -36,39 +36,43 @@ import org.apache.ignite.catalog.annotations.Table;
 import org.apache.ignite.catalog.annotations.Zone;
 import org.apache.ignite.sql.IgniteSql;
 
-class CreateTableFromAnnotationsImpl extends AbstractCatalogQuery {
+class CreateFromAnnotationsImpl extends AbstractCatalogQuery {
 
     private boolean ifNotExists;
     private CreateZoneImpl createZone;
     private CreateTableImpl createTable;
     private IndexType pkType;
 
-    CreateTableFromAnnotationsImpl(IgniteSql sql, Options options) {
+    CreateFromAnnotationsImpl(IgniteSql sql, Options options) {
         super(sql, options);
     }
 
-    CreateTableFromAnnotationsImpl ifNotExists() {
+    CreateFromAnnotationsImpl ifNotExists() {
         this.ifNotExists = true;
         return this;
     }
 
-    CreateTableFromAnnotationsImpl keyValueView(Class<?> key, Class<?> value) {
+    CreateFromAnnotationsImpl keyValueView(Class<?> key, Class<?> value) {
         processAnnotations(key);
         processAnnotations(value);
         return this;
     }
 
-    CreateTableFromAnnotationsImpl recordView(Class<?> recCls) {
+    CreateFromAnnotationsImpl recordView(Class<?> recCls) {
         processAnnotations(recCls);
         return this;
     }
 
     @Override
     protected void accept(QueryContext ctx) {
-        if (createZone != null) {
-            ctx.visit(createZone).formatSeparator().sql("\n");
+        var separator = "";
+        for (var create : new QueryPart[]{createZone, createTable}) {
+            if (create == null) {
+                continue;
+            }
+            ctx.visit(create).formatSeparator().sql(separator);
+            separator = "\n";
         }
-        ctx.visit(createTable);
     }
 
     private void processAnnotations(Class<?> clazz) {

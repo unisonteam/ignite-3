@@ -29,6 +29,7 @@ import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.SortOrder;
 import org.apache.ignite.catalog.TableDefinition;
+import org.apache.ignite.catalog.ZoneDefinition;
 import org.apache.ignite.catalog.ZoneEngine;
 import org.apache.ignite.catalog.annotations.Col;
 import org.apache.ignite.catalog.annotations.ColocateBy;
@@ -42,17 +43,17 @@ import org.apache.ignite.table.mapper.PojoMapper;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("LongLine")
-class CreateTableFromAnnotationsTest {
+class CreateFromAnnotationsTest {
 
     private static final Options defaultOptions = Options.defaultOptions().prettyPrint(false).quoteIdentifiers(false);
     private static final Options quoteIdentifiers = Options.defaultOptions().prettyPrint(false).quoteIdentifiers(true);
 
-    private static CreateTableFromAnnotationsImpl createTable() {
+    private static CreateFromAnnotationsImpl createTable() {
         return createTable(defaultOptions);
     }
 
-    private static CreateTableFromAnnotationsImpl createTable(Options options) {
-        return new CreateTableFromAnnotationsImpl(null, options).ifNotExists();
+    private static CreateFromAnnotationsImpl createTable(Options options) {
+        return new CreateFromAnnotationsImpl(null, options).ifNotExists();
     }
 
     @Test
@@ -73,17 +74,26 @@ class CreateTableFromAnnotationsTest {
     }
 
     @Test
-    void testTableDefinitionCompatibility() {
-        var definition = TableDefinition.tableBuilder("pojo_value_test")
+    void testDefinitionCompatibility() {
+        var zone = ZoneDefinition.builder("zone_test")
+                .ifNotExists()
+                .engine(ZoneEngine.AIMEM)
+                .partitions(1)
+                .replicas(3)
+                .build();
+        var sqlZone = new CreateFromDefinitionImpl(null, defaultOptions).from(zone).getSql();
+
+        var table = TableDefinition.builder("pojo_value_test")
                 .ifNotExists()
                 .keyValueView(PojoKey.class, PojoValue.class)
                 .colocateBy("id", "id_str")
                 .zone("zone_test")
                 .index("ix_pojo", IndexType.DEFAULT, column("f_name"), column("l_name").desc())
                 .build();
-        var sqlFromDefinition = new CreateTableFromBuilderImpl(null, defaultOptions).from(definition).getSql();
-        var sql = createTable().keyValueView(PojoKey.class, PojoValue.class).getSql();
-        assertThat(sql, containsString(sqlFromDefinition)); // table definition doesn't create zone
+        var sqlTable = new CreateFromDefinitionImpl(null, defaultOptions).from(table).getSql();
+
+        var sqlAnnotations = createTable().keyValueView(PojoKey.class, PojoValue.class).getSql();
+        assertThat(sqlAnnotations, containsString(sqlZone + sqlTable));
     }
 
     @Test

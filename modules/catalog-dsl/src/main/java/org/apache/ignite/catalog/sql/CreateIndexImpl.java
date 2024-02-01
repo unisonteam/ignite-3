@@ -39,7 +39,7 @@ class CreateIndexImpl extends AbstractCatalogQuery {
     /**
      * Constructor for internal usage.
      *
-     * @see CreateTableFromAnnotationsImpl
+     * @see CreateFromAnnotationsImpl
      */
     CreateIndexImpl(IgniteSql sql, Options options) {
         super(sql, options);

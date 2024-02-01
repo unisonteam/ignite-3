@@ -18,6 +18,7 @@
 package org.apache.ignite.catalog.sql;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -29,6 +30,14 @@ abstract class QueryPart {
      * @see QueryContext#visit(QueryPart)
      */
     protected abstract void accept(QueryContext ctx); // to make sure ctx created first, and pass it from outside
+
+    static boolean isEmpty(Collection<?> c) {
+        return c == null || c.isEmpty();
+    }
+
+    static boolean isGreaterThanZero(Integer n) {
+        return n != null && n > 0;
+    }
 
     protected static <T, R> List<R> map(T[] in, Function<T, R> mapper) {
         List<R> result = new ArrayList<>(in.length);

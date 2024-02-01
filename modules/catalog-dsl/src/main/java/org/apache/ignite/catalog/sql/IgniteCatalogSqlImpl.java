@@ -36,22 +36,22 @@ public class IgniteCatalogSqlImpl implements IgniteCatalog {
 
     @Override
     public Query create(Class<?> key, Class<?> value) {
-        return new CreateTableFromAnnotationsImpl(sql, options).ifNotExists().keyValueView(key, value);
+        return new CreateFromAnnotationsImpl(sql, options).ifNotExists().keyValueView(key, value);
     }
 
     @Override
     public Query create(Class<?> recCls) {
-        return new CreateTableFromAnnotationsImpl(sql, options).ifNotExists().recordView(recCls);
+        return new CreateFromAnnotationsImpl(sql, options).ifNotExists().recordView(recCls);
     }
 
     @Override
     public Query create(TableDefinition definition) {
-        return new CreateTableFromBuilderImpl(sql, options).from(definition);
+        return new CreateFromDefinitionImpl(sql, options).from(definition);
     }
 
     @Override
     public Query create(ZoneDefinition definition) {
-        throw new RuntimeException("NOT YET IMPLEMENTED");
+        return new CreateFromDefinitionImpl(sql, options).from(definition);
     }
 
     @Override

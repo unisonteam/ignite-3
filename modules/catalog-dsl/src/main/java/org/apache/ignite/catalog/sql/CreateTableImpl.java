@@ -43,7 +43,7 @@ class CreateTableImpl extends AbstractCatalogQuery {
     /**
      * Constructor for internal usage.
      *
-     * @see CreateTableFromAnnotationsImpl
+     * @see CreateFromAnnotationsImpl
      */
     CreateTableImpl(IgniteSql sql, Options options) {
         super(sql, options);
@@ -141,7 +141,6 @@ class CreateTableImpl extends AbstractCatalogQuery {
 
         if (!constraints.isEmpty()) {
             ctx.sql(", ").formatSeparator();
-            // todo merge primary keys
             ctx.visit(wrap(constraints).separator(", ").formatSeparator());
         }
 

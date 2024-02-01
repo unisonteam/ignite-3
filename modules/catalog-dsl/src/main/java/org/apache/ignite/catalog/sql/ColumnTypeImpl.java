@@ -64,10 +64,6 @@ class ColumnTypeImpl<T> extends QueryPart {
         }
     }
 
-    private static boolean isGreaterThanZero(Integer n) {
-        return n != null && n > 0;
-    }
-
     private static boolean isNeedsQuotes(ColumnType<?> type) {
         var typeClass = type.getType();
         return String.class.equals(typeClass)

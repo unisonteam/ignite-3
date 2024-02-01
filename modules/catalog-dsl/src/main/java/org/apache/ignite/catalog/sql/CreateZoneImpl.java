@@ -36,7 +36,7 @@ class CreateZoneImpl extends AbstractCatalogQuery {
     /**
      * Constructor for internal usage.
      *
-     * @see CreateTableFromAnnotationsImpl
+     * @see CreateFromAnnotationsImpl
      */
     CreateZoneImpl(IgniteSql sql, Options options) {
         super(sql, options);
