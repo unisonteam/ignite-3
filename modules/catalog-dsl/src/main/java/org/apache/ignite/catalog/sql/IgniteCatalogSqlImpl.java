@@ -21,6 +21,7 @@ import org.apache.ignite.catalog.IgniteCatalog;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.Query;
 import org.apache.ignite.catalog.TableDefinition;
+import org.apache.ignite.catalog.ZoneDefinition;
 import org.apache.ignite.sql.IgniteSql;
 
 public class IgniteCatalogSqlImpl implements IgniteCatalog {
@@ -34,32 +35,37 @@ public class IgniteCatalogSqlImpl implements IgniteCatalog {
     }
 
     @Override
-    public Query createIfNotExists(Class<?> key, Class<?> value) {
+    public Query create(Class<?> key, Class<?> value) {
         return new CreateTableFromAnnotationsImpl(sql, options).ifNotExists().keyValueView(key, value);
     }
 
     @Override
-    public Query createIfNotExists(Class<?> recCls) {
+    public Query create(Class<?> recCls) {
         return new CreateTableFromAnnotationsImpl(sql, options).ifNotExists().recordView(recCls);
     }
 
     @Override
-    public Query dropTableIfExists(String name) {
+    public Query create(TableDefinition definition) {
+        return new CreateTableFromBuilderImpl(sql, options).from(definition);
+    }
+
+    @Override
+    public Query create(ZoneDefinition definition) {
+        throw new RuntimeException("NOT YET IMPLEMENTED");
+    }
+
+    @Override
+    public Query dropTable(String name) {
         return new DropTableImpl(sql, options).name(name).ifExists();
     }
 
     @Override
-    public Query dropIndexIfExists(String name) {
+    public Query dropIndex(String name) {
         throw new RuntimeException("NOT YET IMPLEMENTED");
     }
 
     @Override
-    public Query dropZoneIfExists(String name) {
+    public Query dropZone(String name) {
         throw new RuntimeException("NOT YET IMPLEMENTED");
-    }
-
-    @Override
-    public Query createTable(TableDefinition definition) {
-        return new CreateTableFromBuilderImpl(sql, options).from(definition); // builder alternative for @Table
     }
 }

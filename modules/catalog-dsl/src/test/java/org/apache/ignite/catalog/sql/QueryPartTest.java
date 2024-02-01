@@ -36,7 +36,7 @@ import static org.apache.ignite.catalog.ColumnType.TINYINT;
 import static org.apache.ignite.catalog.ColumnType.UUID;
 import static org.apache.ignite.catalog.ColumnType.VARBINARY;
 import static org.apache.ignite.catalog.ColumnType.VARCHAR;
-import static org.apache.ignite.catalog.IndexColumn.ix;
+import static org.apache.ignite.catalog.ColumnSorted.column;
 import static org.apache.ignite.catalog.sql.ColumnTypeImpl.wrap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -209,17 +209,17 @@ class QueryPartTest {
 
     @Test
     void testConstraintsPart() {
-        var sql = sql(new Constraint().primaryKey(ix("a")));
+        var sql = sql(new Constraint().primaryKey(column("a")));
         assertThat(sql, is("PRIMARY KEY (a)"));
 
-        sql = sql(new Constraint().primaryKey(ix("a"), ix("b")));
+        sql = sql(new Constraint().primaryKey(column("a"), column("b")));
         assertThat(sql, is("PRIMARY KEY (a, b)"));
 
         // quote identifiers
-        sql = sql(quoteIdentifiers, new Constraint().primaryKey(ix("a")));
+        sql = sql(quoteIdentifiers, new Constraint().primaryKey(column("a")));
         assertThat(sql, is("PRIMARY KEY (\"a\")"));
 
-        sql = sql(quoteIdentifiers, new Constraint().primaryKey(ix("a"), ix("b")));
+        sql = sql(quoteIdentifiers, new Constraint().primaryKey(column("a"), column("b")));
         assertThat(sql, is("PRIMARY KEY (\"a\", \"b\")"));
     }
 
@@ -266,28 +266,28 @@ class QueryPartTest {
 
     @Test
     void testIndexColumnPart() {
-        var col = ix("col1");
+        var col = column("col1");
         var sql = sql(IndexColumnImpl.wrap(col));
         assertThat(sql, is("col1"));
 
-        col = ix("col1").sort(SortOrder.ASC_NULLS_FIRST);
+        col = column("col1").sort(SortOrder.ASC_NULLS_FIRST);
         sql = sql(IndexColumnImpl.wrap(col));
         assertThat(sql, is("col1 asc nulls first"));
 
-        col = ix("col1").sort(SortOrder.DESC_NULLS_LAST);
+        col = column("col1").sort(SortOrder.DESC_NULLS_LAST);
         sql = sql(IndexColumnImpl.wrap(col));
         assertThat(sql, is("col1 desc nulls last"));
 
         // quote identifiers
-        col = ix("col1");
+        col = column("col1");
         sql = sql(quoteIdentifiers, IndexColumnImpl.wrap(col));
         assertThat(sql, is("\"col1\""));
 
-        col = ix("col1").sort(SortOrder.ASC_NULLS_FIRST);
+        col = column("col1").sort(SortOrder.ASC_NULLS_FIRST);
         sql = sql(quoteIdentifiers, IndexColumnImpl.wrap(col));
         assertThat(sql, is("\"col1\" asc nulls first"));
 
-        col = ix("col1").sort(SortOrder.DESC_NULLS_LAST);
+        col = column("col1").sort(SortOrder.DESC_NULLS_LAST);
         sql = sql(quoteIdentifiers, IndexColumnImpl.wrap(col));
         assertThat(sql, is("\"col1\" desc nulls last"));
     }
@@ -295,18 +295,18 @@ class QueryPartTest {
     @Test
     void testIndexColumnPartParse() {
         var cols = IndexColumnImpl.parseIndexColumnList("col1");
-        assertThat(cols, containsInAnyOrder(ix("col1")));
+        assertThat(cols, containsInAnyOrder(column("col1")));
 
         cols = IndexColumnImpl.parseIndexColumnList("col1, COL_UPPER_CASE ASC, col3 nulls first, col4 desc nulls last");
         assertThat(cols, containsInAnyOrder(
-                ix("col1"),
-                ix("COL_UPPER_CASE").sort(SortOrder.ASC),
-                ix("col3").sort(SortOrder.NULLS_FIRST),
-                ix("col4").sort(SortOrder.DESC_NULLS_LAST)
+                column("col1"),
+                column("COL_UPPER_CASE").sort(SortOrder.ASC),
+                column("col3").sort(SortOrder.NULLS_FIRST),
+                column("col4").sort(SortOrder.DESC_NULLS_LAST)
         ));
 
         cols = IndexColumnImpl.parseIndexColumnList("col1 unexpectedKeyword");
-        assertThat(cols, containsInAnyOrder(ix("col1")));
+        assertThat(cols, containsInAnyOrder(column("col1")));
     }
 
     private static String sql(QueryPart part) {

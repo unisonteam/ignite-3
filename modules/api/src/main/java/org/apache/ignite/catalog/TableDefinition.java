@@ -17,6 +17,7 @@
 
 package org.apache.ignite.catalog;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,24 +27,26 @@ public class TableDefinition {
     private final String tableName;
     private final String schemaName;
     private final boolean ifNotExists;
-    private final List<Column> columns;
+    private final List<ColumnDefinition> columns;
     private final IndexType pkType;
-    private final List<IndexColumn> pkColumns;
+    private final List<ColumnSorted> pkColumns;
 
     private final List<String> colocationColumns;
     private final String zoneName;
     private final List<Class<?>> annotatedClasses;
+    private final List<IndexDefinition> indexes;
 
     private TableDefinition(
             String tableName,
             String schemaName,
             boolean ifNotExists,
-            List<Column> columns,
+            List<ColumnDefinition> columns,
             IndexType pkType,
-            List<IndexColumn> pkColumns,
+            List<ColumnSorted> pkColumns,
             List<String> colocationColumns,
             String zoneName,
-            List<Class<?>> annotatedClasses) {
+            List<Class<?>> annotatedClasses,
+            List<IndexDefinition> indexes) {
         this.tableName = tableName;
         this.schemaName = schemaName;
         this.ifNotExists = ifNotExists;
@@ -53,10 +56,11 @@ public class TableDefinition {
         this.colocationColumns = colocationColumns;
         this.zoneName = zoneName;
         this.annotatedClasses = annotatedClasses;
+        this.indexes = indexes;
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder tableBuilder(String name) {
+        return new Builder().tableName(name);
     }
 
     public String getTableName() {
@@ -71,7 +75,7 @@ public class TableDefinition {
         return ifNotExists;
     }
 
-    public List<Column> getColumns() {
+    public List<ColumnDefinition> getColumns() {
         return columns;
     }
 
@@ -79,7 +83,7 @@ public class TableDefinition {
         return pkType;
     }
 
-    public List<IndexColumn> getPrimaryKeyColumns() {
+    public List<ColumnSorted> getPrimaryKeyColumns() {
         return pkColumns;
     }
 
@@ -95,6 +99,10 @@ public class TableDefinition {
         return annotatedClasses;
     }
 
+    public List<IndexDefinition> getIndexes() {
+        return indexes;
+    }
+
     public Builder toBuilder() {
         return new Builder(this);
     }
@@ -103,15 +111,16 @@ public class TableDefinition {
         private String tableName;
         private String schemaName;
         private boolean ifNotExists;
-        private List<Column> columns;
+        private List<ColumnDefinition> columns;
 
         private IndexType pkType;
-        private List<IndexColumn> pkColumns;
+        private List<ColumnSorted> pkColumns;
         private List<String> colocationColumns;
 
         private String zoneName;
 
         private List<Class<?>> annotatedClasses;
+        private List<IndexDefinition> indexes = new ArrayList<>();
 
         private Builder() {
         }
@@ -128,7 +137,7 @@ public class TableDefinition {
             annotatedClasses = definition.annotatedClasses;
         }
 
-        public Builder tableName(String name) {
+        Builder tableName(String name) {
             this.tableName = name;
             return this;
         }
@@ -143,11 +152,11 @@ public class TableDefinition {
             return this;
         }
 
-        public Builder columns(Column... columns) {
+        public Builder columns(ColumnDefinition... columns) {
             return columns(Arrays.asList(columns));
         }
 
-        public Builder columns(List<Column> columns) {
+        public Builder columns(List<ColumnDefinition> columns) {
             this.columns = columns;
             return this;
         }
@@ -173,17 +182,31 @@ public class TableDefinition {
         }
 
         public Builder primaryKey(String... columns) {
-            var pkColumns = Arrays.stream(columns).map(IndexColumn::ix).collect(Collectors.toList());
+            var pkColumns = Arrays.stream(columns).map(ColumnSorted::column).collect(Collectors.toList());
             return primaryKey(IndexType.DEFAULT, pkColumns);
         }
 
-        public Builder primaryKey(IndexType type, IndexColumn... columns) {
+        public Builder primaryKey(IndexType type, ColumnSorted... columns) {
             return primaryKey(type, Arrays.asList(columns));
         }
 
-        public Builder primaryKey(IndexType type, List<IndexColumn> columns) {
+        public Builder primaryKey(IndexType type, List<ColumnSorted> columns) {
             pkType = type;
             pkColumns = columns;
+            return this;
+        }
+
+        public Builder index(String... columns) {
+            var columnsArr = Arrays.stream(columns).map(ColumnSorted::column).collect(Collectors.toList());
+            return index(null, IndexType.DEFAULT, columnsArr);
+        }
+
+        public Builder index(String indexName, IndexType type, ColumnSorted... columns) {
+            return index(indexName, type, Arrays.asList(columns));
+        }
+
+        public Builder index(String name, IndexType type, List<ColumnSorted> columns) {
+            indexes.add(new IndexDefinition(name, type, columns));
             return this;
         }
 
@@ -197,7 +220,8 @@ public class TableDefinition {
                     pkColumns,
                     colocationColumns,
                     zoneName,
-                    annotatedClasses
+                    annotatedClasses,
+                    indexes
             );
         }
     }

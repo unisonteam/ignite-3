@@ -17,22 +17,29 @@
 
 package org.apache.ignite.catalog;
 
-public interface IgniteCatalog {
+import java.util.List;
 
-    Query create(Class<?> recCls);
+public class IndexDefinition {
 
-    Query create(Class<?> key, Class<?> value);
+    private final String indexName;
+    private final IndexType indexType;
+    private final List<ColumnSorted> columns;
 
-    Query create(TableDefinition definition);
+    IndexDefinition(String indexName, IndexType indexType, List<ColumnSorted> columns) {
+        this.indexName = indexName;
+        this.indexType = indexType;
+        this.columns = columns;
+    }
 
-    Query create(ZoneDefinition definition);
+    public String getIndexName() {
+        return indexName;
+    }
 
-    // drop for definitions?
+    public IndexType getIndexType() {
+        return indexType;
+    }
 
-    Query dropTable(String name);
-
-    Query dropIndex(String name);
-
-    Query dropZone(String name);
-
+    public List<ColumnSorted> getColumns() {
+        return columns;
+    }
 }

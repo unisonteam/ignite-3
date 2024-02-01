@@ -17,6 +17,7 @@
 
 package org.apache.ignite.catalog.sql;
 
+import static org.apache.ignite.catalog.ColumnSorted.column;
 import static org.apache.ignite.catalog.ColumnType.DECIMAL;
 import static org.apache.ignite.catalog.ColumnType.INTEGER;
 import static org.apache.ignite.catalog.ColumnType.UUID;
@@ -25,7 +26,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 
-import org.apache.ignite.catalog.IndexColumn;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.SortOrder;
@@ -157,8 +157,8 @@ class CreateTableTest {
     @Test
     void testIndex() {
         var sql = createTable().name("table1")
-                .index("ix_test1", "col1, COL2_UPPER ASC, col3 desc nulls last").getSql();
-        assertThat(sql, endsWith("CREATE INDEX IF NOT EXISTS ix_test1 ON table1 (col1, COL2_UPPER asc, col3 desc nulls last);"));
+                .index("ix_test1", "col1, COL2_UPPER desc nulls last").getSql();
+        assertThat(sql, endsWith("CREATE INDEX IF NOT EXISTS ix_test1 ON table1 (col1, COL2_UPPER desc nulls last);"));
 
         sql = createTable().name("table1")
                 .index("ix_test1", IndexType.HASH, "col1").getSql();
@@ -166,8 +166,8 @@ class CreateTableTest {
 
         // quote identifiers
         sql = createTable(quoteIdentifiers).name("table1")
-                .index("ix_test1", "col1, COL2_UPPER ASC, col3 desc nulls last").getSql();
-        assertThat(sql, endsWith("CREATE INDEX IF NOT EXISTS \"ix_test1\" ON \"table1\" (\"col1\", \"COL2_UPPER\" asc, \"col3\" desc nulls last);"));
+                .index("ix_test1", "col1, COL2_UPPER desc nulls last").getSql();
+        assertThat(sql, endsWith("CREATE INDEX IF NOT EXISTS \"ix_test1\" ON \"table1\" (\"col1\", \"COL2_UPPER\" desc nulls last);"));
 
         sql = createTable(quoteIdentifiers).name("table1")
                 .index("ix_test1", IndexType.HASH, "col1").getSql();
@@ -193,7 +193,7 @@ class CreateTableTest {
                 .colocateBy("col1", "col2", "col3")
                 .zone("zone1")
                 .index("ix_test1", "col1, col2 asc, col3 desc nulls first")
-                .index("ix_test2", IndexType.HASH, IndexColumn.ix("col1").sort(SortOrder.ASC_NULLS_FIRST), IndexColumn.ix("col2").sort(SortOrder.DESC_NULLS_LAST))
+                .index("ix_test2", IndexType.HASH, column("col1").asc(), column("col2").sort(SortOrder.DESC_NULLS_LAST))
                 .getSql();
         System.out.println(createTable);
     }

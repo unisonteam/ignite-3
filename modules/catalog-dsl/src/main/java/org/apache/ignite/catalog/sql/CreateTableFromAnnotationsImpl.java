@@ -17,16 +17,15 @@
 
 package org.apache.ignite.catalog.sql;
 
-import static org.apache.ignite.catalog.IndexColumn.ix;
+import static org.apache.ignite.catalog.ColumnSorted.column;
 import static org.apache.ignite.table.mapper.Mapper.nativelySupported;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.ignite.catalog.ColumnSorted;
 import org.apache.ignite.catalog.ColumnType;
 import org.apache.ignite.catalog.DefaultZone;
-import org.apache.ignite.catalog.IndexColumn;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.annotations.Col;
@@ -116,9 +115,8 @@ class CreateTableFromAnnotationsImpl extends AbstractCatalogQuery {
     }
 
     private void processTable(Table table) {
-        var indexes = table.indexes();
-        for (Index ix : indexes) {
-            var indexColumns = map(ix.columns(), col -> ix(col.name(), col.sort()));
+        for (var ix : table.indexes()) {
+            var indexColumns = map(ix.columns(), col -> column(col.name(), col.sort()));
             var name = toIndexName(ix);
             createTable.index(name, ix.type(), indexColumns);
         }
@@ -131,7 +129,7 @@ class CreateTableFromAnnotationsImpl extends AbstractCatalogQuery {
         pkType = table.primaryKeyType();
     }
 
-    private String toIndexName(Index ix) {
+    private static String toIndexName(Index ix) {
         if (!ix.name().isEmpty()) {
             return ix.name();
         }
@@ -144,11 +142,11 @@ class CreateTableFromAnnotationsImpl extends AbstractCatalogQuery {
     }
 
     static void processColumns(CreateTableImpl createTable, IndexType pkType, Class<?> clazz) {
-        var idColumns = new ArrayList<IndexColumn>();
+        var idColumns = new ArrayList<ColumnSorted>();
 
         if (nativelySupported(clazz)) {
             // e.g. primitive boxed key in keyValueView
-            idColumns.add(ix("id"));
+            idColumns.add(column("id"));
             createTable.column("id", ColumnType.of(clazz));
         } else {
             processColumnsInPojo(createTable, clazz, idColumns);
@@ -159,8 +157,8 @@ class CreateTableFromAnnotationsImpl extends AbstractCatalogQuery {
         }
     }
 
-    private static void processColumnsInPojo(CreateTableImpl createTable, Class<?> clazz, List<IndexColumn> idColumns) {
-        for (Field f : clazz.getDeclaredFields()) {
+    private static void processColumnsInPojo(CreateTableImpl createTable, Class<?> clazz, List<ColumnSorted> idColumns) {
+        for (var f : clazz.getDeclaredFields()) {
             if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) {
                 continue;
             }
@@ -178,18 +176,14 @@ class CreateTableFromAnnotationsImpl extends AbstractCatalogQuery {
                 if (!column.columnDefinition().isEmpty()) {
                     createTable.column(columnName, column.columnDefinition());
                 } else {
-                    ColumnType<?> type = ColumnType.of(f.getType());
-                    type = type.length(column.length() > 0 ? column.length() : null);
-                    type = type.precision(column.precision() > 0 ? column.precision() : null);
-                    type = type.scale(column.scale() > 0 ? column.scale() : null);
-                    type = type.nullable(column.nullable());
+                    var type = ColumnType.of(f.getType(), column.length(), column.precision(), column.scale(), column.nullable());
                     createTable.column(columnName, type);
                 }
             }
 
             var id = f.getAnnotation(Id.class);
             if (id != null) {
-                idColumns.add(ix(columnName).sort(id.sort()));
+                idColumns.add(column(columnName).sort(id.sort()));
             }
         }
     }

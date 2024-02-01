@@ -19,26 +19,34 @@ package org.apache.ignite.catalog;
 
 import java.util.Objects;
 
-public class IndexColumn {
+public class ColumnSorted {
 
     private final String columnName;
 
     private SortOrder sortOrder = SortOrder.DEFAULT;
 
-    private IndexColumn(String columnName) {
+    private ColumnSorted(String columnName) {
         Objects.requireNonNull(columnName, "index column name is null");
         this.columnName = columnName;
     }
 
-    public static IndexColumn ix(String name) {
-        return new IndexColumn(name);
+    public static ColumnSorted column(String name) {
+        return new ColumnSorted(name);
     }
 
-    public static IndexColumn ix(String name, SortOrder sortOrder) {
-        return new IndexColumn(name).sort(sortOrder);
+    public static ColumnSorted column(String name, SortOrder sortOrder) {
+        return new ColumnSorted(name).sort(sortOrder);
     }
 
-    public IndexColumn sort(SortOrder sortOrder) {
+    public ColumnSorted asc() {
+        return sort(SortOrder.ASC);
+    }
+
+    public ColumnSorted desc() {
+        return sort(SortOrder.DESC);
+    }
+
+    public ColumnSorted sort(SortOrder sortOrder) {
         this.sortOrder = sortOrder;
         return this;
     }
@@ -59,7 +67,7 @@ public class IndexColumn {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        IndexColumn that = (IndexColumn) o;
+        ColumnSorted that = (ColumnSorted) o;
         return Objects.equals(columnName, that.columnName) && sortOrder == that.sortOrder;
     }
 

@@ -17,6 +17,7 @@
 
 package org.apache.ignite.catalog;
 
+import static org.apache.ignite.catalog.TableDefinition.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,57 +32,83 @@ import org.apache.ignite.catalog.annotations.Index;
 import org.apache.ignite.catalog.annotations.Table;
 import org.apache.ignite.catalog.annotations.Zone;
 import org.apache.ignite.internal.ClusterPerTestIntegrationTest;
-import org.apache.ignite.table.KeyValueView;
-import org.apache.ignite.table.RecordView;
 import org.junit.jupiter.api.Test;
 
 class ItCatalogDslTest extends ClusterPerTestIntegrationTest {
 
     @Test
-    void testMapperKvView() {
+    void testCreateAndKvView() {
+        var tableName = "pojo_value_test";
         var key = 1;
         var expectedKey = new PojoKey(key, String.valueOf(key));
         var expectedValue = new PojoValue("fname", "lname", UUID.randomUUID().toString());
 
         // key boxed primitive
-        node(0).catalog().createIfNotExists(Integer.class, PojoValue.class).execute();
-        KeyValueView<Integer, PojoValue> kv = node(0).tables().table("pojo_value_test")
+        node(0).catalog().create(Integer.class, PojoValue.class).execute();
+        var kv1 = node(0).tables().table(tableName)
                 .keyValueView(Integer.class, PojoValue.class);
-        kv.put(null, key, expectedValue);
-        var actual = kv.get(null, key);
+        kv1.put(null, key, expectedValue);
+        var actual = kv1.get(null, key);
         assertThat(actual, is(expectedValue));
-
-        node(0).catalog().dropTableIfExists("pojo_value_test").execute();
+        node(0).catalog().dropTable(tableName).execute();
 
         // key pojo
-        node(0).catalog().createIfNotExists(PojoKey.class, PojoValue.class).execute();
-        KeyValueView<PojoKey, PojoValue> kv2 = node(0).tables().table("pojo_value_test")
+        node(0).catalog().create(PojoKey.class, PojoValue.class).execute();
+        var kv2 = node(0).tables().table(tableName)
                 .keyValueView(PojoKey.class, PojoValue.class);
         kv2.put(null, expectedKey, expectedValue);
-        var actualValue = kv2.get(null, expectedKey);
-        assertThat(actualValue, is(expectedValue));
+        actual = kv2.get(null, expectedKey);
+        assertThat(actual, is(expectedValue));
+        node(0).catalog().dropTable(tableName).execute();
 
-        node(0).catalog().dropTableIfExists("pojo_value_test").execute();
+        // key boxed primitive - builder
+        var definition = tableBuilder(tableName).ifNotExists()
+                .keyValueView(Integer.class, PojoValue.class).build();
+        node(0).catalog().create(definition).execute();
+        var kv3 = node(0).tables().table(tableName)
+                .keyValueView(Integer.class, PojoValue.class);
+        kv3.put(null, key, expectedValue);
+        actual = kv3.get(null, key);
+        assertThat(actual, is(expectedValue));
+        node(0).catalog().dropTable(tableName).execute();
+
+        // key pojo - builder
+        definition = tableBuilder(tableName).ifNotExists()
+                .keyValueView(PojoKey.class, PojoValue.class).build();
+        node(0).catalog().create(definition).execute();
+        var kv4 = node(0).tables().table(tableName)
+                .keyValueView(PojoKey.class, PojoValue.class);
+        kv4.put(null, expectedKey, expectedValue);
+        actual = kv4.get(null, expectedKey);
+        assertThat(actual, is(expectedValue));
+        node(0).catalog().dropTable(tableName).execute();
     }
 
     @Test
-    void testMapperRecordView() {
+    void testCreateAndRecordView() {
+        var tableName = "pojo_test";
         var expected = new Pojo(1, "1", "fname", "lname", UUID.randomUUID().toString());
-        node(0).catalog().createIfNotExists(Pojo.class).execute();
+        node(0).catalog().create(Pojo.class).execute();
 
-        RecordView<Pojo> rec = node(0).tables().table("pojo_test").recordView(Pojo.class);
-        var ins = rec.insert(null, expected);
-        assertTrue(ins);
-
+        var rec = node(0).tables().table(tableName).recordView(Pojo.class);
+        assertTrue(rec.insert(null, expected));
         var actual = rec.get(null, expected);
-        assertThat(actual, is(expected))
-        ;
-        node(0).catalog().dropTableIfExists("pojo_test").execute();
+        assertThat(actual, is(expected));
+        node(0).catalog().dropTable(tableName).execute();
+
+        // builder
+        var definition = tableBuilder(tableName).ifNotExists().recordView(Pojo.class).build();
+        node(0).catalog().create(definition).execute();
+        rec = node(0).tables().table(tableName).recordView(Pojo.class);
+        assertTrue(rec.insert(null, expected));
+        actual = rec.get(null, expected);
+        assertThat(actual, is(expected));
+        node(0).catalog().dropTable(tableName).execute();
     }
 
     @Test
-    void testSqlInsertSelect() {
-        node(0).catalog().createIfNotExists(Pojo.class).execute();
+    void testCreateAndSqlInsert() {
+        node(0).catalog().create(Pojo.class).execute();
 
         try (var session = node(0).sql().createSession()) {
             session.execute(null, "insert into pojo_test (id, id_str, f_name, l_name, str) values (1, '1', 'f', 'l', 's')");
@@ -98,7 +125,7 @@ class ItCatalogDslTest extends ClusterPerTestIntegrationTest {
             }
         }
 
-        node(0).catalog().dropTableIfExists("pojo_test").execute();
+        node(0).catalog().dropTable("pojo_test").execute();
     }
 
     @Zone(

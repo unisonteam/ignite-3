@@ -23,7 +23,7 @@ import static org.apache.ignite.catalog.sql.QueryPartCollection.wrap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.apache.ignite.catalog.IndexColumn;
+import org.apache.ignite.catalog.ColumnSorted;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.sql.IgniteSql;
@@ -56,7 +56,7 @@ class CreateIndexImpl extends AbstractCatalogQuery {
         return this;
     }
 
-    public CreateIndexImpl on(Name tableName, List<IndexColumn> columns) {
+    public CreateIndexImpl on(Name tableName, List<ColumnSorted> columns) {
         this.tableName = tableName;
         for (var column : columns) {
             this.columns.add(wrap(column));

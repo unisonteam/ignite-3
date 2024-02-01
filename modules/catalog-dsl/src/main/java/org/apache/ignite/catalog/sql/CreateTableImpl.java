@@ -24,8 +24,8 @@ import static org.apache.ignite.catalog.sql.QueryPartCollection.wrap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.ignite.catalog.ColumnSorted;
 import org.apache.ignite.catalog.ColumnType;
-import org.apache.ignite.catalog.IndexColumn;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.sql.IgniteSql;
@@ -82,7 +82,7 @@ class CreateTableImpl extends AbstractCatalogQuery {
         return primaryKey(type, parseIndexColumnList(columnList));
     }
 
-    CreateTableImpl primaryKey(IndexType type, List<IndexColumn> columns) {
+    CreateTableImpl primaryKey(IndexType type, List<ColumnSorted> columns) {
         Objects.requireNonNull(columns, "pk columns is null");
         constraints.add(new Constraint().primaryKey(type, columns));
         return this;
@@ -116,11 +116,11 @@ class CreateTableImpl extends AbstractCatalogQuery {
         return index(name, type, parseIndexColumnList(columnList));
     }
 
-    CreateTableImpl index(String name, IndexType type, IndexColumn... columns) {
+    CreateTableImpl index(String name, IndexType type, ColumnSorted... columns) {
         return index(name, type, asList(columns));
     }
 
-    CreateTableImpl index(String name, IndexType type, List<IndexColumn> columns) {
+    CreateTableImpl index(String name, IndexType type, List<ColumnSorted> columns) {
         Objects.requireNonNull("index name is null");
         Objects.requireNonNull(columns);
         indexes.add(new CreateIndexImpl(sql, options()).ifNotExists().name(name).using(type).on(tableName, columns));

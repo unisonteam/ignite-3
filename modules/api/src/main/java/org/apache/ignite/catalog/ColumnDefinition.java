@@ -17,22 +17,35 @@
 
 package org.apache.ignite.catalog;
 
-public interface IgniteCatalog {
+public class ColumnDefinition {
 
-    Query create(Class<?> recCls);
+    private final String name;
+    private final ColumnType<?> type;
+    private final String definition;
 
-    Query create(Class<?> key, Class<?> value);
+    private ColumnDefinition(String name, ColumnType<?> type, String definition) {
+        this.name = name;
+        this.type = type;
+        this.definition = definition;
+    }
 
-    Query create(TableDefinition definition);
+    public static ColumnDefinition column(String name, ColumnType<?> type) {
+        return new ColumnDefinition(name, type, null);
+    }
 
-    Query create(ZoneDefinition definition);
+    public static ColumnDefinition column(String name, String definition) {
+        return new ColumnDefinition(name, null, definition);
+    }
 
-    // drop for definitions?
+    public String getName() {
+        return name;
+    }
 
-    Query dropTable(String name);
+    public ColumnType<?> getType() {
+        return type;
+    }
 
-    Query dropIndex(String name);
-
-    Query dropZone(String name);
-
+    public String getDefinition() {
+        return definition;
+    }
 }

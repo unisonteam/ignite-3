@@ -19,33 +19,33 @@ package org.apache.ignite.catalog.sql;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.ignite.catalog.IndexColumn;
+import org.apache.ignite.catalog.ColumnSorted;
 import org.apache.ignite.catalog.SortOrder;
 
 class IndexColumnImpl extends QueryPart {
 
-    private final IndexColumn wrapped;
+    private final ColumnSorted wrapped;
 
-    public static IndexColumnImpl wrap(IndexColumn column) {
+    public static IndexColumnImpl wrap(ColumnSorted column) {
         return new IndexColumnImpl(column);
     }
 
-    private IndexColumnImpl(IndexColumn wrapped) {
+    private IndexColumnImpl(ColumnSorted wrapped) {
         this.wrapped = wrapped;
     }
 
-    public static List<IndexColumn> parseIndexColumnList(String columnList) {
-        var result = new ArrayList<IndexColumn>();
+    public static List<ColumnSorted> parseIndexColumnList(String columnList) {
+        var result = new ArrayList<ColumnSorted>();
         for (var s : columnList.split("\\s*,\\s*")) {
             result.add(parseCol(s));
         }
         return result;
     }
 
-    private static IndexColumn parseCol(String columnRaw) {
+    private static ColumnSorted parseCol(String columnRaw) {
         String columnName = columnRaw.split("\\s+", 2)[0];
         var lower = columnRaw.toLowerCase();
-        var col = IndexColumn.ix(columnName);
+        var col = ColumnSorted.column(columnName);
 
         if (containsAll(lower, "asc", "nulls", "first")) {
             col.sort(SortOrder.ASC_NULLS_FIRST);
@@ -81,7 +81,7 @@ class IndexColumnImpl extends QueryPart {
     @Override
     protected void accept(QueryContext ctx) {
         ctx.visit(new Name(wrapped.getColumnName()));
-        if (wrapped.getSortOrder() != SortOrder.DEFAULT) {
+        if (wrapped.getSortOrder() != null && wrapped.getSortOrder() != SortOrder.DEFAULT) {
             var sortOrderStr = wrapped.getSortOrder().name().replaceAll("_", " ").toLowerCase();
             ctx.sql(" ").sql(sortOrderStr);
         }

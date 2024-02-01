@@ -122,6 +122,14 @@ public class ColumnType<T> {
         this.defaultExpression = ref.defaultExpression;
     }
 
+    public static ColumnType<?> of(Class<?> type, Integer length, Integer precision, Integer scale, Boolean nullable) {
+        return of(type)
+                .length_(length)
+                .precision_(precision)
+                .scale_(scale)
+                .nullable_(nullable);
+    }
+
     public static ColumnType<?> of(Class<?> type) {
         ColumnType<?> columnType = TYPES.get(type);
         if (columnType == null) {
@@ -146,23 +154,23 @@ public class ColumnType<T> {
         return copy().defaultExpression_(expression);
     }
 
-    public ColumnType<T> length(Integer length) {
+    ColumnType<T> length(Integer length) {
         return copy().length_(length);
     }
 
-    public ColumnType<T> precision(Integer precision) {
+    ColumnType<T> precision(Integer precision) {
         return copy().precision_(precision);
     }
 
-    public ColumnType<T> precision(Integer precision, Integer scale) {
+    ColumnType<T> precision(Integer precision, Integer scale) {
         return copy().precision_(precision, scale);
     }
 
-    public ColumnType<T> scale(Integer scale) {
+    ColumnType<T> scale(Integer scale) {
         return copy().scale_(scale);
     }
 
-    public ColumnType<T> nullable(Boolean n) {
+    ColumnType<T> nullable(Boolean n) {
         return copy().nullable_(n);
     }
 

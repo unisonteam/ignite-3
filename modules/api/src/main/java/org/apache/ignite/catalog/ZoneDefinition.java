@@ -17,35 +17,6 @@
 
 package org.apache.ignite.catalog;
 
-public class Column {
-
-    private final String name;
-    private final ColumnType<?> type;
-    private final String definition;
-
-    private Column(String name, ColumnType<?> type, String definition) {
-        this.name = name;
-        this.type = type;
-        this.definition = definition;
-    }
-
-    public static Column col(String name, ColumnType<?> type) {
-        return new Column(name, type, null);
-    }
-
-    public static Column col(String name, String definition) {
-        return new Column(name, null, definition);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public ColumnType<?> getType() {
-        return type;
-    }
-
-    public String getDefinition() {
-        return definition;
-    }
+public class ZoneDefinition {
+    // todo
 }

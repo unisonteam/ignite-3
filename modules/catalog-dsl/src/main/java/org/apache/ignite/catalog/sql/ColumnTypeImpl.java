@@ -39,10 +39,10 @@ class ColumnTypeImpl<T> extends QueryPart {
     protected void accept(QueryContext ctx) {
         ctx.sql(wrapped.getTypeName());
 
-        if (wrapped.getLength() != null) {
+        if (isGreaterThanZero(wrapped.getLength())) {
             ctx.sql("(").sql(wrapped.getLength()).sql(")");
-        } else if (wrapped.getPrecision() != null) {
-            if (wrapped.getScale() != null) {
+        } else if (isGreaterThanZero(wrapped.getPrecision())) {
+            if (isGreaterThanZero(wrapped.getScale())) {
                 ctx.sql("(").sql(wrapped.getPrecision()).sql(", ").sql(wrapped.getScale()).sql(")");
             } else {
                 ctx.sql("(").sql(wrapped.getPrecision()).sql(")");
@@ -62,6 +62,10 @@ class ColumnTypeImpl<T> extends QueryPart {
         } else if (wrapped.getDefaultExpression() != null) {
             ctx.sql(" DEFAULT ").sql(wrapped.getDefaultExpression());
         }
+    }
+
+    private static boolean isGreaterThanZero(Integer n) {
+        return n != null && n > 0;
     }
 
     private static boolean isNeedsQuotes(ColumnType<?> type) {

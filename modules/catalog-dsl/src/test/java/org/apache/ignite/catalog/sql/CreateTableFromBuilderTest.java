@@ -17,21 +17,25 @@
 
 package org.apache.ignite.catalog.sql;
 
-import static org.apache.ignite.catalog.Column.col;
+import static org.apache.ignite.catalog.ColumnDefinition.column;
+import static org.apache.ignite.catalog.ColumnSorted.column;
+import static org.apache.ignite.catalog.ColumnType.INTEGER;
+import static org.apache.ignite.catalog.ColumnType.VARCHAR;
+import static org.apache.ignite.catalog.SortOrder.DESC_NULLS_LAST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
 import java.util.Objects;
+import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
+import org.apache.ignite.catalog.TableDefinition;
 import org.apache.ignite.catalog.annotations.Column;
 import org.apache.ignite.catalog.annotations.Id;
-import org.apache.ignite.catalog.ColumnType;
-import org.apache.ignite.catalog.TableDefinition;
 import org.apache.ignite.catalog.sql.CreateTableFromAnnotationsTest.Pojo;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("LongLine")
-public class CreateTableFromBuilderTest {
+class CreateTableFromBuilderTest {
 
     private static final Options quoteIdentifiers = Options.defaultOptions().prettyPrint(false).quoteIdentifiers(true);
 
@@ -45,33 +49,34 @@ public class CreateTableFromBuilderTest {
 
     @Test
     void testCreateFromBuilder() {
-        var builder = TableDefinition.builder()
-                .tableName("builder_test")
+        var builder = TableDefinition.tableBuilder("builder_test")
                 .ifNotExists()
                 .colocateBy("id", "id_str")
                 .zone("zone_test")
                 .columns(
-                        col("id", ColumnType.INTEGER),
-                        col("id_str", ColumnType.VARCHAR(20)),
-                        col("f_name", ColumnType.VARCHAR),
-                        col("l_name", ColumnType.VARCHAR),
-                        col("str", ColumnType.VARCHAR)
+                        column("id", INTEGER),
+                        column("id_str", VARCHAR),
+                        column("f_name", VARCHAR(20).notNull().defaultValue("a"))
                 )
                 .primaryKey("id", "id_str")
+                .index("id_str", "f_name")
+                .index("ix_test", IndexType.TREE, column("id_str").asc(), column("f_name").sort(DESC_NULLS_LAST))
                 .build();
         var sql = createTable().from(builder).getSql();
-        assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS builder_test (id int, id_str varchar(20), f_name varchar, l_name varchar, str varchar, PRIMARY KEY (id, id_str)) COLOCATE BY (id, id_str) WITH PRIMARY_ZONE='ZONE_TEST';"));
+        assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS builder_test (id int, id_str varchar, f_name varchar(20) NOT NULL DEFAULT 'a', PRIMARY KEY (id, id_str)) COLOCATE BY (id, id_str) WITH PRIMARY_ZONE='ZONE_TEST';"));
+        assertThat(sql, containsString("CREATE INDEX IF NOT EXISTS ix_id_str_f_name ON builder_test (id_str, f_name);"));
+        assertThat(sql, containsString("CREATE INDEX IF NOT EXISTS ix_test ON builder_test USING TREE (id_str asc, f_name desc nulls last);"));
 
         sql = createTable(quoteIdentifiers).from(builder).getSql();
-        assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS \"builder_test\" (\"id\" int, \"id_str\" varchar(20), \"f_name\" varchar, \"l_name\" varchar, \"str\" varchar, PRIMARY KEY (\"id\", \"id_str\")) COLOCATE BY (\"id\", \"id_str\") WITH PRIMARY_ZONE='ZONE_TEST';"));
-
+        assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS \"builder_test\" (\"id\" int, \"id_str\" varchar, \"f_name\" varchar(20) NOT NULL DEFAULT 'a', PRIMARY KEY (\"id\", \"id_str\")) COLOCATE BY (\"id\", \"id_str\") WITH PRIMARY_ZONE='ZONE_TEST';"));
+        assertThat(sql, containsString("CREATE INDEX IF NOT EXISTS \"ix_id_str_f_name\" ON \"builder_test\" (\"id_str\", \"f_name\");"));
+        assertThat(sql, containsString("CREATE INDEX IF NOT EXISTS \"ix_test\" ON \"builder_test\" USING TREE (\"id_str\" asc, \"f_name\" desc nulls last);"));
     }
 
     @Test
     void testCreateFromKeyValueView() {
         // primitive/boxed key class is a primary key with default name 'id'
-        var sql = createTable().from(TableDefinition.builder()
-                        .tableName("pojo_value_test")
+        var sql = createTable().from(TableDefinition.tableBuilder("pojo_value_test")
                         .ifNotExists()
                         .colocateBy("id", "id_str")
                         .zone("zone_test")
@@ -81,8 +86,7 @@ public class CreateTableFromBuilderTest {
         assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS pojo_value_test (id int, f_name varchar, l_name varchar, str varchar, PRIMARY KEY (id)) COLOCATE BY (id, id_str) WITH PRIMARY_ZONE='ZONE_TEST';"));
 
         // key class fields (annotated only) is a composite primary keys
-        sql = createTable().from(TableDefinition.builder()
-                        .tableName("pojo_value_test")
+        sql = createTable().from(TableDefinition.tableBuilder("pojo_value_test")
                         .ifNotExists()
                         .colocateBy("id", "id_str")
                         .zone("zone_test")
@@ -94,8 +98,7 @@ public class CreateTableFromBuilderTest {
 
     @Test
     void testCreateFromRecordView() {
-        var sql = createTable().from(TableDefinition.builder()
-                        .tableName("pojo_test")
+        var sql = createTable().from(TableDefinition.tableBuilder("pojo_test")
                         .ifNotExists()
                         .colocateBy("id", "id_str")
                         .zone("zone_test")
@@ -105,8 +108,7 @@ public class CreateTableFromBuilderTest {
         assertThat(sql, containsString("CREATE TABLE IF NOT EXISTS pojo_test (id int, id_str varchar(20), f_name varchar(20) not null default 'a', l_name varchar, str varchar, PRIMARY KEY (id, id_str)) COLOCATE BY (id, id_str) WITH PRIMARY_ZONE='ZONE_TEST';"));
 
         // quote identifiers
-        sql = createTable(quoteIdentifiers).from(TableDefinition.builder()
-                        .tableName("pojo_test")
+        sql = createTable(quoteIdentifiers).from(TableDefinition.tableBuilder("pojo_test")
                         .ifNotExists()
                         .colocateBy("id", "id_str")
                         .zone("zone_test")

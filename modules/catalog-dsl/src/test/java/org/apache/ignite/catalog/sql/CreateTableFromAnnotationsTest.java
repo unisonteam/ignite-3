@@ -17,6 +17,7 @@
 
 package org.apache.ignite.catalog.sql;
 
+import static org.apache.ignite.catalog.ColumnSorted.column;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -27,6 +28,7 @@ import java.util.Objects;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.SortOrder;
+import org.apache.ignite.catalog.TableDefinition;
 import org.apache.ignite.catalog.ZoneEngine;
 import org.apache.ignite.catalog.annotations.Col;
 import org.apache.ignite.catalog.annotations.ColocateBy;
@@ -42,10 +44,11 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("LongLine")
 class CreateTableFromAnnotationsTest {
 
+    private static final Options defaultOptions = Options.defaultOptions().prettyPrint(false).quoteIdentifiers(false);
     private static final Options quoteIdentifiers = Options.defaultOptions().prettyPrint(false).quoteIdentifiers(true);
 
     private static CreateTableFromAnnotationsImpl createTable() {
-        return createTable(Options.defaultOptions().prettyPrint(false).quoteIdentifiers(false));
+        return createTable(defaultOptions);
     }
 
     private static CreateTableFromAnnotationsImpl createTable(Options options) {
@@ -67,6 +70,20 @@ class CreateTableFromAnnotationsTest {
         assertThat(m.fieldForColumn("F_NAME"), is("firstName"));
         assertThat(m.fieldForColumn("L_NAME"), is("lastName"));
         assertThat(m.fieldForColumn("STR"), is("str"));
+    }
+
+    @Test
+    void testTableDefinitionCompatibility() {
+        var definition = TableDefinition.tableBuilder("pojo_value_test")
+                .ifNotExists()
+                .keyValueView(PojoKey.class, PojoValue.class)
+                .colocateBy("id", "id_str")
+                .zone("zone_test")
+                .index("ix_pojo", IndexType.DEFAULT, column("f_name"), column("l_name").desc())
+                .build();
+        var sqlFromDefinition = new CreateTableFromBuilderImpl(null, defaultOptions).from(definition).getSql();
+        var sql = createTable().keyValueView(PojoKey.class, PojoValue.class).getSql();
+        assertThat(sql, containsString(sqlFromDefinition)); // table definition doesn't create zone
     }
 
     @Test

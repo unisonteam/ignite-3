@@ -22,7 +22,7 @@ import static org.apache.ignite.catalog.sql.CreateTableFromAnnotationsImpl.proce
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
-import org.apache.ignite.catalog.IndexColumn;
+import org.apache.ignite.catalog.IndexDefinition;
 import org.apache.ignite.catalog.IndexType;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.catalog.Query;
@@ -70,12 +70,12 @@ class CreateTableFromBuilderImpl extends AbstractCatalogQuery {
                 createTable.primaryKey(type, def.getPrimaryKeyColumns());
             }
         }
-        // todo indexes
+        if (!isEmpty(def.getIndexes())) {
+            for (var ix : def.getIndexes()) {
+                createTable.index(toIndexName(ix), ix.getIndexType(), ix.getColumns());
+            }
+        }
         return this;
-    }
-
-    private static boolean isEmpty(Collection<?> c) {
-        return c == null || c.isEmpty();
     }
 
     @Override
@@ -83,10 +83,17 @@ class CreateTableFromBuilderImpl extends AbstractCatalogQuery {
         ctx.visit(createTable);
     }
 
-    private static String toIndexName(IndexColumn... columns) {
+    private static boolean isEmpty(Collection<?> c) {
+        return c == null || c.isEmpty();
+    }
+
+    private static String toIndexName(IndexDefinition ix) {
+        if (ix.getIndexName() != null && !ix.getIndexName().isEmpty()) {
+            return ix.getIndexName();
+        }
         var list = new ArrayList<String>();
         list.add("ix");
-        for (var col : columns) {
+        for (var col : ix.getColumns()) {
             list.add(col.getColumnName());
         }
         return String.join("_", list);

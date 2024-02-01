@@ -22,7 +22,7 @@ import static org.apache.ignite.catalog.sql.QueryPartCollection.wrap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.ignite.catalog.IndexColumn;
+import org.apache.ignite.catalog.ColumnSorted;
 import org.apache.ignite.catalog.IndexType;
 
 class Constraint extends QueryPart {
@@ -30,11 +30,11 @@ class Constraint extends QueryPart {
     private IndexType pkType;
     private final List<IndexColumnImpl> pkColumns = new ArrayList<>();
 
-    Constraint primaryKey(IndexColumn... columns) {
+    Constraint primaryKey(ColumnSorted... columns) {
         return primaryKey(IndexType.DEFAULT, Arrays.asList(columns));
     }
 
-    Constraint primaryKey(IndexType type, List<IndexColumn> columns) {
+    Constraint primaryKey(IndexType type, List<ColumnSorted> columns) {
         pkType = type;
         for (var column : columns) {
             this.pkColumns.add(IndexColumnImpl.wrap(column));
