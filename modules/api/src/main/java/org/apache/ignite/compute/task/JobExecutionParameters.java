@@ -79,6 +79,10 @@ public class JobExecutionParameters {
         return args;
     }
 
+    public JobExecutionParametersBuilder toBuilder() {
+        return builder().jobClassName(jobClassName).nodes(nodes).options(jobOptions).units(units);
+    }
+
     public static JobExecutionParametersBuilder builder() {
         return new JobExecutionParametersBuilder();
     }

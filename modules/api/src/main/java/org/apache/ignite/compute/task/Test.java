@@ -21,105 +21,83 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.ignite.compute.task.JobExecutionParameters.JobExecutionSplitter;
 import org.apache.ignite.lang.Cursor;
 import org.apache.ignite.network.ClusterNode;
 
 public class Test {
-    private static final Map<String, List<Integer>> tableToPartitionsMap = new HashMap<>();
-
-    public static ClusterNode getPrimary(int partitions) {
-        return null;
-    }
-
     @FunctionalInterface
-    interface SplitJob<I, T> {
-        // [NodeName -> Map Job that should be executed in NodeName]
-        List<JobExecutionParameters> split(String tableName);
+    interface Splitter<I, T> {
+        List<JobExecutionParameters> split();
     }
-
 
     // Maps data of I type into T type
     @FunctionalInterface
-    interface MapJob<I, T> {
+    interface Mapper<I, T> {
         T map(I input);
     }
 
-
     // Reduces data from MapJobs from [T] into R
     @FunctionalInterface
-    interface ReduceJob<T, R> {
+    interface Reducer<T, R> {
         R reduce(Cursor<T> cursor);
     }
-
 
     // Task that "links" split job and reduce job.
     // I - input of MapJob that is returned by splitJob().split(tableName).values()
     // T - output of MapJob and input of ReduceJob
     // R - output of ReduceJob
-    interface SplitReduceTask<I, T, R> {
-        SplitJob<I, T> splitJob();
+    interface SplitReduceTask<I, T, R> extends Splitter<I, T>, Reducer<T, R> {
 
-
-        ReduceJob<T, R> reduceJob();
     }
-
 
     // MapReduce task that is a SplitReduceTask but with split by partition,
     // Also, defines the map task.
-    interface MapReduceTask<I, T, R> extends SplitReduceTask<I, T, R> {
+    interface MapReduceTask<I, T, R> extends SplitReduceTask<I, T, R>, Mapper<I, T> {
         @Override
-        default SplitJob<I, T> splitJob() {
-            return new PartitionSplitJob<>(this::mapJob);
+        default List<JobExecutionParameters> split() {
+            JobExecutionParameters.builder().jobClassName(this.getClass().getName())
+            return new ComputePartitionSplit<>();
         }
-
-
-        MapJob<I, T> mapJob();
     }
 
-
-    // In order not to use Class, because we'll have troubles with generics.
-    @FunctionalInterface
-    interface JobDefinition<J> {
-        J newInstance();
-    }
-
-
-    // Split Job instance that gets the MapJobDefinition as an input
-    // in constructor and the table name in the method argument.
-    // It splits the MapJob in a way that each MapJob instance
-    // Will be executed on PartitionPrimaryReplicas and only data from
-    // local replica will be an input for local MapJob.
-    static class PartitionSplitJob<I, T>  implements SplitJob<I, T> {
-        private final JobDefinition<MapJob<I, T>> definition;
+    static class ComputePartitionSplit<I, T> implements Splitter<I, T> {
         private final String tableName;
+        private final JobExecutionParameters parameters;
+        private final JobExecutionSplitter splitter = new JobExecutionSplitterImpl();
 
-
-        PartitionSplitJob(JobDefinition<MapJob<I, T>> definition, String tableName) {
-            this.definition = definition;
+        ComputePartitionSplit(JobExecutionParameters parameters, String tableName) {
+            this.parameters = parameters;
             this.tableName = tableName;
         }
 
-
         @Override
         public List<JobExecutionParameters> split() {
-
-            JobExecutionSplitter splitter = new JobExecutionSplitter() {
-
-                @Override
-                public List<JobExecutionParameters> split(JobExecutionParameters parameters, String table) {
-                    return null;
-                }
-            };
-
-            return splitter.split(JobExecutionParameters.builder().build(), tableName);
+            return splitter.split(parameters, tableName);
         }
     }
 
+    static class JobExecutionSplitterImpl implements JobExecutionSplitter {
+        private static final Map<String, List<Integer>> tableToPartitionsMap = new HashMap<>();
+
+        public static ClusterNode getPrimary(int partitions) {
+            return null;
+        }
+
+        @Override
+        public List<JobExecutionParameters> split(JobExecutionParameters parameters, String table) {
+            return tableToPartitionsMap.get(table).stream()
+                    .map(JobExecutionSplitterImpl::getPrimary)
+                    .map(clusterNode -> parameters.toBuilder().nodes(Set.of(clusterNode)).build())
+                    .collect(Collectors.toList());
+        }
+    }
 
     // Map job that defines the code that will consume
     // local data from partition primary replica.
-    static class WordCountMap implements MapJob<String, Map<String, Integer>> {
+    static class WordCountMap implements Mapper<String, Mapper<String, Integer>> {
         @Override
         public Map<String, Integer> map(Cursor<String> cursor) {
             HashMap<String, Integer> mapResult = new HashMap<>();
@@ -135,12 +113,11 @@ public class Test {
         }
     }
 
-
     // Reduce job that will be executed on "some" node and will
     // consume the outputs of Map jobs.
-    static class WordCountReduce implements ReduceJob<Map<String, Integer>, Map<String, Integer>> {
+    static class WordCountReduce implements Reducer<Map<String, Integer>, Map<String, Integer>> {
         @Override
-        public Map<String, Integer> reduce(Cursor<Map<String, Integer>> cursor) {
+        public Map<String, Integer> reduce(Cursor<java.util.Map<String, Integer>> cursor) {
             HashMap<String, Integer> reduceResult = new HashMap<>();
             cursor.forEachRemaining(mapResult -> {
                 mapResult.forEach((word, counts) -> {
@@ -153,21 +130,18 @@ public class Test {
         }
     }
 
-
     // MapReduce task that "links" the WordCountMapJob and WordCountReduce job.
     // This is "type-safe".
-    static class WordCountMapReduce implements MapReduceTask<String, Map<String, Integer>, Map<String, Integer>> {
+    static class WordCountMapReduce implements MapReduceTask<String, java.util.Map<String, Integer>, java.util.Map<String, Integer>> {
         @Override
-        public MapJob<String, Map<String, Integer>> mapJob() {
+        public Mapper<String, Mapper<String, Integer>> mapJob() {
             return new WordCountMap();
         }
 
 
         @Override
-        public ReduceJob<Map<String, Integer>, Map<String, Integer>> reduceJob() {
+        public Reducer<Map<String, Integer>, Map<String, Integer>> reduceJob() {
             return new WordCountReduce();
         }
-
-
     }
 }
