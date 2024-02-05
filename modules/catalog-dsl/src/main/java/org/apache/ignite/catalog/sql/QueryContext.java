@@ -70,6 +70,11 @@ class QueryContext {
         return this;
     }
 
+    QueryContext sqlSanitized(String s) {
+        // ignite ddl doesn't have prepared statements yet
+        return sql(s.replaceAll("[';\r\n\t\\s\\/]|(--[^\r\n]*)", ""));
+    }
+
     QueryContext formatSeparator() {
         if (!newline && options.isPrettyPrint()) {
             newline = true;

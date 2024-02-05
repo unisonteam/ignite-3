@@ -58,9 +58,15 @@ class CreateTableTest {
         var sql = createTable().name("public", "table1").getSql();
         assertThat(sql, is("CREATE TABLE public.table1 ();"));
 
+        sql = createTable().name("", "table;1--test\n\r\t;").getSql();
+        assertThat(sql, is("CREATE TABLE table1 ();"));
+
         // quote identifiers
         sql = createTable(quoteIdentifiers).name("public", "table1").getSql();
         assertThat(sql, is("CREATE TABLE \"public\".\"table1\" ();"));
+
+        sql = createTable(quoteIdentifiers).name("", "table;1--test\n\r\t;").getSql();
+        assertThat(sql, is("CREATE TABLE \"table1\" ();"));
     }
 
     @Test

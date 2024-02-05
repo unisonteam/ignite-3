@@ -38,10 +38,10 @@ class Name extends QueryPart {
         var c = ctx.isQuoteNames() ? "\"" : "";
         var separator = "";
         for (String name : names) {
-            if (name == null) {
+            if (name == null || name.isBlank()) {
                 continue;
             }
-            ctx.sql(separator).sql(c).sql(name).sql(c);
+            ctx.sql(separator).sql(c).sqlSanitized(name).sql(c);
             separator = ".";
         }
     }
