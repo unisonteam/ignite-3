@@ -27,11 +27,13 @@ public interface IgniteCatalog {
 
     Query create(ZoneDefinition definition);
 
+    Query drop(TableDefinition definition);
+
+    Query drop(ZoneDefinition definition);
+
     // drop for definitions?
 
     Query dropTable(String name);
-
-    Query dropIndex(String name);
 
     Query dropZone(String name);
 

@@ -55,17 +55,22 @@ public class IgniteCatalogSqlImpl implements IgniteCatalog {
     }
 
     @Override
+    public Query drop(TableDefinition definition) {
+        return new DropTableImpl(sql, options).name(definition.getSchemaName(), definition.getTableName()).ifExists();
+    }
+
+    @Override
+    public Query drop(ZoneDefinition definition) {
+        return new DropZoneImpl(sql, options).name(definition.getZoneName()).ifExists();
+    }
+
+    @Override
     public Query dropTable(String name) {
         return new DropTableImpl(sql, options).name(name).ifExists();
     }
 
     @Override
-    public Query dropIndex(String name) {
-        throw new RuntimeException("NOT YET IMPLEMENTED");
-    }
-
-    @Override
     public Query dropZone(String name) {
-        throw new RuntimeException("NOT YET IMPLEMENTED");
+        return new DropZoneImpl(sql, options).name(name).ifExists();
     }
 }

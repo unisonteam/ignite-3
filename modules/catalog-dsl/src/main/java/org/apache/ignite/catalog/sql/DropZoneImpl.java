@@ -21,33 +21,32 @@ import java.util.Objects;
 import org.apache.ignite.catalog.Options;
 import org.apache.ignite.sql.IgniteSql;
 
-class DropTableImpl extends AbstractCatalogQuery {
-
-    private Name tableName;
+class DropZoneImpl extends AbstractCatalogQuery {
+    private Name zoneName;
     private boolean ifExists;
 
-    DropTableImpl(IgniteSql sql, Options options) {
+    DropZoneImpl(IgniteSql sql, Options options) {
         super(sql, options);
     }
 
-    DropTableImpl name(String... names) {
-        Objects.requireNonNull(names, "table name is null");
-        this.tableName = new Name(names);
+    DropZoneImpl name(String... names) {
+        Objects.requireNonNull(names, "zone name is null");
+        this.zoneName = new Name(names);
         return this;
     }
 
-    DropTableImpl ifExists() {
+    DropZoneImpl ifExists() {
         this.ifExists = true;
         return this;
     }
 
     @Override
     protected void accept(QueryContext ctx) {
-        ctx.sql("DROP TABLE ");
+        ctx.sql("DROP ZONE ");
         if (ifExists) {
             ctx.sql("IF EXISTS ");
         }
-        ctx.visit(tableName);
+        ctx.visit(zoneName);
         ctx.sql(";");
     }
 }
