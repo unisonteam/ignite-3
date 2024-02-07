@@ -19,7 +19,6 @@ package org.apache.ignite.internal.compute;
 
 import static java.util.stream.Collectors.joining;
 import static org.apache.ignite.internal.compute.utils.ComputeTestUtils.assertPublicException;
-import static org.apache.ignite.internal.testframework.matchers.CompletableFutureExceptionMatcher.willThrow;
 import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willBe;
 import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willCompleteSuccessfully;
 import static org.apache.ignite.internal.testframework.matchers.JobStatusMatcher.jobStatusWithState;
@@ -29,6 +28,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
@@ -39,6 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import org.apache.ignite.Ignite;
@@ -68,6 +69,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 @SuppressWarnings("resource")
 class ItComputeTestEmbedded extends ItComputeBaseTest {
+
     @Override
     protected List<DeploymentUnit> units() {
         return List.of();
@@ -140,11 +142,12 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
     void cancelsJobLocally() {
         IgniteImpl entryNode = node(0);
 
-        JobExecution<String> execution = entryNode.compute().executeAsync(Set.of(entryNode.node()), units(), LongJob.class.getName());
+        JobExecution<String> execution = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), new CountDownLatch(1));
 
         await().until(execution::statusAsync, willBe(jobStatusWithState(JobState.EXECUTING)));
 
-        assertThat(execution.cancelAsync(), willCompleteSuccessfully());
+        assertThat(execution.cancelAsync(), willBe(true));
 
         await().until(execution::statusAsync, willBe(jobStatusWithState(JobState.CANCELED)));
     }
@@ -153,49 +156,57 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
     void cancelsJobRemotely() {
         IgniteImpl entryNode = node(0);
 
-        JobExecution<String> execution = entryNode.compute().executeAsync(Set.of(node(1).node()), units(), LongJob.class.getName());
+        JobExecution<String> execution = entryNode.compute()
+                .executeAsync(Set.of(node(1).node()), units(), WaitLatchJob.class.getName(), new CountDownLatch(1));
 
         await().until(execution::statusAsync, willBe(jobStatusWithState(JobState.EXECUTING)));
 
-        assertThat(execution.cancelAsync(), willCompleteSuccessfully());
+        assertThat(execution.cancelAsync(), willBe(true));
 
         await().until(execution::statusAsync, willBe(jobStatusWithState(JobState.CANCELED)));
     }
 
     @Test
-    void changeJobPriorityLocallyComputeException() {
+    void changeExecutingJobPriorityLocally() {
         IgniteImpl entryNode = node(0);
 
-        JobExecution<String> execution = entryNode.compute().executeAsync(Set.of(entryNode.node()), units(), LongJob.class.getName());
+        JobExecution<String> execution = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), new CountDownLatch(1));
         await().until(execution::statusAsync, willBe(jobStatusWithState(JobState.EXECUTING)));
 
-        assertThat(execution.changePriorityAsync(2), willThrow(ComputeException.class));
+        assertThat(execution.changePriorityAsync(2), willBe(false));
     }
 
     @Test
-    void changeJobPriorityRemotelyComputeException() {
+    void changeExecutingJobPriorityRemotely() {
         IgniteImpl entryNode = node(0);
 
-        JobExecution<String> execution = entryNode.compute().executeAsync(Set.of(node(1).node()), units(), LongJob.class.getName());
+        JobExecution<String> execution = entryNode.compute()
+                .executeAsync(Set.of(node(1).node()), units(), WaitLatchJob.class.getName(), new CountDownLatch(1));
         await().until(execution::statusAsync, willBe(jobStatusWithState(JobState.EXECUTING)));
 
-        assertThat(execution.changePriorityAsync(2), willThrow(ComputeException.class));
+        assertThat(execution.changePriorityAsync(2), willBe(false));
     }
 
     @Test
     void changeJobPriorityLocally() {
         IgniteImpl entryNode = node(0);
 
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
         // Start 1 task in executor with 1 thread
-        JobExecution<String> execution1 = entryNode.compute().executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName());
+        JobExecution<String> execution1 = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), countDownLatch);
         await().until(execution1::statusAsync, willBe(jobStatusWithState(JobState.EXECUTING)));
 
-        // Start one more long lasting task
-        JobExecution<String> execution2 = entryNode.compute().executeAsync(Set.of(entryNode.node()), units(), LongJob.class.getName());
+        // Start one more task
+        JobExecution<String> execution2 = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), new CountDownLatch(1));
         await().until(execution2::statusAsync, willBe(jobStatusWithState(JobState.QUEUED)));
 
         // Start third task
-        JobExecution<String> execution3 = entryNode.compute().executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName());
+        JobExecution<String> execution3 = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), countDownLatch);
         await().until(execution3::statusAsync, willBe(jobStatusWithState(JobState.QUEUED)));
 
         // Task 1 and 2 are not competed, in queue state
@@ -203,10 +214,10 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
         assertThat(execution3.resultAsync().isDone(), is(false));
 
         // Change priority of task 3, so it should be executed before task 2
-        assertThat(execution3.changePriorityAsync(2), willCompleteSuccessfully());
+        assertThat(execution3.changePriorityAsync(2), willBe(true));
 
         // Run 1 and 3 task
-        WaitLatchJob.latch.countDown();
+        countDownLatch.countDown();
 
         // Tasks 1 and 3 completed successfully
         assertThat(execution1.resultAsync(), willCompleteSuccessfully());
@@ -216,6 +227,55 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
 
         // Task 2 is not completed
         assertThat(execution2.resultAsync().isDone(), is(false));
+    }
+
+    @Test
+    void executesJobLocallyWithOptions() {
+        IgniteImpl entryNode = node(0);
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        // Start 1 task in executor with 1 thread
+        JobExecution<String> execution1 = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), countDownLatch);
+        await().until(execution1::statusAsync, willBe(jobStatusWithState(JobState.EXECUTING)));
+
+        // Start one more task
+        JobExecution<String> execution2 = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchJob.class.getName(), new CountDownLatch(1));
+        await().until(execution2::statusAsync, willBe(jobStatusWithState(JobState.QUEUED)));
+
+        // Start third task it should be before task2 in the queue due to higher priority in options
+        JobExecutionOptions options = JobExecutionOptions.builder().priority(1).maxRetries(2).build();
+        JobExecution<String> execution3 = entryNode.compute()
+                .executeAsync(Set.of(entryNode.node()), units(), WaitLatchThrowExceptionOnFirstExecutionJob.class.getName(),
+                        options, countDownLatch);
+        await().until(execution3::statusAsync, willBe(jobStatusWithState(JobState.QUEUED)));
+
+        // Task 1 and 2 are not competed, in queue state
+        assertThat(execution2.resultAsync().isDone(), is(false));
+        assertThat(execution3.resultAsync().isDone(), is(false));
+
+        // Reset counter
+        WaitLatchThrowExceptionOnFirstExecutionJob.counter.set(0);
+
+        // Run 1 and 3 task
+        countDownLatch.countDown();
+
+        // Tasks 1 and 3 completed successfully
+        assertThat(execution1.resultAsync(), willCompleteSuccessfully());
+        assertThat(execution3.resultAsync(), willCompleteSuccessfully());
+        assertThat(execution1.resultAsync().isDone(), is(true));
+        assertThat(execution3.resultAsync().isDone(), is(true));
+
+        // Task 3 should be executed 2 times
+        assertEquals(2, WaitLatchThrowExceptionOnFirstExecutionJob.counter.get());
+
+        // Task 2 is not completed
+        assertThat(execution2.resultAsync().isDone(), is(false));
+
+        // Cancel task2
+        execution2.cancelAsync().join();
     }
 
     @Test
@@ -286,29 +346,32 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
         }
     }
 
-    private static class LongJob implements ComputeJob<String> {
+    private static class WaitLatchJob implements ComputeJob<String> {
+
         /** {@inheritDoc} */
         @Override
         public String execute(JobExecutionContext context, Object... args) {
             try {
-                Thread.sleep(1_000_000);
+                ((CountDownLatch) args[0]).await();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-
             return null;
         }
     }
 
-    private static class WaitLatchJob implements ComputeJob<String> {
+    private static class WaitLatchThrowExceptionOnFirstExecutionJob implements ComputeJob<String> {
 
-        static final CountDownLatch latch = new CountDownLatch(1);
+        static final AtomicInteger counter = new AtomicInteger(0);
 
         /** {@inheritDoc} */
         @Override
         public String execute(JobExecutionContext context, Object... args) {
             try {
-                latch.await();
+                ((CountDownLatch) args[0]).await();
+                if (counter.incrementAndGet() == 1) {
+                    throw new RuntimeException();
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

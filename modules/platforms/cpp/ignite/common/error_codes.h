@@ -1,19 +1,19 @@
-/*                                                                          
- * Licensed to the Apache Software Foundation (ASF) under one or more       
- * contributor license agreements. See the NOTICE file distributed with     
- * this work for additional information regarding copyright ownership.      
- * The ASF licenses this file to You under the Apache License, Version 2.0  
- * (the "License"); you may not use this file except in compliance with   
- * the License. You may obtain a copy of the License at                     
- *                                                                          
- *      http://www.apache.org/licenses/LICENSE-2.0                          
- *                                                                          
- * Unless required by applicable law or agreed to in writing, software      
- * distributed under the License is distributed on an "AS IS" BASIS,      
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and      
- * limitations under the License.                                           
- */                                                                         
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 // THIS IS AUTO-GENERATED FILE. DO NOT EDIT.
 
@@ -63,6 +63,7 @@ enum class code : underlying_t {
     ILLEGAL_ARGUMENT = 0x10003,
     SSL_CONFIGURATION = 0x10004,
     NODE_LEFT = 0x10005,
+    CURSOR_CLOSED = 0x10006,
     INTERNAL = 0x1ffff,
 
     // Table group. Group code: 2
@@ -87,10 +88,8 @@ enum class code : underlying_t {
     HANDSHAKE_HEADER = 0x3000a,
 
     // Sql group. Group code: 4
-    CURSOR_NO_MORE_PAGES = 0x40001,
     QUERY_NO_RESULT_SET = 0x40002,
     SCHEMA_NOT_FOUND = 0x40003,
-    CURSOR_CLOSED = 0x40004,
     STMT_PARSE = 0x40005,
     STMT_VALIDATION = 0x40006,
     CONSTRAINT_VIOLATION = 0x40007,
@@ -127,6 +126,8 @@ enum class code : underlying_t {
     TX_READ_ONLY_TOO_OLD = 0x7000b,
     TX_INCOMPATIBLE_SCHEMA = 0x7000c,
     TX_PRIMARY_REPLICA_EXPIRED = 0x7000d,
+    TX_ALREADY_FINISHED = 0x7000e,
+    TX_STALE_OPERATION = 0x7000f,
 
     // Replicator group. Group code: 8
     REPLICA_COMMON = 0x80001,
@@ -146,11 +147,7 @@ enum class code : underlying_t {
     STORAGE_REBALANCE = 0x90004,
 
     // DistributionZones group. Group code: 10
-    ZONE_ALREADY_EXISTS = 0xa0001,
-    ZONE_NOT_FOUND = 0xa0002,
-    ZONE_RENAME = 0xa0003,
-    ZONE_DROP = 0xa0004,
-    ZONE_DEFINITION = 0xa0005,
+    ZONE_NOT_FOUND = 0xa0001,
 
     // Network group. Group code: 11
     UNRESOLVABLE_CONSISTENT_ID = 0xb0001,
@@ -189,6 +186,8 @@ enum class code : underlying_t {
     COMPUTE_JOB_FAILED = 0x100009,
     CHANGE_JOB_PRIORITY_NO_JOB = 0x10000a,
     CHANGE_JOB_PRIORITY_JOB_EXECUTING = 0x10000b,
+    PRIMARY_REPLICA_RESOLVE = 0x10000c,
+    CHANGE_JOB_PRIORITY = 0x10000d,
 
     // Catalog group. Group code: 17
     VALIDATION = 0x110001,

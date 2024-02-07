@@ -17,10 +17,12 @@
 
 package org.apache.ignite.internal.index;
 
+import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.toList;
 import static org.apache.ignite.internal.catalog.CatalogService.DEFAULT_SCHEMA_NAME;
 import static org.apache.ignite.internal.catalog.CatalogService.DEFAULT_ZONE_NAME;
+import static org.apache.ignite.internal.catalog.CatalogTestUtils.createTestCatalogManager;
 import static org.apache.ignite.internal.catalog.commands.CatalogUtils.DEFAULT_DATA_REGION;
 import static org.apache.ignite.internal.catalog.commands.CatalogUtils.pkIndexName;
 import static org.apache.ignite.internal.index.TestIndexManagementUtils.COLUMN_NAME;
@@ -72,7 +74,6 @@ import org.apache.ignite.internal.catalog.descriptors.CatalogZoneDescriptor;
 import org.apache.ignite.internal.catalog.events.CatalogEvent;
 import org.apache.ignite.internal.hlc.HybridClock;
 import org.apache.ignite.internal.hlc.HybridClockImpl;
-import org.apache.ignite.internal.manager.IgniteComponent;
 import org.apache.ignite.internal.metastorage.impl.MetaStorageManagerImpl;
 import org.apache.ignite.internal.metastorage.impl.MetaStorageService;
 import org.apache.ignite.internal.metastorage.impl.StandaloneMetaStorageManager;
@@ -94,6 +95,7 @@ import org.apache.ignite.internal.testframework.WorkDirectoryExtension;
 import org.apache.ignite.internal.tx.impl.HeapLockManager;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.sql.IgniteSql;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -234,22 +236,32 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
     }
 
     @Test
-    void testCollectIndexesForRecoveryForCreatedAndDroppedIndexes() {
+    void testCollectIndexesForRecoveryForCreatedAndDroppedAndBuildingIndexes() {
         createTable(OTHER_TABLE_NAME);
 
         String indexName0 = INDEX_NAME + 0;
         String indexName1 = INDEX_NAME + 1;
         String indexName2 = INDEX_NAME + 2;
         String indexName3 = INDEX_NAME + 3;
+        String indexName4 = INDEX_NAME + 4;
 
         String indexNameOtherTable0 = INDEX_NAME + "-other" + 0;
         String indexNameOtherTable1 = INDEX_NAME + "-other" + 1;
         String indexNameOtherTable2 = INDEX_NAME + "-other" + 2;
         String indexNameOtherTable3 = INDEX_NAME + "-other" + 3;
+        String indexNameOtherTable4 = INDEX_NAME + "-other" + 4;
 
-        createIndexes(TABLE_NAME, indexName0, indexName1, indexName2, indexName3);
-        createIndexes(OTHER_TABLE_NAME, indexNameOtherTable0, indexNameOtherTable1, indexNameOtherTable2, indexNameOtherTable3);
+        createIndexes(
+                TABLE_NAME,
+                indexName0, indexName1, indexName2, indexName3, indexName4
+        );
 
+        createIndexes(
+                OTHER_TABLE_NAME,
+                indexNameOtherTable0, indexNameOtherTable1, indexNameOtherTable2, indexNameOtherTable3, indexNameOtherTable4
+        );
+
+        startBuildingIndexes(indexName0, indexName2, indexName4, indexNameOtherTable1, indexNameOtherTable3, indexNameOtherTable4);
         makeIndexesAvailable(indexName0, indexName2, indexNameOtherTable1, indexNameOtherTable3);
 
         List<CatalogIndexDescriptor> droppedIndexes = dropIndexes(indexName1, indexName2);
@@ -271,6 +283,7 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
                         index(latestCatalogVersion, PK_INDEX_NAME),
                         index(latestCatalogVersion, indexName0),
                         index(latestCatalogVersion, indexName3),
+                        index(latestCatalogVersion, indexName4),
                         droppedIndexes.get(0),
                         droppedIndexes.get(1)
                 )
@@ -282,6 +295,7 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
                         index(latestCatalogVersion, PK_INDEX_NAME_OTHER_TABLE),
                         index(latestCatalogVersion, indexNameOtherTable2),
                         index(latestCatalogVersion, indexNameOtherTable3),
+                        index(latestCatalogVersion, indexNameOtherTable4),
                         droppedIndexesOtherTable.get(0),
                         droppedIndexesOtherTable.get(1)
                 )
@@ -307,8 +321,11 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
         String indexName1 = INDEX_NAME + 1;
         String indexName2 = INDEX_NAME + 2;
         String indexName3 = INDEX_NAME + 3;
+        String indexName4 = INDEX_NAME + 4;
 
-        createIndexes(TABLE_NAME, indexName0, indexName1, indexName2, indexName3);
+        createIndexes(TABLE_NAME, indexName0, indexName1, indexName2, indexName3, indexName4);
+
+        startBuildingIndexes(indexName0, indexName2, indexName4);
 
         makeIndexesAvailable(indexName0, indexName2);
 
@@ -324,7 +341,7 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
 
         ArgumentCaptor<StorageHashIndexDescriptor> captor = ArgumentCaptor.forClass(StorageHashIndexDescriptor.class);
 
-        verify(tableViewInternal, times(5)).registerHashIndex(captor.capture(), anyBoolean(), any(), any());
+        verify(tableViewInternal, times(6)).registerHashIndex(captor.capture(), anyBoolean(), any(), any());
 
         CatalogTableDescriptor table = table(catalogManager.latestCatalogVersion(), TABLE_NAME);
 
@@ -374,7 +391,7 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
     private void createAndStartComponents() {
         metaStorageManager = StandaloneMetaStorageManager.create(new TestRocksDbKeyValueStorage(NODE_NAME, workDir));
 
-        catalogManager = CatalogTestUtils.createTestCatalogManager(NODE_NAME, clock, metaStorageManager);
+        catalogManager = createTestCatalogManager(NODE_NAME, clock, metaStorageManager);
 
         indexManager = new IndexManager(
                 mockSchemaManager,
@@ -384,7 +401,7 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
                 (LongFunction<CompletableFuture<?>> function) -> metaStorageManager.registerRevisionUpdateListener(function::apply)
         );
 
-        List.of(metaStorageManager, catalogManager, indexManager).forEach(IgniteComponent::start);
+        assertThat(allOf(metaStorageManager.start(), catalogManager.start(), indexManager.start()), willCompleteSuccessfully());
 
         assertThat(metaStorageManager.recoveryFinishedFuture(), willCompleteSuccessfully());
         assertThat(metaStorageManager.notifyRevisionUpdateListenerOnStart(), willCompleteSuccessfully());
@@ -399,6 +416,10 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
         return CatalogTestUtils.index(catalogManager, catalogVersion, indexName);
     }
 
+    private @Nullable CatalogIndexDescriptor indexOrNull(int catalogVersion, String indexName) {
+        return CatalogTestUtils.indexOrNull(catalogManager, catalogVersion, indexName);
+    }
+
     private void createTable(String tableName) {
         TestIndexManagementUtils.createTable(catalogManager, tableName, COLUMN_NAME);
     }
@@ -409,6 +430,12 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
 
     private void createIndex(String tableName, String indexName) {
         createHashIndex(catalogManager, DEFAULT_SCHEMA_NAME, tableName, indexName, List.of(COLUMN_NAME), false);
+    }
+
+    private void startBuildingIndex(String indexName) {
+        CatalogIndexDescriptor index = index(catalogManager.latestCatalogVersion(), indexName);
+
+        TestIndexManagementUtils.startBuildingIndex(catalogManager, index.id());
     }
 
     private void makeIndexAvailable(String indexName) {
@@ -433,13 +460,24 @@ public class IndexManagerTest extends BaseIgniteAbstractTest {
         }
     }
 
+    private void startBuildingIndexes(String... indexNames) {
+        for (String indexName : indexNames) {
+            startBuildingIndex(indexName);
+        }
+    }
+
     private List<CatalogIndexDescriptor> dropIndexes(String... indexNames) {
         var res = new ArrayList<CatalogIndexDescriptor>(indexNames.length);
 
         for (String indexName : indexNames) {
-            res.add(index(catalogManager.latestCatalogVersion(), indexName));
+            int versionBeforeDrop = catalogManager.latestCatalogVersion();
+            CatalogIndexDescriptor indexBeforeDropping = index(versionBeforeDrop, indexName);
 
             dropIndex(indexName);
+
+            CatalogIndexDescriptor indexAfterDropping = indexOrNull(versionBeforeDrop + 1, indexName);
+
+            res.add(indexAfterDropping != null ? indexAfterDropping : indexBeforeDropping);
         }
 
         return res;

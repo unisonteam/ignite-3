@@ -17,6 +17,8 @@
 
 package org.apache.ignite.internal;
 
+import static org.apache.ignite.internal.catalog.commands.CatalogUtils.DEFAULT_STORAGE_ENGINE;
+import static org.apache.ignite.internal.catalog.descriptors.CatalogIndexStatus.AVAILABLE;
 import static org.apache.ignite.internal.lang.IgniteStringFormatter.format;
 import static org.apache.ignite.internal.testframework.IgniteTestUtils.waitForCondition;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,8 +35,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.InitParametersBuilder;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.internal.catalog.CatalogManager;
+import org.apache.ignite.internal.catalog.commands.CatalogUtils;
 import org.apache.ignite.internal.catalog.descriptors.CatalogIndexDescriptor;
 import org.apache.ignite.internal.catalog.descriptors.CatalogObjectDescriptor;
 import org.apache.ignite.internal.hlc.HybridClock;
@@ -84,7 +88,7 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
 
     /** Work directory. */
     @WorkDirectory
-    private static Path WORK_DIR;
+    protected static Path WORK_DIR;
 
     /** Reset {@link #AWAIT_INDEX_AVAILABILITY}. */
     @BeforeEach
@@ -103,7 +107,7 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
         CLUSTER = new Cluster(testInfo, WORK_DIR, getNodeBootstrapConfigTemplate());
 
         if (initialNodes() > 0) {
-            CLUSTER.startAndInit(initialNodes(), cmgMetastoreNodes());
+            CLUSTER.startAndInit(initialNodes(), cmgMetastoreNodes(), this::configureInitParameters);
         }
     }
 
@@ -121,6 +125,12 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
     }
 
     /**
+     * This method can be overridden to add custom init parameters during cluster initialization.
+     */
+    protected void configureInitParameters(InitParametersBuilder builder) {
+    }
+
+    /**
      * Returns node bootstrap config template.
      *
      * @return Node bootstrap config template.
@@ -133,7 +143,7 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
      * After all.
      */
     @AfterAll
-    void afterAll() throws Exception {
+    void afterAll() {
         CLUSTER.shutdown();
     }
 
@@ -156,6 +166,36 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
     }
 
     /**
+     * Creates a table.
+     *
+     * @param tableName Table name.
+     * @param zoneName Zone name.
+     */
+    protected static Table createTableOnly(String tableName, String zoneName) {
+        sql(format(
+                "CREATE TABLE IF NOT EXISTS {} (id INT PRIMARY KEY, name VARCHAR, salary DOUBLE) WITH PRIMARY_ZONE='{}'",
+                tableName, zoneName
+        ));
+
+        return CLUSTER.node(0).tables().table(tableName);
+    }
+
+    /**
+     * Creates a zone.
+     *
+     * @param zoneName Zone name.
+     * @param replicas Replica factor.
+     * @param partitions Partitions count.
+     * @param storageEngine Storage engine, zero to use {@link CatalogUtils#DEFAULT_STORAGE_ENGINE}.
+     */
+    protected static void createZoneOnlyIfNotExists(String zoneName, int replicas, int partitions, @Nullable String storageEngine) {
+        sql(format(
+                "CREATE ZONE IF NOT EXISTS {} ENGINE {} WITH REPLICAS={}, PARTITIONS={};",
+                zoneName, Objects.requireNonNullElse(storageEngine, DEFAULT_STORAGE_ENGINE), replicas, partitions
+        ));
+    }
+
+    /**
      * Creates zone and table.
      *
      * @param zoneName Zone name.
@@ -164,17 +204,25 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
      * @param partitions Partitions count.
      */
     protected static Table createZoneAndTable(String zoneName, String tableName, int replicas, int partitions) {
-        sql(format(
-                "CREATE ZONE IF NOT EXISTS {} WITH REPLICAS={}, PARTITIONS={};",
-                zoneName, replicas, partitions
-        ));
+        createZoneOnlyIfNotExists(zoneName, replicas, partitions, null);
 
-        sql(format(
-                "CREATE TABLE IF NOT EXISTS {} (id INT PRIMARY KEY, name VARCHAR, salary DOUBLE) WITH PRIMARY_ZONE='{}'",
-                tableName, zoneName
-        ));
+        return createTableOnly(tableName, zoneName);
+    }
 
-        return CLUSTER.node(0).tables().table(tableName);
+    /**
+     * Inserts data into the table created by {@link #createZoneAndTable(String, String, int, int)}.
+     *
+     * @param tx Transaction.
+     * @param tableName Table name.
+     * @param people People to insert into the table.
+     */
+    protected static void insertPeople(Transaction tx, String tableName, Person... people) {
+        insertDataInTransaction(
+                tx,
+                tableName,
+                List.of("ID", "NAME", "SALARY"),
+                Stream.of(people).map(person -> new Object[]{person.id, person.name, person.salary}).toArray(Object[][]::new)
+        );
     }
 
     /**
@@ -412,7 +460,7 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
 
                         return difference.stream()
                                 .map(id -> catalogManager.index(id, now))
-                                .allMatch(indexDescriptor -> indexDescriptor != null && indexDescriptor.available());
+                                .allMatch(indexDescriptor -> indexDescriptor != null && indexDescriptor.status() == AVAILABLE);
                     },
                     10_000L
             ));
@@ -443,7 +491,7 @@ public abstract class ClusterPerClassIntegrationTest extends IgniteIntegrationTe
 
         CatalogIndexDescriptor indexDescriptor = catalogManager.index(indexName, clock.nowLong());
 
-        return indexDescriptor != null && indexDescriptor.available();
+        return indexDescriptor != null && indexDescriptor.status() == AVAILABLE;
     }
 
     /**

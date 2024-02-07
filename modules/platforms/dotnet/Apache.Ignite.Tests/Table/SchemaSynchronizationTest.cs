@@ -292,8 +292,11 @@ public class SchemaSynchronizationTest : IgniteTestsBase
                 break;
 
             case TestMode.Compute:
-                await Client.Compute.ExecuteColocatedAsync<string, Poco>(
+                var jobExecution = await Client.Compute.ExecuteColocatedAsync<string, Poco>(
                     table.Name, new Poco(1, "foo"), Array.Empty<DeploymentUnit>(), ComputeTests.NodeNameJob);
+
+                await jobExecution.GetResultAsync();
+
                 break;
 
             default:
@@ -339,7 +342,7 @@ public class SchemaSynchronizationTest : IgniteTestsBase
         var table = await Client.Tables.GetTableAsync(TestTableName);
         var view = table!.RecordBinaryView;
 
-        var options = DataStreamerOptions.Default with { BatchSize = 2 };
+        var options = DataStreamerOptions.Default with { PageSize = 2 };
         await view.StreamDataAsync(GetData(), options);
 
         // Inserted with old schema.

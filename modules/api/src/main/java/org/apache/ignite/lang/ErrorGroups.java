@@ -133,6 +133,9 @@ public class ErrorGroups {
         /** Operation failed because a node has left the cluster. */
         public static final int NODE_LEFT_ERR = COMMON_ERR_GROUP.registerErrorCode((short) 5);
 
+        /** Cursor is already closed error. */
+        public static final int CURSOR_CLOSED_ERR = COMMON_ERR_GROUP.registerErrorCode((short) 6);
+
         /**
          * This error code represents an internal error caused by faulty logic or coding in the Ignite codebase.
          * In general, this error code should be considered as a non-recoverable error
@@ -211,17 +214,11 @@ public class ErrorGroups {
         /** SQL error group. */
         public static final ErrorGroup SQL_ERR_GROUP = registerGroup("SQL", (short) 4);
 
-        /** No more pages in the cursor error. */
-        public static final int CURSOR_NO_MORE_PAGES_ERR = SQL_ERR_GROUP.registerErrorCode((short) 1);
-
         /** Query without a result set error. */
         public static final int QUERY_NO_RESULT_SET_ERR = SQL_ERR_GROUP.registerErrorCode((short) 2);
 
         /** Schema not found. */
         public static final int SCHEMA_NOT_FOUND_ERR = SQL_ERR_GROUP.registerErrorCode((short) 3);
-
-        /** Cursor is already closed error. */
-        public static final int CURSOR_CLOSED_ERR = SQL_ERR_GROUP.registerErrorCode((short) 4);
 
         /** Statement parsing error. This error is returned when an SQL statement string is not valid according to syntax rules. */
         public static final int STMT_PARSE_ERR = SQL_ERR_GROUP.registerErrorCode((short) 5);
@@ -358,6 +355,12 @@ public class ErrorGroups {
 
         /** Failure due to primary replica expiration. */
         public static final int TX_PRIMARY_REPLICA_EXPIRED_ERR = TX_ERR_GROUP.registerErrorCode((short) 13);
+
+        /** Operation failed because the transaction is already finished. */
+        public static final int TX_ALREADY_FINISHED_ERR = TX_ERR_GROUP.registerErrorCode((short) 14);
+
+        /** Failure due to a stale operation of a completed transaction is detected. */
+        public static final int TX_STALE_OPERATION_ERR = TX_ERR_GROUP.registerErrorCode((short) 15);
     }
 
     /** Replicator error group. */
@@ -419,20 +422,8 @@ public class ErrorGroups {
         /** Distribution zones group. */
         public static final ErrorGroup DISTRIBUTION_ZONES_ERR_GROUP = registerGroup("DISTRZONES", (short) 10);
 
-        /** Distribution zone already exists. */
-        public static final int ZONE_ALREADY_EXISTS_ERR = DISTRIBUTION_ZONES_ERR_GROUP.registerErrorCode((short) 1);
-
         /** Distribution zone is not found. */
-        public static final int ZONE_NOT_FOUND_ERR = DISTRIBUTION_ZONES_ERR_GROUP.registerErrorCode((short) 2);
-
-        /** Distribution zone rename error. */
-        public static final int ZONE_RENAME_ERR = DISTRIBUTION_ZONES_ERR_GROUP.registerErrorCode((short) 3);
-
-        /** Distribution zone is a default distribution zone or bound to table. */
-        public static final int ZONE_DROP_ERR = DISTRIBUTION_ZONES_ERR_GROUP.registerErrorCode((short) 4);
-
-        /** Distribution zone definition error. */
-        public static final int ZONE_DEFINITION_ERR = DISTRIBUTION_ZONES_ERR_GROUP.registerErrorCode((short) 5);
+        public static final int ZONE_NOT_FOUND_ERR = DISTRIBUTION_ZONES_ERR_GROUP.registerErrorCode((short) 1);
     }
 
     /** Network error group. */
@@ -548,17 +539,23 @@ public class ErrorGroups {
         /** Compute job result not found error. */
         public static final int RESULT_NOT_FOUND_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 7);
 
-        /** Compute job status can not be retrieved. */
+        /** Compute job status can't be retrieved. */
         public static final int FAIL_TO_GET_JOB_STATUS_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 8);
 
         /** Compute job failed. */
         public static final int COMPUTE_JOB_FAILED_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 9);
 
-        /** Can not change job priority, compute job not found error. */
+        /** Cannot change job priority, compute job not found error. */
         public static final int CHANGE_JOB_PRIORITY_NO_JOB_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 10);
 
-        /** Can not change job priority, compute job is already executing. */
+        /** Cannot change job priority, compute job is already executing. */
         public static final int CHANGE_JOB_PRIORITY_JOB_EXECUTING_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 11);
+
+        /** Cannot resolve primary replica for colocated execution. */
+        public static final int PRIMARY_REPLICA_RESOLVE_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 12);
+
+        /** Cannot change job priority. */
+        public static final int CHANGE_JOB_PRIORITY_ERR = COMPUTE_ERR_GROUP.registerErrorCode((short) 13);
     }
 
     /** Catalog error group. */

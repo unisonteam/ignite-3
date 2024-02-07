@@ -45,6 +45,11 @@ import org.apache.ignite.internal.hlc.HybridClock;
 import org.apache.ignite.internal.hlc.HybridTimestamp;
 import org.apache.ignite.internal.logger.IgniteLogger;
 import org.apache.ignite.internal.logger.Loggers;
+import org.apache.ignite.internal.network.AbstractMessagingService;
+import org.apache.ignite.internal.network.ChannelType;
+import org.apache.ignite.internal.network.ClusterNodeImpl;
+import org.apache.ignite.internal.network.ClusterService;
+import org.apache.ignite.internal.network.NetworkMessage;
 import org.apache.ignite.internal.placementdriver.PlacementDriver;
 import org.apache.ignite.internal.placementdriver.TestPlacementDriver;
 import org.apache.ignite.internal.raft.Command;
@@ -64,6 +69,7 @@ import org.apache.ignite.internal.schema.BinaryRowEx;
 import org.apache.ignite.internal.schema.Column;
 import org.apache.ignite.internal.schema.ColumnsExtractor;
 import org.apache.ignite.internal.schema.SchemaDescriptor;
+import org.apache.ignite.internal.schema.configuration.StorageUpdateConfiguration;
 import org.apache.ignite.internal.storage.MvPartitionStorage;
 import org.apache.ignite.internal.storage.engine.MvTableStorage;
 import org.apache.ignite.internal.storage.impl.TestMvPartitionStorage;
@@ -90,18 +96,14 @@ import org.apache.ignite.internal.tx.impl.HeapLockManager;
 import org.apache.ignite.internal.tx.impl.TransactionIdGenerator;
 import org.apache.ignite.internal.tx.impl.TxManagerImpl;
 import org.apache.ignite.internal.tx.storage.state.test.TestTxStateTableStorage;
+import org.apache.ignite.internal.tx.test.TestLocalRwTxCounter;
 import org.apache.ignite.internal.type.NativeTypes;
 import org.apache.ignite.internal.util.Lazy;
 import org.apache.ignite.internal.util.PendingComparableValuesTracker;
 import org.apache.ignite.internal.util.PendingIndependentComparableValuesTracker;
-import org.apache.ignite.network.AbstractMessagingService;
-import org.apache.ignite.network.ChannelType;
 import org.apache.ignite.network.ClusterNode;
-import org.apache.ignite.network.ClusterNodeImpl;
 import org.apache.ignite.network.ClusterNodeResolver;
-import org.apache.ignite.network.ClusterService;
 import org.apache.ignite.network.NetworkAddress;
-import org.apache.ignite.network.NetworkMessage;
 import org.apache.ignite.network.SingleClusterNodeResolver;
 import org.apache.ignite.network.TopologyService;
 import org.apache.ignite.tx.TransactionException;
@@ -135,6 +137,7 @@ public class DummyInternalTableImpl extends InternalTableImpl {
     );
 
     private static final ReplicationGroupId crossTableGroupId = new TablePartitionId(333, 0);
+    private final StorageUpdateConfiguration storageUpdateConfiguration;
 
     private PartitionListener partitionListener;
 
@@ -155,9 +158,16 @@ public class DummyInternalTableImpl extends InternalTableImpl {
      * @param replicaSvc Replica service.
      * @param schema Schema.
      * @param txConfiguration Transaction configuration.
+     * @param storageUpdateConfiguration Configuration for the storage update handler.
      */
-    public DummyInternalTableImpl(ReplicaService replicaSvc, SchemaDescriptor schema, TransactionConfiguration txConfiguration) {
-        this(replicaSvc, new TestMvPartitionStorage(0), schema, new TestPlacementDriver(LOCAL_NODE), txConfiguration);
+    public DummyInternalTableImpl(
+            ReplicaService replicaSvc,
+            SchemaDescriptor schema,
+            TransactionConfiguration txConfiguration,
+            StorageUpdateConfiguration storageUpdateConfiguration
+    ) {
+        this(replicaSvc, new TestMvPartitionStorage(0), schema, new TestPlacementDriver(LOCAL_NODE),
+                txConfiguration, storageUpdateConfiguration);
     }
 
     /**
@@ -167,14 +177,16 @@ public class DummyInternalTableImpl extends InternalTableImpl {
      * @param storage Storage.
      * @param schema Schema.
      * @param txConfiguration Transaction configuration.
+     * @param storageUpdateConfiguration Configuration for the storage update handler.
      */
     public DummyInternalTableImpl(
             ReplicaService replicaSvc,
             MvPartitionStorage storage,
             SchemaDescriptor schema,
-            TransactionConfiguration txConfiguration
+            TransactionConfiguration txConfiguration,
+            StorageUpdateConfiguration storageUpdateConfiguration
     ) {
-        this(replicaSvc, storage, schema, new TestPlacementDriver(LOCAL_NODE), txConfiguration);
+        this(replicaSvc, storage, schema, new TestPlacementDriver(LOCAL_NODE), txConfiguration, storageUpdateConfiguration);
     }
 
     /**
@@ -184,13 +196,15 @@ public class DummyInternalTableImpl extends InternalTableImpl {
      * @param mvPartStorage Multi version partition storage.
      * @param schema Schema descriptor.
      * @param txConfiguration Transaction configuration.
+     * @param storageUpdateConfiguration Configuration for the storage update handler.
      */
     public DummyInternalTableImpl(
             ReplicaService replicaSvc,
             MvPartitionStorage mvPartStorage,
             SchemaDescriptor schema,
             PlacementDriver placementDriver,
-            TransactionConfiguration txConfiguration
+            TransactionConfiguration txConfiguration,
+            StorageUpdateConfiguration storageUpdateConfiguration
     ) {
         this(
                 replicaSvc,
@@ -200,7 +214,8 @@ public class DummyInternalTableImpl extends InternalTableImpl {
                 null,
                 schema,
                 new HybridTimestampTracker(),
-                placementDriver
+                placementDriver,
+                storageUpdateConfiguration
         );
     }
 
@@ -216,6 +231,7 @@ public class DummyInternalTableImpl extends InternalTableImpl {
      * @param schema Schema descriptor.
      * @param tracker Observable timestamp tracker.
      * @param placementDriver Placement driver.
+     * @param storageUpdateConfiguration Configuration for the storage config handler.
      */
     public DummyInternalTableImpl(
             ReplicaService replicaSvc,
@@ -225,7 +241,8 @@ public class DummyInternalTableImpl extends InternalTableImpl {
             @Nullable TransactionStateResolver transactionStateResolver,
             SchemaDescriptor schema,
             HybridTimestampTracker tracker,
-            PlacementDriver placementDriver
+            PlacementDriver placementDriver,
+            StorageUpdateConfiguration storageUpdateConfiguration
     ) {
         super(
                 "test",
@@ -241,6 +258,7 @@ public class DummyInternalTableImpl extends InternalTableImpl {
                 tracker,
                 placementDriver
         );
+        this.storageUpdateConfiguration = storageUpdateConfiguration;
         RaftGroupService svc = raftGroupServiceByPartitionId.get(PART_ID);
 
         groupId = crossTableUsage ? new TablePartitionId(tableId(), PART_ID) : crossTableGroupId;
@@ -346,7 +364,8 @@ public class DummyInternalTableImpl extends InternalTableImpl {
         StorageUpdateHandler storageUpdateHandler = new StorageUpdateHandler(
                 PART_ID,
                 partitionDataStorage,
-                indexUpdateHandler
+                indexUpdateHandler,
+                storageUpdateConfiguration
         );
 
         DummySchemaManagerImpl schemaManager = new DummySchemaManagerImpl(schema);
@@ -446,7 +465,8 @@ public class DummyInternalTableImpl extends InternalTableImpl {
                 CLOCK,
                 new TransactionIdGenerator(0xdeadbeef),
                 placementDriver,
-                () -> DEFAULT_IDLE_SAFE_TIME_PROPAGATION_PERIOD_MILLISECONDS
+                () -> DEFAULT_IDLE_SAFE_TIME_PROPAGATION_PERIOD_MILLISECONDS,
+                new TestLocalRwTxCounter()
         );
 
         txManager.start();

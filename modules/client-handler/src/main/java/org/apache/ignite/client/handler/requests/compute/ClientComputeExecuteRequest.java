@@ -17,17 +17,23 @@
 
 package org.apache.ignite.client.handler.requests.compute;
 
+import static org.apache.ignite.client.handler.requests.compute.ClientComputeGetStatusRequest.packJobStatus;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.apache.ignite.client.handler.NotificationSender;
 import org.apache.ignite.compute.DeploymentUnit;
-import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.compute.JobExecution;
+import org.apache.ignite.compute.JobExecutionOptions;
+import org.apache.ignite.internal.client.proto.ClientMessagePacker;
 import org.apache.ignite.internal.client.proto.ClientMessageUnpacker;
+import org.apache.ignite.internal.compute.IgniteComputeInternal;
+import org.apache.ignite.internal.network.ClusterService;
 import org.apache.ignite.lang.IgniteException;
-import org.apache.ignite.network.ClusterService;
-import org.jetbrains.annotations.Nullable;
+import org.apache.ignite.network.ClusterNode;
 
 /**
  * Compute execute request.
@@ -36,36 +42,57 @@ public class ClientComputeExecuteRequest {
     /**
      * Processes the request.
      *
-     * @param in                 Unpacker.
-     * @param compute            Compute.
-     * @param cluster            Cluster.
+     * @param in Unpacker.
+     * @param out Packer.
+     * @param compute Compute.
+     * @param cluster Cluster.
      * @param notificationSender Notification sender.
      * @return Future.
      */
-    public static @Nullable CompletableFuture<Void> process(
+    public static CompletableFuture<Void> process(
             ClientMessageUnpacker in,
-            IgniteCompute compute,
+            ClientMessagePacker out,
+            IgniteComputeInternal compute,
             ClusterService cluster,
-            NotificationSender notificationSender) {
-        var nodeName = in.tryUnpackNil() ? null : in.unpackString();
-
-        var node = nodeName == null
-                ? cluster.topologyService().localMember()
-                : cluster.topologyService().getByConsistentId(nodeName);
-
-        if (node == null) {
-            throw new IgniteException("Specified node is not present in the cluster: " + nodeName);
-        }
+            NotificationSender notificationSender
+    ) {
+        Set<ClusterNode> candidates = unpackCandidateNodes(in, cluster);
 
         List<DeploymentUnit> deploymentUnits = unpackDeploymentUnits(in);
         String jobClassName = in.unpackString();
+        JobExecutionOptions options = JobExecutionOptions.builder().priority(in.unpackInt()).maxRetries(in.unpackInt()).build();
         Object[] args = unpackArgs(in);
 
-        compute.executeAsync(Set.of(node), deploymentUnits, jobClassName, args)
-                .resultAsync()
-                .whenComplete((res, err) -> notificationSender.sendNotification(w -> w.packObjectAsBinaryTuple(res), err));
+        JobExecution<Object> execution = compute.executeAsyncWithFailover(candidates, deploymentUnits, jobClassName, options, args);
+        sendResultAndStatus(execution, notificationSender);
+        return execution.idAsync().thenAccept(out::packUuid);
+    }
 
-        return null;
+    private static Set<ClusterNode> unpackCandidateNodes(ClientMessageUnpacker in, ClusterService cluster) {
+        int size = in.unpackInt();
+        Set<ClusterNode> nodes = new HashSet<>(size);
+
+        for (int i = 0; i < size; i++) {
+            String nodeName = in.unpackString();
+            ClusterNode node = cluster.topologyService().getByConsistentId(nodeName);
+
+            if (node == null) {
+                throw new IgniteException("Specified node is not present in the cluster: " + nodeName);
+            }
+
+            nodes.add(node);
+        }
+
+        return nodes;
+    }
+
+    static void sendResultAndStatus(JobExecution<Object> execution, NotificationSender notificationSender) {
+        execution.resultAsync().whenComplete((val, err) ->
+                execution.statusAsync().whenComplete((status, errStatus) ->
+                        notificationSender.sendNotification(w -> {
+                            w.packObjectAsBinaryTuple(val);
+                            packJobStatus(w, status);
+                        }, err)));
     }
 
     /**
