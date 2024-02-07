@@ -158,10 +158,6 @@ public class JobExecutionParameters {
         }
     }
 
-    public interface JobExecutionSplitter {
-        List<JobExecutionParameters> split(JobExecutionParameters parameters, String table);
-    }
-
     private abstract static class ColocationOption {
         protected final String tableName;
 
