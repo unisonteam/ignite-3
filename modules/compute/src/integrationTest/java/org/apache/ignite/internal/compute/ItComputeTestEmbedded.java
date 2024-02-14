@@ -19,6 +19,7 @@ package org.apache.ignite.internal.compute;
 
 import static java.util.stream.Collectors.joining;
 import static org.apache.ignite.internal.compute.utils.ComputeTestUtils.assertPublicException;
+import static org.apache.ignite.internal.testframework.IgniteTestUtils.randomString;
 import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willBe;
 import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willCompleteSuccessfully;
 import static org.apache.ignite.internal.testframework.matchers.JobStatusMatcher.jobStatusWithState;
@@ -26,21 +27,27 @@ import static org.apache.ignite.lang.ErrorGroups.Compute.CLASS_INITIALIZATION_ER
 import static org.apache.ignite.lang.ErrorGroups.Compute.COMPUTE_ERR_GROUP;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.compute.ComputeException;
@@ -53,11 +60,19 @@ import org.apache.ignite.compute.JobState;
 import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.compute.task.ComputeTask;
 import org.apache.ignite.compute.task.JobExecutionParameters;
-import org.apache.ignite.compute.task.TaskOptions;
+import org.apache.ignite.compute.task.PartitionProvider;
 import org.apache.ignite.internal.app.IgniteImpl;
+import org.apache.ignite.internal.schema.BinaryRow;
+import org.apache.ignite.internal.schema.SchemaRegistry;
+import org.apache.ignite.internal.table.TableRow;
+import org.apache.ignite.internal.table.TableViewInternal;
+import org.apache.ignite.internal.util.subscription.ListAccumulator;
 import org.apache.ignite.lang.ErrorGroup;
 import org.apache.ignite.lang.IgniteException;
+import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.network.TopologyProvider;
+import org.apache.ignite.table.Table;
+import org.apache.ignite.table.Tuple;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -287,6 +302,30 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
         assertThat(taskExecution.resultAsync(), willBe(runningNodes().map(IgniteImpl::name).map(String::length).reduce(Integer::sum).get()));
     }
 
+    @Test
+    void wordCountTest() {
+        IgniteImpl node = node(0);
+
+        var tableName = "tableName";
+        node.sql().createSession().execute(null, "CREATE TABLE " + tableName + " (KEY INT PRIMARY KEY, VAL VARCHAR NOT NULL)");
+
+        Table table = node.tables().table(tableName);
+        var tupleView = table.recordView();
+
+        Random random = new Random();
+        Map<String, Integer> result = new HashMap<>();
+        for (int i = 0; i < 100; i++) {
+            String s = randomString(random, 10);
+            result.merge(s, 1, Integer::sum);
+            Tuple rec = Tuple.create().set("KEY", i).set("VAL", s);
+            tupleView.upsert(null, rec);
+        }
+
+        TaskExecution<Map<String, Integer>> execution = node.compute().mapReduceAsync(units(), WordCounter.class.getName());
+
+        assertThat(execution.resultAsync(), willBe(result));
+    }
+
     private static class ConcatJob implements ComputeJob<String> {
         /** {@inheritDoc} */
         @Override
@@ -383,6 +422,7 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
         @Override
         public List<JobExecutionParameters> map(
                 TopologyProvider topologyProvider,
+                PartitionProvider partitionProvider,
                 @Nullable Object[] args
         ) {
             return topologyProvider.allMembers().stream().map(node ->
@@ -404,6 +444,83 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
                     .map(String::length)
                     .reduce(Integer::sum)
                     .get();
+        }
+    }
+
+    private static class WordCounter implements ComputeTask<Map<String, Integer>> {
+        @Override
+        public List<JobExecutionParameters> map(
+                TopologyProvider topologyProvider,
+                PartitionProvider partitionProvider,
+                @Nullable Object[] args
+        ) {
+            String tableName = (String) Objects.requireNonNull(args[0]);
+
+            Map<Integer, ClusterNode> partitionMapping = partitionProvider.partitionMapping(tableName);
+
+            List<JobExecutionParameters> result = new ArrayList<>();
+            for (Entry<Integer, ClusterNode> entry : partitionMapping.entrySet()) {
+                Integer partition = entry.getKey();
+                ClusterNode node = entry.getValue();
+
+                result.add(JobExecutionParameters.builder()
+                                .jobClassName(CounterJob.class.getName())
+                                .nodes(Set.of(node))
+                                .args(new Object[] {tableName, partition})
+                        .build());
+            }
+            return result;
+        }
+
+        @Override
+        public Map<String, Integer> reduce(Map<UUID, ?> results) {
+            Map<String, Integer> result = new HashMap<>();
+
+            for (Object value : results.values()) {
+                Map<String, Integer> map = (Map<String, Integer>) value;
+
+                map.forEach((k, v) -> result.merge(k, v, Integer::sum));
+            }
+
+            return result;
+        }
+    }
+
+    private static class CounterJob implements ComputeJob<Map<String, Integer>> {
+        @Override
+        public Map<String, Integer> execute(JobExecutionContext context, Object... args) {
+            String tableName = (String) Objects.requireNonNull(args[0]);
+            Integer partition = (Integer) Objects.requireNonNull(args[1]);
+
+            Ignite ignite = context.ignite();
+
+            Table table = ignite.tables().table(tableName);
+
+            TableViewInternal tableViewInternal = (TableViewInternal) table;
+
+            Publisher<BinaryRow> scan = tableViewInternal.internalTable().scan(partition, null);
+
+            CompletableFuture<List<Tuple>> result = new CompletableFuture<>();
+            scan.subscribe(new ListAccumulator<>((Function<BinaryRow, Tuple>) binaryRow -> {
+                SchemaRegistry registry = tableViewInternal.schemaView();
+                return TableRow.tuple(registry.resolve(binaryRow, registry.lastKnownSchemaVersion()));
+            }).toSubscriber(result));
+
+            try {
+                return result.thenApply(tuples -> {
+                    Map<String, Integer> map = new HashMap<>();
+                    for (Tuple tuple : tuples) {
+                        String text = tuple.stringValue(2);
+                        String[] split = text.split(" ");
+                        for (String s : split) {
+                            map.merge(s, 1, Integer::sum);
+                        }
+                    }
+                    return map;
+                }).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

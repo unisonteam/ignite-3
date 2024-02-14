@@ -714,7 +714,7 @@ public class IgniteImpl implements Ignite {
                 clusterSvc.messagingService(),
                 clusterSvc.topologyService(),
                 logicalTopologyService,
-                new JobContextManager(deploymentManagerImpl, deploymentManagerImpl.deploymentUnitAccessor(), new JobClassLoaderFactory()),
+                jobContextManager,
                 new ComputeExecutorImpl(this, stateMachine, computeCfg),
                 computeCfg
         );
@@ -723,6 +723,7 @@ public class IgniteImpl implements Ignite {
                 placementDriverMgr.placementDriver(),
                 clusterSvc.topologyService(),
                 distributedTblMgr,
+                jobContextManager,
                 computeComponent,
                 clock
         );

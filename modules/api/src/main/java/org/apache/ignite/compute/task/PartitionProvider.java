@@ -17,23 +17,9 @@
 
 package org.apache.ignite.compute.task;
 
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import org.apache.ignite.network.TopologyProvider;
-import org.jetbrains.annotations.Nullable;
+import org.apache.ignite.network.ClusterNode;
 
-/**
- * Compute task interface.
- *
- * @param <R> Result type.
- */
-public interface ComputeTask<R> {
-    List<JobExecutionParameters> map(
-            TopologyProvider topologyProvider,
-            PartitionProvider partitionProvider,
-            @Nullable Object[] args
-    );
-
-    R reduce(Map<UUID, ?> results);
+public interface PartitionProvider {
+    Map<Integer, ClusterNode> partitionMapping(String tableName);
 }

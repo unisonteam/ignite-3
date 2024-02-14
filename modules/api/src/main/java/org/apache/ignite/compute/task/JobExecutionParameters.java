@@ -24,8 +24,6 @@ import java.util.Set;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.network.ClusterNode;
-import org.apache.ignite.table.Tuple;
-import org.apache.ignite.table.mapper.Mapper;
 import org.jetbrains.annotations.Nullable;
 
 public class JobExecutionParameters {
@@ -34,8 +32,6 @@ public class JobExecutionParameters {
     private final Set<ClusterNode> nodes;
 
     private final JobExecutionOptions jobOptions;
-
-    private final ColocationOption colocationOption;
 
     private final List<DeploymentUnit> units;
 
@@ -46,14 +42,12 @@ public class JobExecutionParameters {
             String jobClassName,
             Set<ClusterNode> nodes,
             JobExecutionOptions jobOptions,
-            ColocationOption colocationOption,
             List<DeploymentUnit> units,
             Object[] args
     ) {
         this.jobClassName = jobClassName;
         this.nodes = Collections.unmodifiableSet(nodes);
         this.jobOptions = jobOptions;
-        this.colocationOption = colocationOption;
         this.units = units;
         this.args = args;
     }
@@ -92,8 +86,6 @@ public class JobExecutionParameters {
 
         private Set<ClusterNode> nodes;
 
-        private ColocationOption colocationOptions;
-
         private JobExecutionOptions jobOptions = JobExecutionOptions.DEFAULT;
 
         private List<DeploymentUnit> units = Collections.emptyList();
@@ -121,21 +113,6 @@ public class JobExecutionParameters {
             return this;
         }
 
-        public JobExecutionParametersBuilder colocatedWith(String tableName, Tuple tuple) {
-            colocationOptions = new TupleColocationOption(tableName, tuple);
-            return this;
-        }
-
-        public <T> JobExecutionParametersBuilder colocatedWith(String tableName, T key, Mapper<T> mapper) {
-            colocationOptions = new KeyColocationOption<>(tableName, key, mapper);
-            return this;
-        }
-
-        public JobExecutionParametersBuilder colocatedWith(String tableName) {
-            colocationOptions = new TableColocationOption(tableName);
-            return this;
-        }
-
         public JobExecutionParametersBuilder args(Object[] args) {
             this.args = args;
             return this;
@@ -151,64 +128,9 @@ public class JobExecutionParameters {
                     jobClassName,
                     nodes,
                     jobOptions,
-                    colocationOptions,
                     units,
                     args
             );
-        }
-    }
-
-    private abstract static class ColocationOption {
-        protected final String tableName;
-
-        private ColocationOption(String tableName) {
-            this.tableName = tableName;
-        }
-
-        public abstract ClusterNode resolve();
-    }
-
-    private static class TupleColocationOption extends ColocationOption {
-        private final Tuple tuple;
-
-
-        private TupleColocationOption(String tableName, Tuple tuple) {
-            super(tableName);
-            this.tuple = tuple;
-        }
-
-        @Override
-        public ClusterNode resolve() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    private static class KeyColocationOption<T> extends ColocationOption {
-        private final T key;
-
-        private final Mapper<T> mapper;
-
-
-        private KeyColocationOption(String tableName, T key, Mapper<T> mapper) {
-            super(tableName);
-            this.key = key;
-            this.mapper = mapper;
-        }
-
-        @Override
-        public ClusterNode resolve() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    private static class TableColocationOption extends ColocationOption {
-        private TableColocationOption(String tableName) {
-            super(tableName);
-        }
-
-        @Override
-        public ClusterNode resolve() {
-            return null;
         }
     }
 }

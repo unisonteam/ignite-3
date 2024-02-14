@@ -21,15 +21,10 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
-import static org.apache.ignite.internal.compute.ComputeUtils.taskClass;
 import static org.apache.ignite.internal.util.CompletableFutures.nullCompletedFuture;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Collection;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -43,20 +38,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 import org.apache.ignite.compute.ComputeException;
 import org.apache.ignite.compute.DeploymentUnit;
 import org.apache.ignite.compute.IgniteCompute;
 import org.apache.ignite.compute.JobExecution;
+import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.compute.JobStatus;
 import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.compute.task.ComputeTask;
-import org.apache.ignite.compute.task.TaskOptions;
+import org.apache.ignite.compute.task.JobExecutionParameters;
+import org.apache.ignite.compute.task.PartitionProvider;
 import org.apache.ignite.internal.compute.loader.JobContextManager;
-import org.apache.ignite.internal.lang.IgniteInternalException;
-import org.apache.ignite.compute.JobExecutionOptions;
-import org.apache.ignite.compute.JobStatus;
 import org.apache.ignite.internal.hlc.HybridClock;
 import org.apache.ignite.internal.placementdriver.PlacementDriver;
 import org.apache.ignite.internal.replicator.TablePartitionId;
@@ -82,6 +75,8 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
 
     private final TopologyProvider topologyProvider;
 
+    private final TopologyService topologyService;
+
     private final IgniteTablesInternal tables;
 
     private final ComputeComponent computeComponent;
@@ -97,9 +92,14 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
     /**
      * Create new instance.
      */
-    public IgniteComputeImpl(PlacementDriver placementDriver, TopologyService topologyService,
-            IgniteTablesInternal tables, ComputeComponent computeComponent,
-            HybridClock clock) {
+    public IgniteComputeImpl(
+            PlacementDriver placementDriver,
+            TopologyService topologyService,
+            IgniteTablesInternal tables,
+            JobContextManager jobContextManager,
+            ComputeComponent computeComponent,
+            HybridClock clock
+    ) {
         this.placementDriver = placementDriver;
         this.topologyService = topologyService;
         this.tables = tables;
@@ -109,12 +109,12 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
         this.topologyProvider = new TopologyProvider() {
             @Override
             public ClusterNode localMember() {
-                return topologyService.localMember();
+                return IgniteComputeImpl.this.topologyService.localMember();
             }
 
             @Override
             public Collection<ClusterNode> allMembers() {
-                return topologyService.allMembers();
+                return IgniteComputeImpl.this.topologyService.allMembers();
             }
         };
     }
@@ -413,22 +413,21 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
                 .thenApply(context -> ComputeUtils.<R>instantiateTask(context.classLoader(), taskClassName))
                 .join();
 
-        Map<String, List<TaskOptions>> result = computeTask.map(topologyProvider, args);
+        List<JobExecutionParameters> result = computeTask.map(topologyProvider, tableName -> {
+
+        }, args);
 
         Map<JobExecution<Object>, Set<ClusterNode>> executions = new HashMap<>();
 
-        for (Entry<String, List<TaskOptions>> entry : result.entrySet()) {
-            String jobClassName = entry.getKey();
-            List<TaskOptions> options = entry.getValue();
-            for (TaskOptions option : options) {
-                JobExecution<Object> jobExecution = executeAsync(
-                        option.nodes(),
-                        option.units(),
-                        jobClassName,
-                        option.args()
-                );
-                executions.put(jobExecution, option.nodes());
-            }
+        for (JobExecutionParameters params : result) {
+            String jobClassName = params.jobClassName();
+            JobExecution<Object> jobExecution = executeAsync(
+                    params.nodes(),
+                    params.units(),
+                    jobClassName,
+                    params.args()
+            );
+            executions.put(jobExecution, params.nodes());
         }
 
         return new TaskExecution<>() {
