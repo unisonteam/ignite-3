@@ -19,17 +19,15 @@ package org.apache.ignite.compute.task;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import org.apache.ignite.compute.DeploymentUnit;
+import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.compute.JobExecution;
 import org.apache.ignite.compute.JobExecutionOptions;
-import org.apache.ignite.network.ClusterNode;
 import org.jetbrains.annotations.Nullable;
 
-public class JobExecutionParameters {
+public class SplitTaskImpl implements SplitTask {
     private final String jobClassName;
-
-    private final Set<ClusterNode> nodes;
 
     private final JobExecutionOptions jobOptions;
 
@@ -38,53 +36,33 @@ public class JobExecutionParameters {
     @Nullable
     private final Object[] args;
 
-    private JobExecutionParameters(
+    private SplitTaskImpl(
             String jobClassName,
-            Set<ClusterNode> nodes,
             JobExecutionOptions jobOptions,
             List<DeploymentUnit> units,
             Object[] args
     ) {
         this.jobClassName = jobClassName;
-        this.nodes = Collections.unmodifiableSet(nodes);
         this.jobOptions = jobOptions;
         this.units = units;
         this.args = args;
     }
 
-    public String jobClassName() {
-        return jobClassName;
+    @Override
+    public JobExecution<Object> execute(IgniteCompute compute) {
+        throw new UnsupportedOperationException();
     }
 
-    public Set<ClusterNode> nodes() {
-        return nodes;
+    public SplitTaskBuilder toBuilder() {
+        return builder().jobClassName(jobClassName).options(jobOptions).units(units).args(args);
     }
 
-    public JobExecutionOptions options() {
-        return jobOptions;
+    public static SplitTaskBuilder builder() {
+        return new SplitTaskBuilder();
     }
 
-    public List<DeploymentUnit> units() {
-        return units;
-    }
-
-    @Nullable
-    public Object[] args() {
-        return args;
-    }
-
-    public JobExecutionParametersBuilder toBuilder() {
-        return builder().jobClassName(jobClassName).nodes(nodes).options(jobOptions).units(units);
-    }
-
-    public static JobExecutionParametersBuilder builder() {
-        return new JobExecutionParametersBuilder();
-    }
-
-    public static class JobExecutionParametersBuilder {
+    public static class SplitTaskBuilder {
         private String jobClassName;
-
-        private Set<ClusterNode> nodes;
 
         private JobExecutionOptions jobOptions = JobExecutionOptions.DEFAULT;
 
@@ -93,40 +71,29 @@ public class JobExecutionParameters {
         @Nullable
         private Object[] args;
 
-        public JobExecutionParametersBuilder jobClassName(String jobClassName) {
+        public SplitTaskBuilder jobClassName(String jobClassName) {
             this.jobClassName = jobClassName;
             return this;
         }
 
-        public JobExecutionParametersBuilder nodes(Set<ClusterNode> nodes) {
-            this.nodes = nodes;
-            return this;
-        }
-
-        public JobExecutionParametersBuilder options(JobExecutionOptions options) {
+        public SplitTaskBuilder options(JobExecutionOptions options) {
             this.jobOptions = options;
             return this;
         }
 
-        public JobExecutionParametersBuilder units(List<DeploymentUnit> units) {
+        public SplitTaskBuilder units(List<DeploymentUnit> units) {
             this.units = units;
             return this;
         }
 
-        public JobExecutionParametersBuilder args(Object[] args) {
+        public SplitTaskBuilder args(Object[] args) {
             this.args = args;
             return this;
         }
 
-        public JobExecutionParameters build() {
-            Objects.requireNonNull(nodes);
-            if (nodes.isEmpty()) {
-                throw new IllegalArgumentException();
-            }
-
-            return new JobExecutionParameters(
+        public SplitTask build() {
+            return new SplitTaskImpl(
                     jobClassName,
-                    nodes,
                     jobOptions,
                     units,
                     args

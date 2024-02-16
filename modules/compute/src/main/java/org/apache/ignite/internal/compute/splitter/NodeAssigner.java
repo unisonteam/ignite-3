@@ -15,28 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.internal.compute.splitter;
 
-import static java.util.stream.Collectors.toMap;
+import org.apache.ignite.compute.task.SplitTask;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import org.apache.ignite.network.ClusterNode;
-
-public interface TaskExecution<R> {
-    CompletableFuture<R> resultAsync();
-
-    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
-
-    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
-        return statusesAsync().thenApply(statuses ->
-                statuses != null
-                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
-                        : null
-        );
-    }
-
-    CompletableFuture<Void> cancelAsync();
+public interface NodeAssigner {
+    <R extends SplitTask> void assign();
 }

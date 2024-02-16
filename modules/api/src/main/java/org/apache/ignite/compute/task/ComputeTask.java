@@ -17,10 +17,10 @@
 
 package org.apache.ignite.compute.task;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.ignite.network.TopologyProvider;
+import org.apache.ignite.compute.splitter.ClusterSplitter;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -29,9 +29,8 @@ import org.jetbrains.annotations.Nullable;
  * @param <R> Result type.
  */
 public interface ComputeTask<R> {
-    List<JobExecutionParameters> map(
-            TopologyProvider topologyProvider,
-            PartitionProvider partitionProvider,
+    Collection<SplitTask> map(
+            ClusterSplitter clusterSplitter,
             @Nullable Object[] args
     );
 

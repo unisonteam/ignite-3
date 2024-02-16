@@ -31,12 +31,11 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
@@ -48,7 +47,6 @@ import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.compute.ComputeException;
 import org.apache.ignite.compute.ComputeJob;
@@ -58,9 +56,10 @@ import org.apache.ignite.compute.JobExecutionContext;
 import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.compute.JobState;
 import org.apache.ignite.compute.TaskExecution;
+import org.apache.ignite.compute.splitter.ClusterSplitter;
 import org.apache.ignite.compute.task.ComputeTask;
-import org.apache.ignite.compute.task.JobExecutionParameters;
-import org.apache.ignite.compute.task.PartitionProvider;
+import org.apache.ignite.compute.task.SplitTask;
+import org.apache.ignite.compute.task.SplitTaskImpl;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.internal.schema.BinaryRow;
 import org.apache.ignite.internal.schema.SchemaRegistry;
@@ -69,8 +68,6 @@ import org.apache.ignite.internal.table.TableViewInternal;
 import org.apache.ignite.internal.util.subscription.ListAccumulator;
 import org.apache.ignite.lang.ErrorGroup;
 import org.apache.ignite.lang.IgniteException;
-import org.apache.ignite.network.ClusterNode;
-import org.apache.ignite.network.TopologyProvider;
 import org.apache.ignite.table.Table;
 import org.apache.ignite.table.Tuple;
 import org.jetbrains.annotations.Nullable;
@@ -299,7 +296,8 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
 
         TaskExecution<Integer> taskExecution = entryNode.compute().mapReduceAsync(units(), MapReduce.class.getName());
 
-        assertThat(taskExecution.resultAsync(), willBe(runningNodes().map(IgniteImpl::name).map(String::length).reduce(Integer::sum).get()));
+        assertThat(taskExecution.resultAsync(),
+                willBe(runningNodes().map(IgniteImpl::name).map(String::length).reduce(Integer::sum).get()));
     }
 
     @Test
@@ -420,21 +418,21 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
 
     private static class MapReduce implements ComputeTask<Integer> {
         @Override
-        public List<JobExecutionParameters> map(
-                TopologyProvider topologyProvider,
-                PartitionProvider partitionProvider,
+        public Collection<SplitTask> map(
+                ClusterSplitter clusterSplitter,
                 @Nullable Object[] args
         ) {
-            return topologyProvider.allMembers().stream().map(node ->
-                            JobExecutionParameters.builder()
+            return clusterSplitter
+                    .forNodes()
+                    .split(node ->
+                            SplitTaskImpl.builder()
                                     .jobClassName(GetNodeNameJob.class.getName())
-                                    .nodes(Set.of(node))
                                     .options(JobExecutionOptions.builder()
                                             .maxRetries(10)
                                             .priority(Integer.MAX_VALUE)
                                             .build()
                                     ).build()
-            ).collect(Collectors.toList());
+                    ).collect();
         }
 
         @Override
@@ -449,27 +447,18 @@ class ItComputeTestEmbedded extends ItComputeBaseTest {
 
     private static class WordCounter implements ComputeTask<Map<String, Integer>> {
         @Override
-        public List<JobExecutionParameters> map(
-                TopologyProvider topologyProvider,
-                PartitionProvider partitionProvider,
+        public Collection<SplitTask> map(
+                ClusterSplitter clusterSplitter,
                 @Nullable Object[] args
         ) {
             String tableName = (String) Objects.requireNonNull(args[0]);
 
-            Map<Integer, ClusterNode> partitionMapping = partitionProvider.partitionMapping(tableName);
-
-            List<JobExecutionParameters> result = new ArrayList<>();
-            for (Entry<Integer, ClusterNode> entry : partitionMapping.entrySet()) {
-                Integer partition = entry.getKey();
-                ClusterNode node = entry.getValue();
-
-                result.add(JobExecutionParameters.builder()
-                                .jobClassName(CounterJob.class.getName())
-                                .nodes(Set.of(node))
-                                .args(new Object[] {tableName, partition})
-                        .build());
-            }
-            return result;
+            return clusterSplitter.forAllParts(tableName)
+                    .split(partition -> SplitTaskImpl.builder()
+                            .jobClassName(CounterJob.class.getName())
+                            .args(new Object[]{tableName, partition})
+                            .build())
+                    .collect();
         }
 
         @Override

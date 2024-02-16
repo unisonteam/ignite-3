@@ -47,9 +47,9 @@ import org.apache.ignite.compute.JobExecutionOptions;
 import org.apache.ignite.compute.JobStatus;
 import org.apache.ignite.compute.TaskExecution;
 import org.apache.ignite.compute.task.ComputeTask;
-import org.apache.ignite.compute.task.JobExecutionParameters;
-import org.apache.ignite.compute.task.PartitionProvider;
+import org.apache.ignite.compute.task.SplitTask;
 import org.apache.ignite.internal.compute.loader.JobContextManager;
+import org.apache.ignite.internal.compute.splitter.ClusterSplitterImpl;
 import org.apache.ignite.internal.hlc.HybridClock;
 import org.apache.ignite.internal.placementdriver.PlacementDriver;
 import org.apache.ignite.internal.replicator.TablePartitionId;
@@ -413,21 +413,14 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
                 .thenApply(context -> ComputeUtils.<R>instantiateTask(context.classLoader(), taskClassName))
                 .join();
 
-        List<JobExecutionParameters> result = computeTask.map(topologyProvider, tableName -> {
-
-        }, args);
+        Collection<SplitTask> result = computeTask.map(new ClusterSplitterImpl(topologyProvider, null), args);
 
         Map<JobExecution<Object>, Set<ClusterNode>> executions = new HashMap<>();
 
-        for (JobExecutionParameters params : result) {
-            String jobClassName = params.jobClassName();
-            JobExecution<Object> jobExecution = executeAsync(
-                    params.nodes(),
-                    params.units(),
-                    jobClassName,
-                    params.args()
-            );
-            executions.put(jobExecution, params.nodes());
+        for (SplitTask splitTask : result) {
+            JobExecution<Object> jobExecution = splitTask.execute(this);
+            //TODO:
+//            executions.put(jobExecution, params.nodes());
         }
 
         return new TaskExecution<>() {
@@ -456,11 +449,11 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
             }
 
             @Override
-            public CompletableFuture<Map<ClusterNode, JobStatus>> statusesAsync() {
+            public CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync() {
                 Map<CompletableFuture<JobStatus>, ClusterNode> collect = executions.entrySet().stream()
                         .collect(toMap(e -> e.getKey().statusAsync(), e -> e.getValue().iterator().next()));
 
-                CompletableFuture<Map<ClusterNode, JobStatus>> result = new CompletableFuture<>();
+                CompletableFuture<Map<JobStatus, ClusterNode>> result = new CompletableFuture<>();
 
                 CompletableFuture.allOf(collect.keySet().toArray(CompletableFuture[]::new)).whenComplete(
                         (unused, throwable) -> {
@@ -468,7 +461,7 @@ public class IgniteComputeImpl implements IgniteComputeInternal {
                                 result.completeExceptionally(throwable);
                             } else {
                                 result.complete(collect.entrySet().stream()
-                                        .collect(toMap(Entry::getValue, e -> e.getKey().join()))
+                                        .collect(toMap(e -> e.getKey().join(), Entry::getValue))
                                 );
                             }
                         });

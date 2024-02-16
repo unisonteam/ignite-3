@@ -15,28 +15,29 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.compute.task;
 
-import static java.util.stream.Collectors.toMap;
+import org.apache.ignite.table.mapper.Mapper;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import org.apache.ignite.network.ClusterNode;
+public class TableKey<T> {
+    private final T key;
 
-public interface TaskExecution<R> {
-    CompletableFuture<R> resultAsync();
+    private final Mapper<T> mapper;
 
-    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
-
-    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
-        return statusesAsync().thenApply(statuses ->
-                statuses != null
-                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
-                        : null
-        );
+    public TableKey(T key, Mapper<T> mapper) {
+        this.key = key;
+        this.mapper = mapper;
     }
 
-    CompletableFuture<Void> cancelAsync();
+    public T key() {
+        return key;
+    }
+
+    public Mapper<T> mapper() {
+        return mapper;
+    }
+
+    public static <R> TableKey<R> of(R key, Mapper<R> mapper) {
+        return new TableKey<>(key, mapper);
+    }
 }

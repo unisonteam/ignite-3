@@ -15,28 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
-
-import static java.util.stream.Collectors.toMap;
+package org.apache.ignite.internal.compute.splitter;
 
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import org.apache.ignite.network.ClusterNode;
 
-public interface TaskExecution<R> {
-    CompletableFuture<R> resultAsync();
+public interface PartitionProvider {
 
-    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
-
-    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
-        return statusesAsync().thenApply(statuses ->
-                statuses != null
-                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
-                        : null
-        );
-    }
-
-    CompletableFuture<Void> cancelAsync();
+    Map<Integer, ClusterNode> partitions(String tableName);
 }

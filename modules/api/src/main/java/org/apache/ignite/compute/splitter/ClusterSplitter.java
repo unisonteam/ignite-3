@@ -15,28 +15,21 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.compute.splitter;
 
-import static java.util.stream.Collectors.toMap;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.Collection;
+import org.apache.ignite.compute.task.TableKey;
 import org.apache.ignite.network.ClusterNode;
+import org.apache.ignite.table.Tuple;
 
-public interface TaskExecution<R> {
-    CompletableFuture<R> resultAsync();
+public interface ClusterSplitter {
+    Splitter<ClusterNode> forNodes();
 
-    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
+    Splitter<Integer> forRange(int range);
 
-    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
-        return statusesAsync().thenApply(statuses ->
-                statuses != null
-                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
-                        : null
-        );
-    }
+    Splitter<Integer> forAllParts(String tableName);
 
-    CompletableFuture<Void> cancelAsync();
+    Splitter<Integer> forTuples(Collection<Tuple> tuples);
+
+    <T> Splitter<TableKey<T>> forKeys(Collection<TableKey<T>> keys);
 }

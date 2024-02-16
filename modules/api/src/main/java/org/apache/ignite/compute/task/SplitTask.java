@@ -15,28 +15,12 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute;
+package org.apache.ignite.compute.task;
 
-import static java.util.stream.Collectors.toMap;
+import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.compute.JobExecution;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import org.apache.ignite.network.ClusterNode;
-
-public interface TaskExecution<R> {
-    CompletableFuture<R> resultAsync();
-
-    CompletableFuture<Map<JobStatus, ClusterNode>> statusesAsync();
-
-    default CompletableFuture<Map<UUID, ClusterNode>> idsAsync() {
-        return statusesAsync().thenApply(statuses ->
-                statuses != null
-                        ? statuses.entrySet().stream().collect(toMap(entry -> entry.getKey().id(), Entry::getValue))
-                        : null
-        );
-    }
-
-    CompletableFuture<Void> cancelAsync();
+public interface SplitTask {
+    //TODO: Refactor to visitor.
+    JobExecution<Object> execute(IgniteCompute compute);
 }

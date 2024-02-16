@@ -15,11 +15,26 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.compute.task;
+package org.apache.ignite.internal.compute.splitter;
 
-import java.util.Map;
+import org.apache.ignite.compute.IgniteCompute;
+import org.apache.ignite.compute.JobExecution;
+import org.apache.ignite.compute.task.SplitTask;
 import org.apache.ignite.network.ClusterNode;
 
-public interface PartitionProvider {
-    Map<Integer, ClusterNode> partitionMapping(String tableName);
+public class AssignedSplitTask implements SplitTask {
+    private final SplitTask userTask;
+
+    private final ClusterNode clusterNode;
+
+    public AssignedSplitTask(SplitTask userTask, ClusterNode clusterNode) {
+        this.userTask = userTask;
+        this.clusterNode = clusterNode;
+    }
+
+    @Override
+    public JobExecution<Object> execute(IgniteCompute compute) {
+        //TODO: execute user task on clusterNode.
+        throw new UnsupportedOperationException();
+    }
 }
