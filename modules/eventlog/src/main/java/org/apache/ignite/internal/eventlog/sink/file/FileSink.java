@@ -13,15 +13,12 @@ public class FileSink implements Sink {
     private Logger logger;
     private FileHandler fileHandler;
 
-    public FileSink(Path filePath) {
+    public FileSink(Path workDir, String filePattern, String name) {
         try {
-            logger = Logger.getLogger("SECURITY_AUDIT");
-
-            fileHandler = new FileHandler(filePath.toString(), true);
-
+            logger = Logger.getLogger(name);
+            fileHandler = new FileHandler(workDir.toAbsolutePath() + filePattern.toString(), true);
             logger.addHandler(fileHandler);
-            Formatter formatter = new EventFormatter();
-            fileHandler.setFormatter(formatter);
+            fileHandler.setFormatter(new EventFormatter());
         } catch (SecurityException | IOException e) {
             throw new RuntimeException(e);
         }

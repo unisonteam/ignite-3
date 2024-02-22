@@ -30,6 +30,7 @@ import org.apache.ignite.internal.configuration.presentation.ConfigurationPresen
 import org.apache.ignite.internal.configuration.presentation.HoconPresentation;
 import org.apache.ignite.internal.configuration.testframework.ConfigurationExtension;
 import org.apache.ignite.internal.configuration.testframework.InjectConfiguration;
+import org.apache.ignite.internal.eventlog.configuration.EventLogConfiguration;
 import org.apache.ignite.internal.rest.RestManager;
 import org.apache.ignite.internal.rest.RestManagerFactory;
 import org.apache.ignite.internal.security.authentication.AuthenticationManager;
@@ -45,6 +46,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 class NodeConfigurationControllerTest extends ConfigurationControllerBaseTest {
     @InjectConfiguration
     SecurityConfiguration securityConfiguration;
+
+    @InjectConfiguration
+    EventLogConfiguration eventLogConfiguration;
 
     @Inject
     @Client("/management/v1/configuration/node/")
@@ -75,6 +79,6 @@ class NodeConfigurationControllerTest extends ConfigurationControllerBaseTest {
     @Bean
     @Factory
     AuthenticationManager authenticationManager() {
-        return new AuthenticationManagerImpl(securityConfiguration);
+        return new AuthenticationManagerImpl(securityConfiguration, eventLogConfiguration);
     }
 }

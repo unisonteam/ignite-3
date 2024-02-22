@@ -97,6 +97,7 @@ import org.apache.ignite.internal.deployunit.IgniteDeployment;
 import org.apache.ignite.internal.deployunit.configuration.DeploymentConfiguration;
 import org.apache.ignite.internal.deployunit.metastore.DeploymentUnitStoreImpl;
 import org.apache.ignite.internal.distributionzones.DistributionZoneManager;
+import org.apache.ignite.internal.eventlog.configuration.EventLogConfiguration;
 import org.apache.ignite.internal.failure.FailureProcessor;
 import org.apache.ignite.internal.hlc.HybridClock;
 import org.apache.ignite.internal.hlc.HybridClockImpl;
@@ -807,7 +808,9 @@ public class IgniteImpl implements Ignite {
     private AuthenticationManager createAuthenticationManager() {
         SecurityConfiguration securityConfiguration = clusterCfgMgr.configurationRegistry()
                 .getConfiguration(SecurityConfiguration.KEY);
-        return new AuthenticationManagerImpl(securityConfiguration);
+        EventLogConfiguration eventLogConfiguration = clusterCfgMgr.configurationRegistry()
+                .getConfiguration(EventLogConfiguration.KEY);
+        return new AuthenticationManagerImpl(securityConfiguration, eventLogConfiguration);
     }
 
     private RestComponent createRestComponent(String name) {

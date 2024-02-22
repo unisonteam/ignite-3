@@ -76,7 +76,7 @@ public class TestServer {
         this.testSslConfig = testSslConfig;
         this.authenticationManager = securityConfiguration == null
                 ? new DummyAuthenticationManager()
-                : new AuthenticationManagerImpl(securityConfiguration);
+                : new AuthenticationManagerImpl(securityConfiguration, null); // fixme
         this.generator = new ConfigurationTreeGenerator(ClientConnectorConfiguration.KEY, NetworkConfiguration.KEY);
         this.configurationManager = new ConfigurationManager(
                 List.of(ClientConnectorConfiguration.KEY, NetworkConfiguration.KEY),

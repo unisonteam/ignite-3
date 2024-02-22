@@ -205,7 +205,7 @@ public class TestServer implements AutoCloseable {
         if (securityConfiguration == null) {
             authenticationManager = new DummyAuthenticationManager();
         } else {
-            authenticationManager = new AuthenticationManagerImpl(securityConfiguration);
+            authenticationManager = new AuthenticationManagerImpl(securityConfiguration, null);//fixme
             authenticationManager.start();
         }
 

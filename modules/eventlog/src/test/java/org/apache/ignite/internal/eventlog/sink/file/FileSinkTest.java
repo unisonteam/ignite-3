@@ -21,7 +21,7 @@ class FileSinkTest {
         assertThat(path.toFile().exists(), equalTo(false));
 
         // When create a new FileSink with the file path.
-        FileSink fileSink = new FileSink(path);
+        FileSink fileSink = new FileSink(path.toString());
         // And write event.
         fileSink.write(new CountEvent(1));
 

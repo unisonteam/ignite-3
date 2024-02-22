@@ -39,6 +39,7 @@ import org.apache.ignite.internal.configuration.ConfigurationRegistry;
 import org.apache.ignite.internal.configuration.ConfigurationTreeGenerator;
 import org.apache.ignite.internal.configuration.storage.TestConfigurationStorage;
 import org.apache.ignite.internal.configuration.validation.TestConfigurationValidator;
+import org.apache.ignite.internal.eventlog.configuration.EventLogConfiguration;
 import org.apache.ignite.internal.network.configuration.NetworkConfiguration;
 import org.apache.ignite.internal.rest.authentication.AuthenticationProviderFactory;
 import org.apache.ignite.internal.rest.cluster.ClusterManagementRestFactory;
@@ -80,12 +81,13 @@ public class RestComponentTest extends BaseIgniteAbstractTest {
         ConfigurationRegistry configurationRegistry = configurationManager.configurationRegistry();
         RestConfiguration restConfiguration = configurationRegistry.getConfiguration(RestConfiguration.KEY);
         SecurityConfiguration securityConfiguration = configurationRegistry.getConfiguration(SecurityConfiguration.KEY);
+        EventLogConfiguration eventLogConfiguration = configurationRegistry.getConfiguration(EventLogConfiguration.KEY);
 
         ClusterManagementGroupManager cmg = mock(ClusterManagementGroupManager.class);
 
         Mockito.when(cmg.clusterState()).then(invocation -> CompletableFuture.completedFuture(state));
 
-        AuthenticationManager authenticationManager = new AuthenticationManagerImpl(securityConfiguration);
+        AuthenticationManager authenticationManager = new AuthenticationManagerImpl(securityConfiguration, eventLogConfiguration);
         Supplier<RestFactory> authProviderFactory = () -> new AuthenticationProviderFactory(authenticationManager);
         Supplier<RestFactory> restPresentationFactory = () -> new PresentationsFactory(
                 configurationManager,

@@ -39,6 +39,7 @@ import java.util.function.Consumer;
 import org.apache.ignite.internal.configuration.testframework.ConfigurationExtension;
 import org.apache.ignite.internal.configuration.testframework.InjectConfiguration;
 import org.apache.ignite.internal.event.EventListener;
+import org.apache.ignite.internal.eventlog.configuration.EventLogConfiguration;
 import org.apache.ignite.internal.security.authentication.basic.BasicAuthenticationProviderChange;
 import org.apache.ignite.internal.security.authentication.event.AuthenticationEvent;
 import org.apache.ignite.internal.security.authentication.event.AuthenticationEventParameters;
@@ -67,6 +68,9 @@ class AuthenticationManagerImplTest extends BaseIgniteAbstractTest {
     @InjectConfiguration(polymorphicExtensions = CustomAuthenticationProviderConfigurationSchema.class, rootName = "security")
     private SecurityConfiguration securityConfiguration;
 
+    @InjectConfiguration
+    private EventLogConfiguration eventLogConfiguration;
+
     private AuthenticationManagerImpl manager;
 
     private final List<AuthenticationEventParameters> events = new CopyOnWriteArrayList<>();
@@ -78,7 +82,7 @@ class AuthenticationManagerImplTest extends BaseIgniteAbstractTest {
 
     @BeforeEach
     void setUp() {
-        manager = new AuthenticationManagerImpl(securityConfiguration);
+        manager = new AuthenticationManagerImpl(securityConfiguration, eventLogConfiguration);
 
         Arrays.stream(AuthenticationEvent.values()).forEach(event -> manager.listen(event, listener));
 
