@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import org.apache.ignite.configuration.NamedListView;
 import org.apache.ignite.configuration.notifications.ConfigurationListener;
 import org.apache.ignite.internal.event.AbstractEventProducer;
+import org.apache.ignite.internal.eventlog.AuthEvent;
 import org.apache.ignite.internal.eventlog.EventLog;
 import org.apache.ignite.internal.eventlog.EventLog.EventDescriptor;
 import org.apache.ignite.internal.eventlog.EventType;
@@ -160,14 +161,19 @@ public class AuthenticationManagerImpl
         rwLock.readLock().lock();
         try {
             if (authEnabled) {
-
-                eventLog.fire(new EventDescriptor(EventType.AUTHENTICATION, () -> new AuthEvent(authenticationRequest.getIdentity().toString())));
-
-                return authenticators.stream()
+                UserDetails userDetails = authenticators.stream()
                         .map(authenticator -> authenticate(authenticator, authenticationRequest))
                         .filter(Objects::nonNull)
                         .findFirst()
-                        .orElseThrow(() -> new InvalidCredentialsException("Authentication failed"));
+                        .orElseGet(() -> null);
+
+                if (userDetails != null) {
+                    eventLog.fire(new EventDescriptor(EventType.AUTHENTICATION, () -> new AuthEvent(authenticationRequest.getIdentity().toString(), true)));
+                    return userDetails;
+                } else {
+                    eventLog.fire(new EventDescriptor(EventType.AUTHENTICATION, () -> new AuthEvent(authenticationRequest.getIdentity().toString(), false)));
+                    throw new InvalidCredentialsException("Authentication failed");
+                }
             } else {
                 return UserDetails.UNKNOWN;
             }

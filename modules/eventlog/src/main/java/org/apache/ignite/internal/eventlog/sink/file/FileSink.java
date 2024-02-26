@@ -10,8 +10,8 @@ import org.apache.ignite.internal.eventlog.Event;
 import org.apache.ignite.internal.eventlog.sink.Sink;
 
 public class FileSink implements Sink {
-    private Logger logger;
-    private FileHandler fileHandler;
+    private final Logger logger;
+    private final FileHandler fileHandler;
 
     public FileSink(Path workDir, String filePattern, String name) {
         try {

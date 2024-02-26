@@ -1,4 +1,4 @@
-package org.apache.ignite.internal.eventlog;
+
 
 import static org.apache.ignite.internal.testframework.matchers.HttpResponseMatcher.hasStatusCode;
 import static org.hamcrest.MatcherAssert.assertThat;
