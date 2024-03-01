@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.internal.eventlog.silk;
+package org.apache.ignite.internal.eventlog.sink;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,8 +30,6 @@ import org.apache.ignite.internal.ClusterPerClassIntegrationTest;
 import org.apache.ignite.internal.app.IgniteImpl;
 import org.apache.ignite.internal.eventlog.configuration.EventLogConfiguration;
 import org.apache.ignite.internal.eventlog.configuration.sink.FileSinkChange;
-import org.apache.ignite.internal.eventlog.sink.Sink;
-import org.apache.ignite.internal.eventlog.sink.SinkRegistry;
 import org.apache.ignite.internal.eventlog.sink.file.FileSink;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

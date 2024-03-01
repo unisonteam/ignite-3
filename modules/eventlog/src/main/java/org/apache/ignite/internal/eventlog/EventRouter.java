@@ -18,15 +18,19 @@
 package org.apache.ignite.internal.eventlog;
 
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.ignite.internal.eventlog.channel.Channel;
+import org.apache.ignite.internal.eventlog.channel.ChannelRegistry;
 
 public class EventRouter {
-    private final HashMap<EventType, List<Channel>> channels = new HashMap<>();
-    public List<Channel> routeByType(EventType eventType) {
-       return channels.get(eventType);
+    private final ChannelRegistry channelRegistry;
+
+    public EventRouter(ChannelRegistry channelRegistry) {
+        this.channelRegistry = channelRegistry;
     }
 
-
+    public List<Channel> routeByType(EventType eventType) {
+       return new ArrayList<>(channelRegistry.allChannels());
+    }
 }

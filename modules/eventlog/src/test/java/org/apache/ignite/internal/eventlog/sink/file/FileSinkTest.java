@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import org.apache.ignite.internal.eventlog.Event;
+import org.apache.ignite.internal.eventlog.EventType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -21,7 +22,7 @@ class FileSinkTest {
         assertThat(path.toFile().exists(), equalTo(false));
 
         // When create a new FileSink with the file path.
-        FileSink fileSink = new FileSink(path.toString());
+        FileSink fileSink = new FileSink(tmp, "fileSink.log", "test-sink");
         // And write event.
         fileSink.write(new CountEvent(1));
 
@@ -64,6 +65,11 @@ class FileSinkTest {
         @Override
         public int hashCode() {
             return Objects.hash(cnt);
+        }
+
+        @Override
+        public EventType type() {
+            return EventType.AUTHENTICATION; // fixme
         }
     }
 }

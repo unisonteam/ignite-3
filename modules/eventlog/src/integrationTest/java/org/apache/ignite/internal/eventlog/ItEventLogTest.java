@@ -1,6 +1,7 @@
-
+package org.apache.ignite.internal.eventlog;
 
 import static org.apache.ignite.internal.testframework.matchers.HttpResponseMatcher.hasStatusCode;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -23,7 +24,12 @@ import org.junit.jupiter.api.TestInfo;
 
 public class ItEventLogTest extends ClusterPerTestIntegrationTest {
 
+    private static final String TEST_CHANNEL = "test-channel";
+    public static final String TEST_SINK = "test-sink";
+    public static final String EVENT_LOG_FILENAME = "test-event.log";
+
     private HttpClient client;
+
     EventLogConfiguration eventLogConfiguration;
 
     SecurityConfiguration securityConfiguration;
@@ -40,34 +46,34 @@ public class ItEventLogTest extends ClusterPerTestIntegrationTest {
     void enableDisableChannel() throws Exception {
         // Given Channel configured.
         eventLogConfiguration.channels().change(
-                c -> c.create("test-channel", channelChange -> channelChange.changeEnabled(false))
+                c -> c.create(TEST_CHANNEL, channelChange -> channelChange.changeEnabled(false))
         ).get();
         // And File Sink configured with the Channel.
         eventLogConfiguration.sinks().change(
-                s -> s.create("test-sink", sinkChange -> sinkChange.convert(FileSinkChange.class)
-                        .changePattern("test-event.log")
-                        .changeChannels("test-channel"))
+                s -> s.create(TEST_SINK, sinkChange -> sinkChange.convert(FileSinkChange.class)
+                        .changePattern(EVENT_LOG_FILENAME)
+                        .changeChannels(TEST_CHANNEL))
         ).get();
 
         // Then Event log file should not be created because the channel is disabled.
-        assertThat(workDir.resolve("test-event.log").toFile().exists(), equalTo(false));
-
+        assertThat(workDir.resolve(EVENT_LOG_FILENAME).toFile().exists(), equalTo(false));
 
         // When Channel is enabled.
         eventLogConfiguration.channels().change(
-                c -> c.update("test-channel", channelChange -> channelChange.changeEnabled(true))
+                c -> c.update(TEST_CHANNEL, channelChange -> channelChange.changeEnabled(true))
         ).get();
 
         // Then Event log file should not be created because there were not events fired yet.
-        assertThat(workDir.resolve("test-event.log").toFile().exists(), equalTo(false));
+        assertThat(workDir.resolve(EVENT_LOG_FILENAME).toFile().exists(), equalTo(false));
 
         // When AUTHENTICATION Event is fired.
         securityConfiguration.enabled().update(true).get();
         readAnyConfigValue("ignite", "ignite");
-        Thread.sleep(10000);
 
         // Then Event log file should be created.
-        assertThat(workDir.resolve("test-event.log").toFile().exists(), equalTo(true));
+        await().untilAsserted(
+                () -> assertThat(workDir.resolve(EVENT_LOG_FILENAME).toFile().exists(), equalTo(true))
+        );
     }
 
     private void readAnyConfigValue(String username, String password) {

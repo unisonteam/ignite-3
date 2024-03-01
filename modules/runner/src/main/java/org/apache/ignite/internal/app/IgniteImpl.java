@@ -98,6 +98,8 @@ import org.apache.ignite.internal.deployunit.configuration.DeploymentConfigurati
 import org.apache.ignite.internal.deployunit.metastore.DeploymentUnitStoreImpl;
 import org.apache.ignite.internal.distributionzones.DistributionZoneManager;
 import org.apache.ignite.internal.eventlog.EventLog;
+import org.apache.ignite.internal.eventlog.EventRouter;
+import org.apache.ignite.internal.eventlog.channel.ChannelRegistry;
 import org.apache.ignite.internal.eventlog.configuration.EventLogConfiguration;
 import org.apache.ignite.internal.failure.FailureProcessor;
 import org.apache.ignite.internal.hlc.HybridClock;
@@ -811,7 +813,7 @@ public class IgniteImpl implements Ignite {
                 .getConfiguration(SecurityConfiguration.KEY);
         EventLogConfiguration eventLogConfiguration = clusterCfgMgr.configurationRegistry()
                 .getConfiguration(EventLogConfiguration.KEY);
-        return new AuthenticationManagerImpl(securityConfiguration, new EventLog(null));
+        return new AuthenticationManagerImpl(securityConfiguration, new EventLog(new EventRouter(new ChannelRegistry(eventLogConfiguration.channels()))));
     }
 
     private RestComponent createRestComponent(String name) {
