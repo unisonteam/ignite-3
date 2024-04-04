@@ -50,6 +50,14 @@ public interface CriteriaVisitor<C> {
     <T> void visit(Expression expression, @Nullable C context);
 
     /**
+     *
+     * @param partition
+     * @param context
+     * @param <T>
+     */
+    <T> void visit(Partition partition, @Nullable C context);
+
+    /**
      * Visit a {@link Criteria} instance with the given context.
      *
      * @param criteria Criteria to visit

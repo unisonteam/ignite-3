@@ -34,6 +34,7 @@ import org.apache.ignite.table.criteria.CriteriaVisitor;
 import org.apache.ignite.table.criteria.Expression;
 import org.apache.ignite.table.criteria.Operator;
 import org.apache.ignite.table.criteria.Parameter;
+import org.apache.ignite.table.criteria.Partition;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -119,6 +120,11 @@ public class SqlSerializer implements CriteriaVisitor<Void> {
                 append(template.substring(end));
             }
         }
+    }
+
+    @Override
+    public <T> void visit(Partition partition, @Nullable Void context) {
+
     }
 
     /** {@inheritDoc} */

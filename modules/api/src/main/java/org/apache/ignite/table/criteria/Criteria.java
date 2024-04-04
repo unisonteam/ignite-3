@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Arrays;
 import java.util.Objects;
+import org.apache.ignite.table.partition.HashPartition;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -64,6 +65,16 @@ public interface Criteria {
         var newElements = new Criteria[oldElements.length + 1];
 
         newElements[0] = new Column(columnName);
+        System.arraycopy(oldElements, 0, newElements, 1, oldElements.length);
+
+        return new Expression(condition.getOperator(), newElements);
+    }
+
+    static Expression partitionValue(Condition condition) {
+        Criteria[] oldElements = condition.getElements();
+        var newElements = new Criteria[oldElements.length + 1];
+
+        newElements[0] = new Partition();
         System.arraycopy(oldElements, 0, newElements, 1, oldElements.length);
 
         return new Expression(condition.getOperator(), newElements);

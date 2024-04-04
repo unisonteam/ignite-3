@@ -20,7 +20,12 @@ package org.apache.ignite.compute.task;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
+import org.apache.ignite.compute.JobExecutionContext;
+import org.apache.ignite.network.ClusterNode;
 import org.apache.ignite.network.TopologyProvider;
+import org.apache.ignite.table.partition.HashPartition;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -30,10 +35,35 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface ComputeTask<R> {
     List<JobExecutionParameters> map(
-            TopologyProvider topologyProvider,
+            JobExecutionContext taskContext,
             PartitionProvider partitionProvider,
             @Nullable Object[] args
     );
 
     R reduce(Map<UUID, ?> results);
+
+
+    static class Task implements ComputeTask<Integer> {
+        @Override
+        public List<JobExecutionParameters> map(JobExecutionContext taskContext, @Nullable Object[] args) {
+            return taskContext.ignite()
+                    .tables()
+                    .table("tableName")
+                    .partitions()
+                    .allPartitions()
+                    .entrySet()
+                    .stream()
+                    .map(e -> JobExecutionParameters.builder().node(e.getValue())
+                            .jobClassName("className").args(e.getKey()).build()
+                    ).collect(Collectors.toList());
+        }
+
+        @Override
+        public Integer reduce(Map<UUID, ?> results) {
+            return results.values().stream()
+                    .map(Integer.class::cast)
+                    .reduce(Integer::sum)
+                    .orElse(0);
+        }
+    }
 }

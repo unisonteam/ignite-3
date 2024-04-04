@@ -18,6 +18,7 @@
 package org.apache.ignite.compute.task;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -84,7 +85,7 @@ public class JobExecutionParameters {
     public static class JobExecutionParametersBuilder {
         private String jobClassName;
 
-        private Set<ClusterNode> nodes;
+        private final Set<ClusterNode> nodes = new HashSet<>();
 
         private JobExecutionOptions jobOptions = JobExecutionOptions.DEFAULT;
 
@@ -99,7 +100,7 @@ public class JobExecutionParameters {
         }
 
         public JobExecutionParametersBuilder nodes(Set<ClusterNode> nodes) {
-            this.nodes = nodes;
+            this.nodes.addAll(nodes);
             return this;
         }
 
@@ -113,7 +114,7 @@ public class JobExecutionParameters {
             return this;
         }
 
-        public JobExecutionParametersBuilder args(Object[] args) {
+        public JobExecutionParametersBuilder args(Object... args) {
             this.args = args;
             return this;
         }
@@ -131,6 +132,11 @@ public class JobExecutionParameters {
                     units,
                     args
             );
+        }
+
+        public JobExecutionParametersBuilder node(ClusterNode value) {
+            nodes.add(value);
+            return this;
         }
     }
 }
