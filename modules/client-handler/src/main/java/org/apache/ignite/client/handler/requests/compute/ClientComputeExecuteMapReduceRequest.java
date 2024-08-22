@@ -94,7 +94,7 @@ public class ClientComputeExecuteMapReduceRequest {
                                         Marshaller<Object, byte[]> resultMarshaller = ((MarshallerProvider<Object>) t).resultMarshaller();
                                         ClientComputeJobPacker.packJobResult(val, resultMarshaller, w);
                                     } else {
-                                        w.packObjectAsBinaryTuple(val);
+                                        ClientComputeJobPacker.packJobResult(val, null, w);
                                     }
                                     packTaskState(w, state);
                                     packJobStates(w, states);

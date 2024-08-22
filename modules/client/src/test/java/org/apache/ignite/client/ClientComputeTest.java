@@ -270,7 +270,9 @@ public class ClientComputeTest extends BaseIgniteAbstractTest {
         try (var client = getClient(server1)) {
             IgniteCompute igniteCompute = client.compute();
             TaskExecution<Object> task = igniteCompute.submitMapReduce(
-                    TaskDescriptor.builder("job").build(), null);
+                    TaskDescriptor.builder("job").build(),
+                    null
+            );
 
             assertThat(task.resultAsync(), willBe("s1"));
 
