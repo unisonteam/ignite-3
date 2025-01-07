@@ -67,6 +67,18 @@ integrationTest {
     systemProperty "buildDirPath", project.buildDir.path
 }
 
+
+tasks.register("runnerPlatformBenchmark", JavaExec) {
+    mainClass = "org.apache.ignite.internal.runner.app.PlatformBenchmarkNodeRunner"
+
+    jvmArgs += defaultJvmArgs
+
+    classpath = sourceSets.integrationTest.runtimeClasspath
+
+    enableAssertions = true
+}
+
+
 jmh {
     iterations = 4 // Number of measurement iterations to do.
     benchmarkMode = [
