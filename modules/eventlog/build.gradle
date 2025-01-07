@@ -16,6 +16,11 @@
  * limitations under the License.
  */
 
+plugins {
+    id "me.champeau.jmh" version "0.7.2"
+    id "io.morethan.jmhreport" version "0.9.6"
+}
+
 apply from: "$rootDir/buildscripts/java-core.gradle"
 apply from: "$rootDir/buildscripts/publishing.gradle"
 apply from: "$rootDir/buildscripts/java-junit5.gradle"
