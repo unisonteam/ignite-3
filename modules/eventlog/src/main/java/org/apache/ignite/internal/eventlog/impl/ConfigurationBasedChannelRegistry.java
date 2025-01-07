@@ -35,7 +35,7 @@ import org.apache.ignite.internal.eventlog.api.EventChannel;
 import org.apache.ignite.internal.eventlog.config.schema.ChannelView;
 import org.apache.ignite.internal.eventlog.config.schema.EventLogConfiguration;
 
-class ConfigurationBasedChannelRegistry implements ChannelRegistry {
+public class ConfigurationBasedChannelRegistry implements ChannelRegistry {
     private final ReadWriteLock guard;
 
     private final Map<String, EventChannel> cache;
@@ -44,7 +44,7 @@ class ConfigurationBasedChannelRegistry implements ChannelRegistry {
 
     private final SinkRegistry sinkRegistry;
 
-    ConfigurationBasedChannelRegistry(EventLogConfiguration cfg, SinkRegistry sinkRegistry) {
+    public ConfigurationBasedChannelRegistry(EventLogConfiguration cfg, SinkRegistry sinkRegistry) {
         this.guard = new ReentrantReadWriteLock();
         this.cache = new HashMap<>();
         this.typeCache = new HashMap<>();

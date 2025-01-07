@@ -80,7 +80,7 @@ tasks.register("runnerPlatformBenchmark", JavaExec) {
 
 
 jmh {
-    iterations = 4 // Number of measurement iterations to do.
+    iterations = 3 // Number of measurement iterations to do.
     benchmarkMode = [
             'all'
     ] // Benchmark mode. Available modes are: [Throughput/thrpt, AverageTime/avgt, SampleTime/sample, SingleShotTime/ss, All/all]
@@ -92,7 +92,7 @@ jmh {
     resultsFile = project.file("${project.buildDir}/reports/jmh/results.json") // results file
     operationsPerInvocation = 1 // Operations per invocation.
     benchmarkParameters =  [:] // Benchmark parameters.
-    profilers = ["async:libPath=${project.projectDir}/src/libasyncProfiler.dylib;output=flamegraph"] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
+    profilers = ["async:libPath=${project.projectDir}/libasyncProfiler.dylib;output=flamegraph"] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
     timeOnIteration = '1s' // Time to spend at each measurement iteration.
     resultFormat = 'JSON' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
     synchronizeIterations = false // Synchronize iterations?
@@ -111,7 +111,7 @@ jmh {
     //zip64 = true // Use ZIP64 format for bigger archives
     //jmhVersion = '1.37' // Specifies JMH version
     //includeTests = true // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
-    duplicateClassesStrategy = DuplicatesStrategy.FAIL // Strategy to apply when encountring duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
+    duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE // Strategy to apply when encountring duplicate classes during creation of the fat jar (i.e. while executing jmhJar task)
 }
 
 jmhReport {

@@ -24,7 +24,7 @@ import org.apache.ignite.internal.eventlog.api.EventChannel;
  * Channel registry. The only way to send an event into channel is to get the channel from this registry.
  * The channel can not be cached for a long time because it can be removed from the registry due to configuration changes.
  */
-interface ChannelRegistry {
+public interface ChannelRegistry {
     /**
      * Get channel by name.
      *

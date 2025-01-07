@@ -20,7 +20,7 @@ package org.apache.ignite.internal.eventlog.impl;
 import java.util.Set;
 import org.apache.ignite.internal.eventlog.api.Sink;
 
-interface SinkRegistry {
+public interface SinkRegistry {
     Sink getByName(String name);
 
     Set<Sink> findAllByChannel(String channel);

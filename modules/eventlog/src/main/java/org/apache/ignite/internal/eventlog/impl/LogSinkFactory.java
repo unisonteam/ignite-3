@@ -25,10 +25,10 @@ import org.apache.ignite.internal.eventlog.ser.EventSerializer;
 /**
  * Factory for creating sink instances.
  */
-class LogSinkFactory implements SinkFactory {
+public class LogSinkFactory implements SinkFactory {
     private final EventSerializer eventSerializer;
 
-    LogSinkFactory(EventSerializer eventSerializer) {
+    public LogSinkFactory(EventSerializer eventSerializer) {
         this.eventSerializer = eventSerializer;
     }
 
