@@ -47,4 +47,8 @@ public interface EventLog {
      * @param eventProvider Event provider.
      */
     void log(Supplier<Event> eventProvider);
+
+    default void log(String type, Supplier<Event> eventProvider) {
+        log(eventProvider);
+    }
 }

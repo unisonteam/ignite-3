@@ -70,7 +70,7 @@ public class EventLogNoOpBenchmark {
 
     @Setup
     public void setup() {
-        noOpBaselineEventlog = new NoOpEventLog(true);
+        noOpBaselineEventlog = new NoOpEventLog(false);
 
         EventSerializer eventSerializer = null;
 
@@ -83,30 +83,55 @@ public class EventLogNoOpBenchmark {
         var channelRegistry = new ConfigurationBasedChannelRegistry(configuration, sinkRegistry);
 
         eventLog = new EventLogImpl(channelRegistry);
+    }
+
+    private static void addChannels(int size, String name, boolean enabled, String[] events, StubEventLogConfiguration configuration) {
+        ArrayList<StubChannelView> arrayList = new ArrayList<>(size);
+        for (int i = 0; i < 1000; i++) {
+            arrayList.add(new StubChannelView(name, enabled, events));
+
+        }
+
+        configuration.channels.listeners.forEach(l -> l.onUpdate(
+                new StubConfigurationNotificationEvent(
+                        new StubNamedListView<>(arrayList)
+                )));
+    }
+
+    private static void addSinks(int size, String name, String type, String channel, StubEventLogConfiguration configuration) {
+        ArrayList<StubSinkView> arrayList = new ArrayList<>(size);
+        for (int i = 0; i < 1000; i++) {
+            arrayList.add(new StubSinkView(name, type, channel));
+        }
 
         configuration.sinks.listeners.forEach(l -> l.onUpdate(
                 new StubConfigurationNotificationEvent(
-                        new StubNamedListView<>(List.of(new StubSinkView("SinkName", "log", "SinkChannel")))
-                )
-        ));
-        configuration.channels.listeners.forEach(l -> l.onUpdate(
-                new StubConfigurationNotificationEvent(
-                        new StubNamedListView<>(
-                                List.of(new StubChannelView("ChannelName", false, new String[]{"USER_AUTHENTICATION_SUCCESS"})))
-                )
-        ));
+                        new StubNamedListView<>(arrayList)
+                )));
     }
 
     @Benchmark
     public void minimalBaseline(Blackhole bh) {
         noOpBaselineEventlog.log(() -> IgniteEvents.CLIENT_CONNECTION_CLOSED.create(EventUser.system()));
-        bh.consume(1);
+        noOpBaselineEventlog.log(() -> IgniteEvents.CLIENT_CONNECTION_ESTABLISHED.create(EventUser.system()));
+        noOpBaselineEventlog.log(() -> IgniteEvents.CLIENT_CONNECTION_CLOSED.create(EventUser.system()));
+        noOpBaselineEventlog.log(() -> IgniteEvents.CLIENT_CONNECTION_ESTABLISHED.create(EventUser.system()));
     }
 
     @Benchmark
     public void eventLogImpl(Blackhole bh) {
+        eventLog.log(() -> IgniteEvents.CLIENT_CONNECTION_CLOSED.create(EventUser.system()));
         eventLog.log(() -> IgniteEvents.CLIENT_CONNECTION_ESTABLISHED.create(EventUser.system()));
-        bh.consume(1);
+        eventLog.log(() -> IgniteEvents.CLIENT_CONNECTION_CLOSED.create(EventUser.system()));
+        eventLog.log(() -> IgniteEvents.CLIENT_CONNECTION_ESTABLISHED.create(EventUser.system()));
+    }
+
+    @Benchmark
+    public void eventLogImplOptimized(Blackhole bh) {
+        eventLog.log("CLIENT_CONNECTION_ESTABLISHED", () -> IgniteEvents.CLIENT_CONNECTION_ESTABLISHED.create(EventUser.system()));
+        eventLog.log("CLIENT_CONNECTION_CLOSED", () -> IgniteEvents.CLIENT_CONNECTION_CLOSED.create(EventUser.system()));
+        eventLog.log("CLIENT_CONNECTION_ESTABLISHED", () -> IgniteEvents.CLIENT_CONNECTION_ESTABLISHED.create(EventUser.system()));
+        eventLog.log("CLIENT_CONNECTION_CLOSED", () -> IgniteEvents.CLIENT_CONNECTION_CLOSED.create(EventUser.system()));
     }
 
     private static class TestChannelRegistry implements ChannelRegistry {
@@ -198,7 +223,7 @@ public class EventLogNoOpBenchmark {
         }
     }
 
-    private static class StubSinkView implements LogSinkView  {
+    private static class StubSinkView implements LogSinkView {
         private final String name;
         private final String type;
         private final String channel;

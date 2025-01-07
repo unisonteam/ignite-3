@@ -82,7 +82,7 @@ tasks.register("runnerPlatformBenchmark", JavaExec) {
 jmh {
     iterations = 3 // Number of measurement iterations to do.
     benchmarkMode = [
-            'all'
+            'avgt'
     ] // Benchmark mode. Available modes are: [Throughput/thrpt, AverageTime/avgt, SampleTime/sample, SingleShotTime/ss, All/all]
     //batchSize = 1 // Batch size: number of benchmark method calls per operation. (some benchmark modes can ignore this setting)
     fork = 0 // How many times to forks a single benchmark. Use 0 to disable forking altogether
@@ -93,15 +93,15 @@ jmh {
     operationsPerInvocation = 1 // Operations per invocation.
     benchmarkParameters =  [:] // Benchmark parameters.
     profilers = ["async:libPath=${project.projectDir}/libasyncProfiler.dylib;output=flamegraph"] // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr, async]
-    timeOnIteration = '1s' // Time to spend at each measurement iteration.
+    timeOnIteration = '500ms' // Time to spend at each measurement iteration.
     resultFormat = 'JSON' // Result format type (one of CSV, JSON, NONE, SCSV, TEXT)
     synchronizeIterations = false // Synchronize iterations?
     threads = 1 // Number of worker threads to run with.
     //threadGroups = [2,3,4] //Override thread group distribution for asymmetric benchmarks.
-    jmhTimeout = '5s' // Timeout for benchmark iteration.
-    timeUnit = 's' // Output time unit. Available time units are: [m, s, ms, us, ns].
+    jmhTimeout = '500ms' // Timeout for benchmark iteration.
+    timeUnit = 'ns' // Output time unit. Available time units are: [m, s, ms, us, ns].
     verbosity = 'NORMAL' // Verbosity mode. Available modes are: [SILENT, NORMAL, EXTRA]
-    warmup = '5s' // Time to spend at each warmup iteration.
+    warmup = '1s' // Time to spend at each warmup iteration.
     warmupBatchSize = 10 // Warmup batch size: number of benchmark method calls per operation.
     warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
     warmupIterations = 1 // Number of warmup iterations to do.
