@@ -17,5 +17,43 @@
 
 package org.apache.ignite.internal;
 
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+
 public class EventLogNoOpBenchmark {
+}
+
+
+@State(Scope.Benchmark)
+public class TupleMarshallingBenchmark {
+
+    /**
+     * Initialize.
+     */
+    @Setup
+    public void init() {
+    }
+
+    /**
+     * Tear down.
+     *
+     * @throws Exception If failed.
+     */
+    @TearDown
+    public void tearDown() throws Exception {
+    }
+
+    /**
+     * Round trip with inline schema.
+     */
+    @Benchmark
+    public void roundWithInlineSchema() {
+    }
+
+    @Benchmark
+    public void roundWithKryo(Blackhole blackhole) throws IOException {
+        blackhole.consume(theObject);
+    }
+
 }
