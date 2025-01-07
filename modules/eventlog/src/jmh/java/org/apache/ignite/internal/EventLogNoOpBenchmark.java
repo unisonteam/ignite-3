@@ -17,16 +17,16 @@
 
 package org.apache.ignite.internal;
 
+import java.io.IOException;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
-
-public class EventLogNoOpBenchmark {
-}
-
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.infra.Blackhole;
 
 @State(Scope.Benchmark)
-public class TupleMarshallingBenchmark {
+public class EventLogNoOpBenchmark {
 
     /**
      * Initialize.
@@ -48,12 +48,11 @@ public class TupleMarshallingBenchmark {
      * Round trip with inline schema.
      */
     @Benchmark
-    public void roundWithInlineSchema() {
+    public void noOpSupplierGet() {
     }
 
     @Benchmark
-    public void roundWithKryo(Blackhole blackhole) throws IOException {
-        blackhole.consume(theObject);
+    public void noOpLazySupplier(Blackhole blackhole) throws IOException {
+        blackhole.consume(null);
     }
-
 }
