@@ -23,7 +23,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.ignite.internal.catalog.descriptors.CatalogIndexStatus.REGISTERED;
 import static org.apache.ignite.internal.catalog.events.CatalogEvent.INDEX_REMOVED;
 import static org.apache.ignite.internal.event.EventListener.fromConsumer;
-import static org.apache.ignite.internal.hlc.HybridTimestamp.hybridTimestampToLong;
 import static org.apache.ignite.internal.lowwatermark.event.LowWatermarkEvent.LOW_WATERMARK_CHANGED;
 import static org.apache.ignite.internal.util.CollectionUtils.view;
 import static org.apache.ignite.internal.util.IgniteUtils.inBusyLock;
@@ -37,6 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
+import org.apache.ignite.internal.catalog.Catalog;
 import org.apache.ignite.internal.catalog.CatalogService;
 import org.apache.ignite.internal.catalog.descriptors.CatalogIndexDescriptor;
 import org.apache.ignite.internal.catalog.descriptors.CatalogIndexStatus;
@@ -123,11 +123,11 @@ public class FullStateTransferIndexChooser implements ManuallyCloseable {
      */
     public List<IndexIdAndTableVersion> chooseForAddWrite(int catalogVersion, int tableId, HybridTimestamp beginTs) {
         return inBusyLock(busyLock, () -> {
-            int activeCatalogVersionAtBeginTxTs = catalogService.activeCatalogVersion(beginTs.longValue());
+            Catalog catalog = catalogService.activeCatalog(beginTs.longValue());
 
             List<Integer> fromCatalog = chooseFromCatalogBusy(catalogVersion, tableId, index -> {
                 if (index.status() == REGISTERED) {
-                    CatalogIndexDescriptor indexAtBeginTs = catalogService.index(index.id(), activeCatalogVersionAtBeginTxTs);
+                    CatalogIndexDescriptor indexAtBeginTs = catalog.index(index.id());
 
                     return indexAtBeginTs != null && indexAtBeginTs.status() == REGISTERED;
                 }
@@ -171,7 +171,7 @@ public class FullStateTransferIndexChooser implements ManuallyCloseable {
     }
 
     private List<Integer> chooseFromCatalogBusy(int catalogVersion, int tableId, Predicate<CatalogIndexDescriptor> filter) {
-        List<CatalogIndexDescriptor> indexes = catalogService.indexes(catalogVersion, tableId);
+        List<CatalogIndexDescriptor> indexes = catalogService.catalog(catalogVersion).indexes(tableId);
 
         if (indexes.isEmpty()) {
             return List.of();
@@ -257,7 +257,9 @@ public class FullStateTransferIndexChooser implements ManuallyCloseable {
             int catalogVersion = parameters.catalogVersion();
 
             lowWatermark.getLowWatermarkSafe(lwm -> {
-                int lwmCatalogVersion = catalogService.activeCatalogVersion(hybridTimestampToLong(lwm));
+                int lwmCatalogVersion = lwm == null
+                        ? catalogService.earliestCatalogVersion()
+                        : catalogService.activeCatalogVersion(lwm.longValue());
 
                 if (catalogVersion <= lwmCatalogVersion) {
                     // There is no need to add a read-only indexes, since the index should be destroyed under the updated low watermark.

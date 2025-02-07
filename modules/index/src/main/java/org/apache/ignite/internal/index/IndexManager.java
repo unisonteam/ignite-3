@@ -22,7 +22,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 import static org.apache.ignite.internal.catalog.events.CatalogEvent.INDEX_CREATE;
 import static org.apache.ignite.internal.catalog.events.CatalogEvent.INDEX_REMOVED;
 import static org.apache.ignite.internal.event.EventListener.fromConsumer;
-import static org.apache.ignite.internal.hlc.HybridTimestamp.hybridTimestampToLong;
 import static org.apache.ignite.internal.lowwatermark.event.LowWatermarkEvent.LOW_WATERMARK_CHANGED;
 import static org.apache.ignite.internal.table.distributed.index.IndexUtils.registerIndexToTable;
 import static org.apache.ignite.internal.util.CompletableFutures.nullCompletedFuture;
@@ -35,6 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import org.apache.ignite.internal.catalog.Catalog;
 import org.apache.ignite.internal.catalog.CatalogService;
 import org.apache.ignite.internal.catalog.descriptors.CatalogIndexDescriptor;
 import org.apache.ignite.internal.catalog.descriptors.CatalogTableDescriptor;
@@ -186,7 +186,7 @@ public class IndexManager implements IgniteComponent {
             long causalityToken = parameters.causalityToken();
             int catalogVersion = parameters.catalogVersion();
 
-            CatalogTableDescriptor table = catalogService.table(tableId, catalogVersion);
+            CatalogTableDescriptor table = catalogService.catalog(catalogVersion).table(tableId);
 
             assert table != null : "tableId=" + tableId + ", indexId=" + indexId;
 
@@ -208,12 +208,12 @@ public class IndexManager implements IgniteComponent {
             int previousCatalogVersion = catalogVersion - 1;
 
             // Retrieve descriptor during synchronous call, before the previous catalog version could be concurrently compacted.
-            CatalogIndexDescriptor indexDescriptor = catalogService.index(indexId, previousCatalogVersion);
+            CatalogIndexDescriptor indexDescriptor = catalogService.catalog(previousCatalogVersion).index(indexId);
             assert indexDescriptor != null : "indexId=" + indexId + ", catalogVersion=" + previousCatalogVersion;
 
             int tableId = indexDescriptor.tableId();
 
-            if (catalogService.table(tableId, catalogVersion) == null) {
+            if (catalogService.catalog(catalogVersion).table(tableId) == null) {
                 // Nothing to do. Index will be destroyed along with the table.
                 return;
             }
@@ -308,14 +308,26 @@ public class IndexManager implements IgniteComponent {
         // LWM starts updating only after the node is restored.
         HybridTimestamp lwm = lowWatermark.getLowWatermark();
 
-        int earliestCatalogVersion = catalogService.activeCatalogVersion(hybridTimestampToLong(lwm));
+        int earliestCatalogVersion = lwm == null
+                ? catalogService.earliestCatalogVersion()
+                : catalogService.activeCatalogVersion(lwm.longValue());
         int latestCatalogVersion = catalogService.latestCatalogVersion();
 
+        Catalog nextCatalog = catalogService.catalog(latestCatalogVersion);
+
+        assert nextCatalog != null : "catalogVersion=" + latestCatalogVersion;
+
         for (int catalogVersion = latestCatalogVersion - 1; catalogVersion >= earliestCatalogVersion; catalogVersion--) {
-            int nextVersion = catalogVersion + 1;
-            catalogService.indexes(catalogVersion).stream()
-                    .filter(idx -> catalogService.index(idx.id(), nextVersion) == null)
-                    .forEach(idx -> destructionEventsQueue.enqueue(new DestroyIndexEvent(nextVersion, idx.id(), idx.tableId())));
+            Catalog catalog = catalogService.catalog(catalogVersion);
+            assert catalog != null : "catalogVersion=" + catalogVersion;
+
+            Catalog finalNextCatalog = nextCatalog;
+            catalog.indexes().stream()
+                    .filter(idx -> finalNextCatalog.index(idx.id()) == null)
+                    .map(idx -> new DestroyIndexEvent(finalNextCatalog.version(), idx.id(), idx.tableId()))
+                    .forEach(destructionEventsQueue::enqueue);
+
+            nextCatalog = catalog;
         }
     }
 

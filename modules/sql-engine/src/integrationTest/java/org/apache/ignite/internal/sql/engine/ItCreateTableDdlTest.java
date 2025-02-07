@@ -46,8 +46,10 @@ import org.apache.ignite.internal.catalog.CatalogManager;
 import org.apache.ignite.internal.catalog.commands.CreateSchemaCommand;
 import org.apache.ignite.internal.catalog.descriptors.CatalogTableDescriptor;
 import org.apache.ignite.internal.catalog.descriptors.CatalogZoneDescriptor;
+import org.apache.ignite.internal.hlc.HybridClock;
 import org.apache.ignite.internal.schema.Column;
 import org.apache.ignite.internal.sql.BaseSqlIntegrationTest;
+import org.apache.ignite.internal.sql.SqlCommon;
 import org.apache.ignite.internal.table.partition.HashPartition;
 import org.apache.ignite.internal.testframework.IgniteTestUtils;
 import org.apache.ignite.internal.testframework.WithSystemProperty;
@@ -56,6 +58,7 @@ import org.apache.ignite.table.Table;
 import org.apache.ignite.table.Tuple;
 import org.apache.ignite.tx.Transaction;
 import org.apache.ignite.tx.TransactionOptions;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -320,7 +323,6 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
     }
 
     @Test
-    @SuppressWarnings("ThrowableNotThrown")
     public void doNotAllowFunctionsInNonPkColumns() {
         // SQL Standard 2016 feature E141-07 - Basic integrity constraints. Column defaults
         assertThrowsSqlException(
@@ -336,13 +338,51 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
         if (DEFINITION_SCHEMA.equals(schema) || INFORMATION_SCHEMA.equals(schema)) {
             IgniteImpl igniteImpl = unwrapIgniteImpl(CLUSTER.aliveNode());
 
-            IgniteTestUtils.await(igniteImpl.catalogManager().execute(CreateSchemaCommand.builder().name(schema).build()));
+            IgniteTestUtils.await(igniteImpl.catalogManager().execute(CreateSchemaCommand.systemSchemaBuilder().name(schema).build()));
         }
 
         assertThrowsSqlException(
                 STMT_VALIDATION_ERR,
                 "Operations with system schemas are not allowed",
                 () -> sql(format("CREATE TABLE {}.SYS_TABLE (NAME VARCHAR PRIMARY KEY, SIZE BIGINT)", schema.toLowerCase())));
+    }
+
+    @ParameterizedTest
+    @MethodSource("reservedSchemaNames")
+    public void testCreateSystemSchemas(String schema) {
+        assertThrowsSqlException(
+                STMT_VALIDATION_ERR,
+                format("Reserved system schema with name '{}' can't be created.", schema),
+                () -> sql(format("CREATE SCHEMA {}", schema.toLowerCase())));
+
+        assertThrowsSqlException(
+                STMT_VALIDATION_ERR,
+                format("Reserved system schema with name '{}' can't be created.", schema),
+                () -> sql(format("CREATE SCHEMA {}", schema)));
+
+        assertThrowsSqlException(
+                STMT_VALIDATION_ERR,
+                format("Reserved system schema with name '{}' can't be created.", schema),
+                () -> sql(format("CREATE SCHEMA \"{}\"", schema)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("reservedSchemaNames")
+    public void testDropSystemSchemas(String schema) {
+        assertThrowsSqlException(
+                STMT_VALIDATION_ERR,
+                format("System schema can't be dropped [name={}]", schema),
+                () -> sql(format("DROP SCHEMA {}", schema.toLowerCase())));
+
+        assertThrowsSqlException(
+                STMT_VALIDATION_ERR,
+                format("System schema can't be dropped [name={}]", schema),
+                () -> sql(format("DROP SCHEMA {}", schema)));
+
+        assertThrowsSqlException(
+                STMT_VALIDATION_ERR,
+                format("System schema can't be dropped [name={}]", schema),
+                () -> sql(format("DROP SCHEMA \"{}\"", schema)));
     }
 
     private static Stream<Arguments> reservedSchemaNames() {
@@ -404,7 +444,7 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
 
         IgniteImpl node = unwrapIgniteImpl(CLUSTER.aliveNode());
 
-        CatalogTableDescriptor table = node.catalogManager().table(SCHEMA_NAME, "TEST", node.clock().nowLong());
+        CatalogTableDescriptor table = getTable(node, "TEST");
 
         CatalogZoneDescriptor zone = getDefaultZone(node);
 
@@ -428,7 +468,7 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
 
         IgniteImpl node = unwrapIgniteImpl(CLUSTER.aliveNode());
 
-        CatalogTableDescriptor table = node.catalogManager().table(SCHEMA_NAME, "TEST", node.clock().nowLong());
+        CatalogTableDescriptor table = getTable(node, "TEST");
 
         assertEquals(DEFAULT_STORAGE_PROFILE, table.storageProfile());
 
@@ -445,7 +485,7 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
 
         IgniteImpl node = unwrapIgniteImpl(CLUSTER.aliveNode());
 
-        CatalogTableDescriptor table = node.catalogManager().table(SCHEMA_NAME, "TEST", node.clock().nowLong());
+        CatalogTableDescriptor table = getTable(node, "TEST");
 
         assertEquals(DEFAULT_STORAGE_PROFILE, table.storageProfile());
 
@@ -462,7 +502,7 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
 
         IgniteImpl node = unwrapIgniteImpl(CLUSTER.aliveNode());
 
-        CatalogTableDescriptor table = node.catalogManager().table(SCHEMA_NAME, "TEST", node.clock().nowLong());
+        CatalogTableDescriptor table = getTable(node, "TEST");
 
         assertEquals(DEFAULT_STORAGE_PROFILE, table.storageProfile());
 
@@ -526,6 +566,7 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
 
     // TODO: https://issues.apache.org/jira/browse/IGNITE-17373
     //  Remove this after interval type support is added.
+
     @Test
     public void testCreateTableDoesNotAllowIntervals() {
         assertThrowsSqlException(
@@ -540,9 +581,9 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
                 () -> sql("CREATE TABLE test(id INTEGER PRIMARY KEY, p INTERVAL YEAR)")
         );
     }
-
     // TODO: https://issues.apache.org/jira/browse/IGNITE-17373
     //  Remove this after interval type support is added.
+
     @Test
     public void testAlterTableDoesNotAllowIntervals() {
         sql("CREATE TABLE test(id INTEGER PRIMARY KEY, val INTEGER)");
@@ -552,6 +593,14 @@ public class ItCreateTableDdlTest extends BaseSqlIntegrationTest {
                 "Type INTERVAL YEAR cannot be used in a column definition [column=P]",
                 () -> sql("ALTER TABLE TEST ADD COLUMN p INTERVAL YEAR")
         );
+    }
+
+    private static @Nullable CatalogTableDescriptor getTable(IgniteImpl node, String tableName) {
+        CatalogManager catalogManager = node.catalogManager();
+        HybridClock clock = node.clock();
+
+        Catalog catalog = catalogManager.activeCatalog(clock.nowLong());
+        return catalog.table(SqlCommon.DEFAULT_SCHEMA_NAME, tableName);
     }
 
     private static CatalogZoneDescriptor getDefaultZone(IgniteImpl node) {

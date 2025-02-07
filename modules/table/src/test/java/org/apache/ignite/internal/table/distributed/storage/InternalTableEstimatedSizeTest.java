@@ -30,6 +30,7 @@ import static org.apache.ignite.internal.util.IgniteUtils.startAsync;
 import static org.apache.ignite.internal.util.IgniteUtils.stopAsync;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -52,6 +53,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
+import org.apache.ignite.internal.catalog.Catalog;
 import org.apache.ignite.internal.catalog.CatalogService;
 import org.apache.ignite.internal.configuration.testframework.ConfigurationExtension;
 import org.apache.ignite.internal.configuration.testframework.InjectConfiguration;
@@ -98,8 +100,8 @@ import org.apache.ignite.internal.tx.LockManager;
 import org.apache.ignite.internal.tx.TxManager;
 import org.apache.ignite.internal.tx.impl.RemotelyTriggeredResourceRegistry;
 import org.apache.ignite.internal.tx.impl.TransactionInflights;
+import org.apache.ignite.internal.tx.storage.state.TxStatePartitionStorage;
 import org.apache.ignite.internal.tx.storage.state.TxStateStorage;
-import org.apache.ignite.internal.tx.storage.state.TxStateTableStorage;
 import org.apache.ignite.internal.util.Lazy;
 import org.apache.ignite.internal.util.PendingComparableValuesTracker;
 import org.apache.ignite.network.ClusterNode;
@@ -123,6 +125,8 @@ public class InternalTableEstimatedSizeTest extends BaseIgniteAbstractTest {
     private static final String TABLE_NAME = "TEST";
 
     private static final int TABLE_ID = 1;
+
+    private static final int ZONE_ID = 2;
 
     private static final int PARTITIONS_NUM = 3;
 
@@ -158,8 +162,8 @@ public class InternalTableEstimatedSizeTest extends BaseIgniteAbstractTest {
             @Mock TxManager txManager,
             @Mock LockManager lockManager,
             @Mock MvTableStorage tableStorage,
-            @Mock TxStateTableStorage txStateTableStorage,
             @Mock TxStateStorage txStateStorage,
+            @Mock TxStatePartitionStorage txStatePartitionStorage,
             @Mock TransactionStateResolver transactionStateResolver,
             @Mock StorageUpdateHandler storageUpdateHandler,
             @Mock ValidationSchemasSource validationSchemasSource,
@@ -200,22 +204,24 @@ public class InternalTableEstimatedSizeTest extends BaseIgniteAbstractTest {
 
         table = new InternalTableImpl(
                 QualifiedNameHelper.fromNormalized(SqlCommon.DEFAULT_SCHEMA_NAME, TABLE_NAME),
+                ZONE_ID,
                 TABLE_ID,
                 PARTITIONS_NUM,
                 clusterService.topologyService(),
                 txManager,
                 tableStorage,
-                txStateTableStorage,
+                txStateStorage,
                 new ReplicaService(clusterService.messagingService(), clock, replicationConfiguration),
                 clockService,
                 HybridTimestampTracker.atomicTracker(null),
                 placementDriver,
                 new TransactionInflights(placementDriver, clockService),
                 0,
-                0,
                 () -> null,
                 mock(StreamerReceiverRunner.class)
         );
+
+        when(catalogService.catalog(anyInt())).thenReturn(mock(Catalog.class));
 
         List<PartitionReplicaListener> partitionReplicaListeners = IntStream.range(0, PARTITIONS_NUM)
                 .mapToObj(partId -> createPartitionReplicaListener(
@@ -223,7 +229,7 @@ public class InternalTableEstimatedSizeTest extends BaseIgniteAbstractTest {
                         txManager,
                         lockManager,
                         clockService,
-                        txStateStorage,
+                        txStatePartitionStorage,
                         transactionStateResolver,
                         storageUpdateHandler,
                         validationSchemasSource,
@@ -267,7 +273,7 @@ public class InternalTableEstimatedSizeTest extends BaseIgniteAbstractTest {
             TxManager txManager,
             LockManager lockManager,
             ClockService clockService,
-            TxStateStorage txStateStorage,
+            TxStatePartitionStorage txStatePartitionStorage,
             TransactionStateResolver transactionStateResolver,
             StorageUpdateHandler storageUpdateHandler,
             ValidationSchemasSource validationSchemasSource,
@@ -307,7 +313,7 @@ public class InternalTableEstimatedSizeTest extends BaseIgniteAbstractTest {
                 Map::of,
                 clockService,
                 new PendingComparableValuesTracker<>(HybridTimestamp.MIN_VALUE),
-                txStateStorage,
+                txStatePartitionStorage,
                 transactionStateResolver,
                 storageUpdateHandler,
                 validationSchemasSource,

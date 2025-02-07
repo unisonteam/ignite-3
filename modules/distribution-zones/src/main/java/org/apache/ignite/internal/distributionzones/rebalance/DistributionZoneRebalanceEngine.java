@@ -26,6 +26,7 @@ import static org.apache.ignite.internal.distributionzones.DistributionZonesUtil
 import static org.apache.ignite.internal.distributionzones.DistributionZonesUtil.parseDataNodes;
 import static org.apache.ignite.internal.distributionzones.DistributionZonesUtil.zoneDataNodesKey;
 import static org.apache.ignite.internal.distributionzones.rebalance.RebalanceUtil.extractZoneId;
+import static org.apache.ignite.internal.lang.IgniteSystemProperties.COLOCATION_FEATURE_FLAG;
 import static org.apache.ignite.internal.lang.IgniteSystemProperties.getBoolean;
 import static org.apache.ignite.internal.util.CompletableFutures.nullCompletedFuture;
 
@@ -85,10 +86,9 @@ public class DistributionZoneRebalanceEngine {
     // TODO: after switching to zone-based replication
     private final DistributionZoneRebalanceEngineV2 distributionZoneRebalanceEngineV2;
 
-    public static final String FEATURE_FLAG_NAME = "IGNITE_ZONE_BASED_REPLICATION";
     /* Feature flag for zone based collocation track */
     // TODO IGNITE-22115 remove it
-    public static final boolean ENABLED = getBoolean(FEATURE_FLAG_NAME, false);
+    private final boolean enabledColocationFeature = getBoolean(COLOCATION_FEATURE_FLAG, false);
 
     /** Special flag to skip rebalance on node recovery for tests. */
     // TODO: IGNITE-23561 Remove it
@@ -149,7 +149,7 @@ public class DistributionZoneRebalanceEngine {
                 return nullCompletedFuture();
             }
 
-            if (ENABLED) {
+            if (enabledColocationFeature) {
                 return rebalanceTriggersRecovery(recoveryRevision, catalogVersion)
                         .thenCompose(v -> distributionZoneRebalanceEngineV2.startAsync());
             } else {
@@ -168,7 +168,7 @@ public class DistributionZoneRebalanceEngine {
     // TODO: And then run the remote invoke, only if needed.
     private CompletableFuture<Void> rebalanceTriggersRecovery(long recoveryRevision, int catalogVersion) {
         if (recoveryRevision > 0) {
-            List<CompletableFuture<Void>> zonesRecoveryFutures = catalogService.zones(catalogVersion)
+            List<CompletableFuture<Void>> zonesRecoveryFutures = catalogService.catalog(catalogVersion).zones()
                     .stream()
                     .map(zoneDesc ->
                             recalculateAssignmentsAndScheduleRebalance(
@@ -193,7 +193,7 @@ public class DistributionZoneRebalanceEngine {
             return;
         }
 
-        if (ENABLED) {
+        if (enabledColocationFeature) {
             distributionZoneRebalanceEngineV2.stop();
         }
 
@@ -214,13 +214,12 @@ public class DistributionZoneRebalanceEngine {
             // It is safe to get the latest version of the catalog as we are in the metastore thread.
             // TODO: IGNITE-22723 Potentially unsafe to use the latest catalog version, as the tables might not already present
             //  in the catalog. Better to store this version when writing datanodes.
-            int catalogVersion = catalogService.latestCatalogVersion();
-
-            Catalog catalog = catalogService.catalog(catalogVersion);
+            int latestCatalogVersion = catalogService.latestCatalogVersion();
+            Catalog catalog = catalogService.catalog(latestCatalogVersion);
 
             long assignmentsTimestamp = catalog.time();
 
-            CatalogZoneDescriptor zoneDescriptor = catalogService.zone(zoneId, catalogVersion);
+            CatalogZoneDescriptor zoneDescriptor = catalog.zone(zoneId);
 
             if (zoneDescriptor == null) {
                 // Zone has been removed.
@@ -262,7 +261,7 @@ public class DistributionZoneRebalanceEngine {
                 return nullCompletedFuture();
             }
 
-            List<CatalogTableDescriptor> tableDescriptors = findTablesByZoneId(zoneId, catalogVersion, catalogService);
+            List<CatalogTableDescriptor> tableDescriptors = findTablesByZoneId(zoneId, catalog);
 
             return triggerPartitionsRebalanceForAllTables(
                     evt.entryEvent().newEntry().revision(),
@@ -302,9 +301,9 @@ public class DistributionZoneRebalanceEngine {
                         return nullCompletedFuture();
                     }
 
-                    List<CatalogTableDescriptor> tableDescriptors = findTablesByZoneId(zoneDescriptor.id(), catalogVersion, catalogService);
-
                     Catalog catalog = catalogService.catalog(catalogVersion);
+
+                    List<CatalogTableDescriptor> tableDescriptors = findTablesByZoneId(zoneDescriptor.id(), catalog);
 
                     return triggerPartitionsRebalanceForAllTables(
                             causalityToken,

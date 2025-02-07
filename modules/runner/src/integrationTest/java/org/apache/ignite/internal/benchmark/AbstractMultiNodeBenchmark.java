@@ -92,8 +92,8 @@ public class AbstractMultiNodeBenchmark {
             // Create a new zone on the cluster's start-up.
             createDistributionZoneOnStartup();
 
-            // Create a table on the cluster's start-up.
-            createTableOnStartup();
+            // Create tables on the cluster's start-up.
+            createTablesOnStartup();
         } catch (Throwable th) {
             nodeTearDown();
 
@@ -110,7 +110,7 @@ public class AbstractMultiNodeBenchmark {
         }
     }
 
-    protected void createTableOnStartup() {
+    protected void createTablesOnStartup() {
         createTable(TABLE_NAME);
     }
 
@@ -209,7 +209,7 @@ public class AbstractMultiNodeBenchmark {
                 + "  rest.port: {},\n"
                 + "  raft.fsync = " + fsync() + ",\n"
                 + "  system.partitionsLogPath = \"" + logPath() + "\",\n"
-                + "  failureHandler.handler: {\n" 
+                + "  failureHandler.handler: {\n"
                 + "      type: \"" + StopNodeOrHaltFailureHandlerConfigurationSchema.TYPE + "\",\n"
                 + "      tryStop: true,\n"
                 + "      timeoutMillis: 60000,\n" // 1 minute for graceful shutdown

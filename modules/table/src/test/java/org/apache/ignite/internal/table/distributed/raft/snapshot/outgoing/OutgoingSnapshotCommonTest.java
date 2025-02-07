@@ -21,10 +21,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
+import org.apache.ignite.internal.catalog.Catalog;
 import org.apache.ignite.internal.catalog.CatalogService;
 import org.apache.ignite.internal.partition.replicator.network.PartitionReplicationMessagesFactory;
 import org.apache.ignite.internal.partition.replicator.network.raft.SnapshotMetaRequest;
@@ -59,6 +63,7 @@ class OutgoingSnapshotCommonTest extends BaseIgniteAbstractTest {
     @BeforeEach
     void createTestInstance() {
         when(partitionAccess.partitionKey()).thenReturn(partitionKey);
+        lenient().when(catalogService.catalog(anyInt())).thenReturn(mock(Catalog.class));
 
         snapshot = new OutgoingSnapshot(UUID.randomUUID(), partitionAccess, catalogService);
     }
@@ -73,6 +78,8 @@ class OutgoingSnapshotCommonTest extends BaseIgniteAbstractTest {
         when(partitionAccess.maxLastAppliedIndex()).thenReturn(100L);
         when(partitionAccess.maxLastAppliedTerm()).thenReturn(3L);
         when(partitionAccess.committedGroupConfiguration()).thenReturn(new RaftGroupConfiguration(
+                13L,
+                37L,
                 List.of("peer1:3000", "peer2:3000"),
                 List.of("learner1:3000", "learner2:3000"),
                 List.of("peer1:3000"),
@@ -89,6 +96,8 @@ class OutgoingSnapshotCommonTest extends BaseIgniteAbstractTest {
 
         SnapshotMetaResponse response = getSnapshotMetaResponse();
 
+        assertThat(response.meta().cfgIndex(), is(13L));
+        assertThat(response.meta().cfgTerm(), is(37L));
         assertThat(response.meta().lastIncludedIndex(), is(100L));
         assertThat(response.meta().lastIncludedTerm(), is(3L));
         assertThat(response.meta().peersList(), is(List.of("peer1:3000", "peer2:3000")));
@@ -121,7 +130,7 @@ class OutgoingSnapshotCommonTest extends BaseIgniteAbstractTest {
     @Test
     void doesNotSendOldConfigWhenItIsNotThere() {
         when(partitionAccess.committedGroupConfiguration()).thenReturn(new RaftGroupConfiguration(
-                List.of(), List.of(), null, null
+                13L, 37L, List.of(), List.of(), null, null
         ));
 
         snapshot.freezeScopeUnderMvLock();

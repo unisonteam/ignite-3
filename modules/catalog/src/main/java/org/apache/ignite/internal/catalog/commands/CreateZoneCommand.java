@@ -38,6 +38,7 @@ import org.apache.ignite.internal.catalog.Catalog;
 import org.apache.ignite.internal.catalog.CatalogCommand;
 import org.apache.ignite.internal.catalog.CatalogValidationException;
 import org.apache.ignite.internal.catalog.DistributionZoneExistsValidationException;
+import org.apache.ignite.internal.catalog.UpdateContext;
 import org.apache.ignite.internal.catalog.descriptors.CatalogZoneDescriptor;
 import org.apache.ignite.internal.catalog.descriptors.ConsistencyMode;
 import org.apache.ignite.internal.catalog.storage.NewZoneEntry;
@@ -117,8 +118,13 @@ public class CreateZoneCommand extends AbstractZoneCommand {
     }
 
     @Override
-    public List<UpdateEntry> get(Catalog catalog) {
+    public List<UpdateEntry> get(UpdateContext updateContext) {
+        Catalog catalog = updateContext.catalog();
         if (catalog.zone(zoneName) != null) {
+            if (ifNotExists) {
+                return List.of();
+            }
+
             throw new DistributionZoneExistsValidationException(format("Distribution zone with name '{}' already exists", zoneName));
         }
 
@@ -131,7 +137,7 @@ public class CreateZoneCommand extends AbstractZoneCommand {
     }
 
     private CatalogZoneDescriptor descriptor(int objectId) {
-        CatalogZoneDescriptor zone = new CatalogZoneDescriptor(
+        return new CatalogZoneDescriptor(
                 objectId,
                 zoneName,
                 Objects.requireNonNullElse(partitions, DEFAULT_PARTITION_COUNT),
@@ -146,8 +152,6 @@ public class CreateZoneCommand extends AbstractZoneCommand {
                 fromParams(storageProfileParams),
                 Objects.requireNonNullElse(consistencyMode, STRONG_CONSISTENCY)
         );
-
-        return zone;
     }
 
     private void validate() {

@@ -19,12 +19,13 @@ package org.apache.ignite.internal.rest.transaction;
 
 import static io.micronaut.http.HttpRequest.DELETE;
 import static io.micronaut.http.HttpStatus.NOT_FOUND;
+import static org.apache.ignite.internal.TestWrappers.unwrapIgniteImpl;
 import static org.apache.ignite.internal.rest.matcher.MicronautHttpResponseMatcher.assertThrowsProblem;
 import static org.apache.ignite.internal.rest.matcher.ProblemMatcher.isProblem;
+import static org.apache.ignite.internal.testframework.IgniteTestUtils.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 
 import io.micronaut.core.type.Argument;
 import io.micronaut.http.HttpRequest;
@@ -38,9 +39,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.ignite.internal.ClusterPerClassIntegrationTest;
 import org.apache.ignite.internal.rest.api.transaction.TransactionInfo;
+import org.apache.ignite.internal.systemview.SystemViewManagerImpl;
 import org.apache.ignite.internal.tx.InternalTransaction;
 import org.apache.ignite.tx.Transaction;
 import org.apache.ignite.tx.TransactionOptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +58,11 @@ public class ItTransactionControllerTest extends ClusterPerClassIntegrationTest 
     @Client("http://localhost:10300" + TRANSACTIONURL)
     HttpClient client;
 
+    @BeforeAll
+    void beforeAll() {
+        await(((SystemViewManagerImpl) unwrapIgniteImpl(CLUSTER.aliveNode()).systemViewManager()).completeRegistration());
+    }
+
     @Test
     void shouldReturnAllTransactions() {
         Transaction roTx = node(0).transactions().begin(new TransactionOptions().readOnly(true));
@@ -67,7 +75,7 @@ public class ItTransactionControllerTest extends ClusterPerClassIntegrationTest 
 
             assertThat(transactionInfo, notNullValue());
             assertThat(transactionInfo.type(), is("READ_ONLY"));
-            assertThat(transactionInfo.state(), nullValue());
+            assertThat(transactionInfo.state(), is("PENDING"));
             assertThat(transactionInfo.priority(), is("NORMAL"));
 
             roTx.rollback();
@@ -94,7 +102,7 @@ public class ItTransactionControllerTest extends ClusterPerClassIntegrationTest 
         {
             assertThat(roTransactionInfo, notNullValue());
             assertThat(roTransactionInfo.type(), is("READ_ONLY"));
-            assertThat(roTransactionInfo.state(), nullValue());
+            assertThat(roTransactionInfo.state(), is("PENDING"));
             assertThat(roTransactionInfo.priority(), is("NORMAL"));
 
             roTx.rollback();
