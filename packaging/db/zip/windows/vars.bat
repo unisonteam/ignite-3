@@ -15,16 +15,7 @@
 @rem limitations under the License.
 @rem
 
-set NODE_NAME=defaultNode
-
-set WORK_DIR=%IGNITE_HOME%\work
-set LOG_DIR=%IGNITE_HOME%\log
-set LIBS_DIR=%IGNITE_HOME%\lib
-set CONF_DIR=%IGNITE_HOME%\etc
-set INSTALL_DIR=%IGNITE_HOME%
-
-set LOG_FILE_PATTERN=%LOG_DIR%\ignite3db-%g.log
-set CONFIG_FILE=%CONF_DIR%\ignite-config.conf
+set LOG_FILE_PATTERN=%IGNITE_LOG_DIR%\ignite3db-%g.log
 
 @rem JVM props
 set JVM_MAX_MEM=16g
@@ -34,6 +25,3 @@ set JVM_G1HeapRegionSize=32M
 set JVM_GC_LOG_NAME=gc.log
 set JVM_GC_LOG_SIZE=100m
 set JVM_GC_NUM_LOGS=10
-
-@rem For any additional users settings
-set IGNITE3_EXTRA_JVM_ARGS=

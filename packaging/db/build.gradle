@@ -64,7 +64,8 @@ def tokens = [
         PRODUCT_DISPLAY_NAME: 'Apache Ignite',
         APP_JAR             : "${project(':ignite-runner').name}-${project(':ignite-runner').version}.jar".toString(),
         MAIN_CLASS          : 'org.apache.ignite.internal.app.IgniteRunner',
-        ADD_OPENS           : project.addOpens.join(' ')
+        ADD_OPENS           : project.addOpens.join(' '),
+        CONF_NAME           : 'ignite-config.conf',
 ]
 
 def tokensLin = tokens + [
@@ -81,6 +82,7 @@ def tokensWin = tokens + [
 // ZIP packaging
 
 def zipStartScriptTokensCommon = [
+        // TODO https://issues.apache.org/jira/browse/IGNITE-24812
         APP_LOG_DIR         : 'log', // java logging does not support env variables, using relative path here
 ]
 
@@ -88,14 +90,14 @@ def zipStartScriptTokensLin = tokensLin + [
         LOG_DIR             : '${IGNITE_HOME}/log',
         LIB_DIR             : '${IGNITE_HOME}/lib',
         CONF_DIR            : '${IGNITE_HOME}/etc',
-        INSTALL_DIR         : '${IGNITE_HOME}',
+        WORK_DIR            : '${IGNITE_HOME}/work',
 ]
 
 def zipStartScriptTokensWin = tokensWin + [
-        LOG_DIR         : '%IGNITE_HOME%\\log',
-        LIB_DIR         : '%IGNITE_HOME%\\lib',
-        CONF_DIR        : '%IGNITE_HOME%\\etc',
-        INSTALL_DIR     : '%IGNITE_HOME%',
+        LOG_DIR             : '%IGNITE_HOME%\\log',
+        LIB_DIR             : '%IGNITE_HOME%\\lib',
+        CONF_DIR            : '%IGNITE_HOME%\\etc',
+        WORK_DIR            : '%IGNITE_HOME%\\work',
 ]
 
 def replaceZipScriptVarsCommon = tasks.register('replaceZipScriptVarsCommon', Copy) {
@@ -213,8 +215,7 @@ def packageTokens = tokens + tokensLin + [
         APP_LOG_DIR         : '/var/log/ignite3db',
         PID_DIR             : '/var/run/ignite3db',
         LIB_DIR             : '/usr/lib/ignite3db/lib',
-        IGNITE_WORK_DIR     : '/var/lib/ignite3db',
-        IGNITE_CONF_FILE    : 'ignite-config.conf'
+        WORK_DIR            : '/var/lib/ignite3db',
 ]
 
 
