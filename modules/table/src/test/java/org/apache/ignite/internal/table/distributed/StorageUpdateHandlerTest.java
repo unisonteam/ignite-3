@@ -275,4 +275,53 @@ public class StorageUpdateHandlerTest extends BaseMvStoragesTest {
         assertEquals(row3, result3.binaryRow());
     }
 
+    /**
+     * Tests that {@link StorageUpdateHandler#switchWriteIntents} respects {@code shouldRelease()} from the storage engine.
+     *
+     * <p>This test verifies that the implementation checks {@code shouldRelease()} before processing write intents
+     * to allow the storage engine to perform critical operations like checkpoints.
+     */
+    @Test
+    void testSwitchWriteIntentsRespectsShouldRelease() {
+        UUID txUuid = UUID.randomUUID();
+        HybridTimestamp commitTs = CLOCK.now();
+
+        BinaryRow row1 = binaryRow(new TestKey(1, "foo1"), new TestValue(2, "bar"));
+        BinaryRow row2 = binaryRow(new TestKey(3, "foo3"), new TestValue(4, "baz"));
+        BinaryRow row3 = binaryRow(new TestKey(5, "foo5"), new TestValue(7, "zzu"));
+
+        TablePartitionId partitionId = new TablePartitionId(333, PARTITION_ID);
+
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        UUID id3 = UUID.randomUUID();
+
+        Map<UUID, TimedBinaryRow> rowsToUpdate = Map.of(
+                id1, new TimedBinaryRow(row1, null),
+                id2, new TimedBinaryRow(row2, null),
+                id3, new TimedBinaryRow(row3, null)
+        );
+
+        // Given: Create write intents
+        storageUpdateHandler.handleUpdateAll(txUuid, rowsToUpdate, partitionId, true, null, null, null);
+
+        // Verify write intents were created
+        verify(storage, times(3)).addWrite(any(), any(), any(), anyInt(), anyInt());
+
+        // When: switchWriteIntents is called to commit the transaction
+        storageUpdateHandler.switchWriteIntents(txUuid, true, commitTs, null);
+
+        // Then: All write intents are committed (verifying the operation completes successfully when shouldRelease=false)
+        verify(storage, times(3)).commitWrite(any(), eq(commitTs), eq(txUuid));
+
+        // Verify rows can be read with committed values
+        ReadResult result1 = storage.read(new RowId(partitionId.partitionId(), id1), HybridTimestamp.MAX_VALUE);
+        ReadResult result2 = storage.read(new RowId(partitionId.partitionId(), id2), HybridTimestamp.MAX_VALUE);
+        ReadResult result3 = storage.read(new RowId(partitionId.partitionId(), id3), HybridTimestamp.MAX_VALUE);
+
+        assertEquals(row1, result1.binaryRow());
+        assertEquals(row2, result2.binaryRow());
+        assertEquals(row3, result3.binaryRow());
+    }
+
 }

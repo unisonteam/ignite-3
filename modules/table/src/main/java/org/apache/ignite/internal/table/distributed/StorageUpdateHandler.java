@@ -372,6 +372,15 @@ public class StorageUpdateHandler {
         // to update indexes. In this case it should be executed under `runConsistently`.
         if (!pendingRowIds.isEmpty() || onApplication != null) {
             storage.runConsistently(locker -> {
+                // Check if the storage engine needs resources before starting.
+                if (locker.shouldRelease()) {
+                    // Put the pending row IDs back since we couldn't process them
+                    if (!pendingRowIds.isEmpty()) {
+                        pendingRows.addPendingRowIds(txId, new ArrayList<>(pendingRowIds));
+                    }
+                    return null;
+                }
+
                 pendingRowIds.forEach(locker::lock);
 
                 // Here we don't need to check for mismatch of the transaction that created the write intent and commits it. Since the
