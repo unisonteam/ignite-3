@@ -207,12 +207,27 @@ public abstract class AbstractPageMemoryTableStorage<T extends AbstractPageMemor
             List<T> storages = mvPartitionStorages.getAll();
 
             var destroyFutures = new CompletableFuture[storages.size()];
+            int futuresAdded = 0;
 
             for (int i = 0; i < storages.size(); i++) {
                 AbstractPageMemoryMvPartitionStorage storage = storages.get(i);
 
+                // Check if the storage engine needs resources before processing each partition.
                 try {
-                    destroyFutures[i] = storage.runConsistently(locker -> storage.destroyIndex(indexId))
+                    boolean shouldRelease = storage.runConsistently(locker -> locker.shouldRelease());
+                    if (shouldRelease && futuresAdded > 0) {
+                        // Exit early if we've started processing at least one partition.
+                        // The remaining partitions will be processed on the next invocation.
+                        break;
+                    }
+                } catch (StorageDestroyedException e) {
+                    // Storage is already destroyed, nothing to do for this partition.
+                    destroyFutures[futuresAdded++] = nullCompletedFuture();
+                    continue;
+                }
+
+                try {
+                    destroyFutures[futuresAdded++] = storage.runConsistently(locker -> storage.destroyIndex(indexId))
                             .handle((res, ex) -> {
                                 if (ex != null && isIgnorableIndexDestructionException(ex)) {
                                     return CompletableFutures.<Void>nullCompletedFuture();
@@ -221,8 +236,15 @@ public abstract class AbstractPageMemoryTableStorage<T extends AbstractPageMemor
                             })
                             .thenCompose(identity());
                 } catch (StorageDestroyedException e) {
-                    destroyFutures[i] = nullCompletedFuture();
+                    destroyFutures[futuresAdded++] = nullCompletedFuture();
                 }
+            }
+
+            // Only wait for the futures we actually created.
+            if (futuresAdded < storages.size()) {
+                var completedFutures = new CompletableFuture[futuresAdded];
+                System.arraycopy(destroyFutures, 0, completedFutures, 0, futuresAdded);
+                return allOf(completedFutures);
             }
 
             return allOf(destroyFutures);

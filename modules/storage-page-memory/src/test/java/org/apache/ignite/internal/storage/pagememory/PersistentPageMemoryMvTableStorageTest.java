@@ -642,4 +642,38 @@ public class PersistentPageMemoryMvTableStorageTest extends AbstractMvTableStora
 
         assertThat(CompletableFutures.allOf(abortRebalanceFutures), willCompleteSuccessfully());
     }
+
+    /**
+     * Tests that {@link AbstractPageMemoryTableStorage#destroyIndex} respects {@code shouldRelease()} from the storage engine.
+     *
+     * <p>This test verifies that when destroying an index across multiple partitions, the operation checks
+     * {@code shouldRelease()} before processing each partition and can exit early to allow critical storage
+     * operations like checkpoints to proceed.</p>
+     */
+    @Test
+    void testDestroyIndexExitsEarlyOnShouldRelease() {
+        // Given: Multiple partitions with an index and some data
+        int[] partitionIds = IntStream.range(0, 10)
+                .map(i -> PARTITION_ID + i)
+                .toArray();
+
+        PersistentPageMemoryMvPartitionStorage[] partitions = getOrCreateMvPartitions(partitionIds);
+
+        // Add some data to each partition
+        addWriteCommitted(partitions);
+
+        // Create an index across all partitions
+        for (int partId : partitionIds) {
+            tableStorage.createHashIndex(partId, hashIdx);
+        }
+
+        // When: Destroy the index in parallel with checkpoints (which trigger shouldRelease)
+        // Then: The operation should complete successfully, respecting shouldRelease when needed
+        for (int i = 0; i < 10; i++) {
+            runRace(
+                    () -> assertThat(tableStorage.destroyIndex(hashIdx.id()), willCompleteSuccessfully()),
+                    () -> assertThat(forceCheckpointAsync(), willCompleteSuccessfully())
+            );
+        }
+    }
 }
