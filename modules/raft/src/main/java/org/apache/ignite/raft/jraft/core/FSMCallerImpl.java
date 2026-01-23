@@ -696,6 +696,36 @@ public class FSMCallerImpl implements FSMCaller {
                 lastAppliedId.getIndex(), lastAppliedId.getTerm(), snapshotId.getIndex(), snapshotId.getTerm()));
             return;
         }
+
+        // Check for divergent applied data: if snapshot is at the same index we've applied
+        // but with a different term, this indicates divergence (we applied different data).
+        // Installing such a snapshot would overwrite divergent applied data.
+        if (meta.lastIncludedIndex() == lastAppliedId.getIndex() &&
+            meta.lastIncludedTerm() != lastAppliedId.getTerm()) {
+            String errorMsg = String.format(
+                "Cannot install snapshot: would lose divergent applied data. " +
+                "Local node has applied entry at same index but with different term. " +
+                "Snapshot: index=%d term=%d, Local applied: index=%d term=%d. " +
+                "This partition is now in BROKEN state and requires manual recovery via " +
+                "'recovery partitions restart --with-cleanup' or 'recovery partitions reset'.",
+                meta.lastIncludedIndex(), meta.lastIncludedTerm(),
+                lastAppliedId.getIndex(), lastAppliedId.getTerm()
+            );
+
+            LOG.error("DIVERGENT APPLIED DATA DETECTED ON SNAPSHOT [node={}, group={}]: {}",
+                this.nodeId, this.node != null ? this.node.getGroupId() : "unknown", errorMsg);
+
+            RaftException error = new RaftException(
+                ErrorType.ERROR_TYPE_STATE_MACHINE,
+                RaftError.EINTERNAL,
+                errorMsg
+            );
+
+            setError(error);
+            done.run(new Status(RaftError.EINTERNAL, errorMsg));
+            return;
+        }
+
         if (!this.fsm.onSnapshotLoad(reader)) {
             done.run(new Status(-1, "StateMachine onSnapshotLoad failed"));
             final RaftException e = new RaftException(ErrorType.ERROR_TYPE_STATE_MACHINE,
