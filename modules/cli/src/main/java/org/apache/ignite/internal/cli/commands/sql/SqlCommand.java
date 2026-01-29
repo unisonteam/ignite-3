@@ -22,6 +22,8 @@ import static org.apache.ignite.internal.cli.commands.Options.Constants.JDBC_URL
 import static org.apache.ignite.internal.cli.commands.Options.Constants.JDBC_URL_OPTION_DESC;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.PLAIN_OPTION;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.PLAIN_OPTION_DESC;
+import static org.apache.ignite.internal.cli.commands.Options.Constants.RESULT_LIMIT_OPTION;
+import static org.apache.ignite.internal.cli.commands.Options.Constants.RESULT_LIMIT_OPTION_DESC;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.SCRIPT_FILE_OPTION;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.SCRIPT_FILE_OPTION_DESC;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.TIMED_OPTION;
@@ -68,6 +70,9 @@ public class SqlCommand extends BaseCommand implements Callable<Integer> {
     @Option(names = SCRIPT_FILE_OPTION, description = SCRIPT_FILE_OPTION_DESC)
     private String file;
 
+    @Option(names = RESULT_LIMIT_OPTION, description = RESULT_LIMIT_OPTION_DESC)
+    private Integer resultLimit;
+
     @Unmatched
     private String[] args;
 
@@ -107,6 +112,9 @@ public class SqlCommand extends BaseCommand implements Callable<Integer> {
         }
         if (file != null) {
             result.add(SCRIPT_FILE_OPTION + "=" + file);
+        }
+        if (resultLimit != null) {
+            result.add(RESULT_LIMIT_OPTION + "=" + resultLimit);
         }
         return result.toArray(new String[0]);
     }
