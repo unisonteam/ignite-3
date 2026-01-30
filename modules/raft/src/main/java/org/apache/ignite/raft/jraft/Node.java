@@ -22,7 +22,9 @@ import org.apache.ignite.raft.jraft.conf.Configuration;
 import org.apache.ignite.raft.jraft.core.NodeMetrics;
 import org.apache.ignite.raft.jraft.core.Replicator;
 import org.apache.ignite.raft.jraft.core.State;
-import org.apache.ignite.raft.jraft.entity.LogId;import org.apache.ignite.raft.jraft.entity.NodeId;
+import org.apache.ignite.raft.jraft.entity.LogId;
+import org.apache.ignite.raft.jraft.entity.NodeId;
+import org.apache.ignite.raft.jraft.error.RaftException;
 import org.apache.ignite.raft.jraft.entity.PeerId;
 import org.apache.ignite.raft.jraft.entity.Task;
 import org.apache.ignite.raft.jraft.entity.UserLog;
@@ -353,4 +355,15 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * (no flush).
      */
     LogId lastLogIndexAndTerm();
+
+    /**
+     * Handle error and transition node to error state.
+     *
+     * <p>This method is called when a critical error occurs that requires the node to transition
+     * to an error state (e.g., STATE_ERROR). The node will propagate the error to its components
+     * (FSMCaller, ReadOnlyService) and update its state accordingly.
+     *
+     * @param error the error that occurred
+     */
+    void onError(RaftException error);
 }
