@@ -1050,6 +1050,16 @@ public class PersistentPageMemory implements PageMemory {
     }
 
     /**
+     * Returns the metrics object for this page memory instance.
+     * Provides access to cache hits, misses, replacements, and I/O statistics.
+     *
+     * @return Page memory metrics.
+     */
+    public PersistentPageMemoryMetrics metrics() {
+        return metrics;
+    }
+
+    /**
      * Returns total number of acquired pages.
      */
     public long acquiredPages() {
