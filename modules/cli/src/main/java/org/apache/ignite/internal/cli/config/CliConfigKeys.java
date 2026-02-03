@@ -91,8 +91,8 @@ public enum CliConfigKeys {
     /** Maximum column width property name. */
     OUTPUT_MAX_COLUMN_WIDTH(Constants.OUTPUT_MAX_COLUMN_WIDTH),
 
-    /** SQL result row limit property name. */
-    SQL_RESULT_LIMIT(Constants.SQL_RESULT_LIMIT);
+    /** SQL display page size property name. */
+    SQL_DISPLAY_PAGE_SIZE(Constants.SQL_DISPLAY_PAGE_SIZE);
 
     private final String value;
 
@@ -171,10 +171,10 @@ public enum CliConfigKeys {
 
         public static final String OUTPUT_MAX_COLUMN_WIDTH = "ignite.cli.output.max-column-width";
 
-        public static final String SQL_RESULT_LIMIT = "ignite.cli.sql.result-limit";
+        public static final String SQL_DISPLAY_PAGE_SIZE = "ignite.cli.sql.display-page-size";
 
-        /** Default SQL result row limit. */
-        public static final int DEFAULT_SQL_RESULT_LIMIT = 1000;
+        /** Default SQL display page size. */
+        public static final int DEFAULT_SQL_DISPLAY_PAGE_SIZE = 1000;
     }
 
     CliConfigKeys(String value) {
