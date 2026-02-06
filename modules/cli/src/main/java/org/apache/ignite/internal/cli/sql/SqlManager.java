@@ -47,18 +47,6 @@ public class SqlManager implements AutoCloseable {
      * @throws SQLException in any case when SQL command can't be executed.
      */
     public SqlQueryResult execute(String sql) throws SQLException {
-        return execute(sql, 0);
-    }
-
-    /**
-     * Execute provided string as SQL request with row limit.
-     *
-     * @param sql incoming string representation of SQL command.
-     * @param resultLimit maximum number of rows to return (0 = unlimited).
-     * @return result of provided SQL command in terms of {@link Table}.
-     * @throws SQLException in any case when SQL command can't be executed.
-     */
-    public SqlQueryResult execute(String sql, int resultLimit) throws SQLException {
         SqlQueryResultBuilder sqlQueryResultBuilder = new SqlQueryResultBuilder();
 
         long startTime = System.currentTimeMillis();
@@ -68,7 +56,7 @@ public class SqlManager implements AutoCloseable {
             do {
                 ResultSet rs = statement.getResultSet();
                 if (rs != null) {
-                    sqlQueryResultBuilder.addTable(Table.fromResultSet(rs, resultLimit));
+                    sqlQueryResultBuilder.addTable(Table.fromResultSet(rs));
                 } else {
                     int updateCount = statement.getUpdateCount();
                     sqlQueryResultBuilder.addMessage(updateCount >= 0 ? "Updated " + updateCount + " rows." : "OK!");
