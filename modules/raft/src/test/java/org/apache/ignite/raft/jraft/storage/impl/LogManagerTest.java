@@ -16,6 +16,11 @@
  */
 package org.apache.ignite.raft.jraft.storage.impl;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willBe;
+import static org.apache.ignite.internal.testframework.matchers.CompletableFutureMatcher.willCompleteSuccessfully;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -26,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import org.apache.ignite.internal.thread.IgniteThreadFactory;
@@ -123,6 +129,34 @@ public class LogManagerTest extends BaseStorageTest {
         this.logStorage.shutdown();
         disruptor.shutdown();
         ExecutorServiceHelper.shutdownAndAwaitTermination(executor);
+    }
+
+    /**
+     * Helper method to append entries asynchronously and return a CompletableFuture with the success result.
+     *
+     * @param entries Entries to append
+     * @return CompletableFuture that completes with {@code true} if append succeeded, {@code false} otherwise
+     */
+    private CompletableFuture<Boolean> appendEntriesAsync(List<LogEntry> entries) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+
+        this.logManager.appendEntries(new ArrayList<>(entries), new LogManager.StableClosure() {
+            @Override
+            public void run(Status status) {
+                future.complete(status.isOk());
+            }
+        });
+
+        return future;
+    }
+
+    /**
+     * Helper method to wait for entries to be flushed to disk.
+     *
+     * @param expectedLastIndex Expected last log index after flush
+     */
+    private void awaitLogFlushed(long expectedLastIndex) {
+        await().atMost(2, SECONDS).until(() -> this.logManager.getLastLogIndex(true) == expectedLastIndex);
     }
 
     @Test
@@ -475,5 +509,166 @@ public class LogManagerTest extends BaseStorageTest {
         this.logManager.shutdown();
         Exception e = assertThrows(IllegalStateException.class, () -> this.logManager.getLastLogIndex(true));
         assertEquals("Node is shutting down", e.getMessage());
+    }
+
+    /**
+     * Test that divergent applied data is detected when truncation would affect applied entries.
+     * Scenario: appliedId=(5, term=1), conflict at index 3 → truncation to index 2 would affect applied data.
+     */
+    @Test
+    public void testCheckAndResolveConflict_WithDivergentAppliedData_CallsNodeOnError() {
+        // Setup: Append entries 1-10 with term 1
+        List<LogEntry> initialEntries = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            initialEntries.add(TestUtils.mockEntry(i, 1));
+        }
+
+        assertThat(appendEntriesAsync(initialEntries), willBe(true));
+
+        // Wait for entries to be flushed to disk before setting applied ID
+        awaitLogFlushed(10);
+        this.logManager.setAppliedId(new LogId(5, 1));
+
+        // Now append conflicting entries starting from index 3 with term 2
+        // This simulates a leader with different log trying to replicate
+        List<LogEntry> conflictingEntries = new ArrayList<>();
+        for (int i = 3; i <= 8; i++) {
+            conflictingEntries.add(TestUtils.mockEntry(i, 2));
+        }
+
+        // Append the conflicting entries - this should detect divergence
+        assertThat(appendEntriesAsync(conflictingEntries), willBe(false));
+
+        // Verify that node.onError() was called with appropriate RaftException
+        Mockito.verify(node).onError(Mockito.any(org.apache.ignite.raft.jraft.error.RaftException.class));
+    }
+
+    /**
+     * Test that non-divergent conflicts allow truncation when it doesn't affect applied entries.
+     * Scenario: appliedId=(2, term=1), conflict at index 5 → truncation to index 4 doesn't affect applied data.
+     */
+    @Test
+    public void testCheckAndResolveConflict_WithNonDivergentConflict_AllowsTruncation() {
+        // Setup: Append entries 1-10 with term 1
+        List<LogEntry> initialEntries = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            initialEntries.add(TestUtils.mockEntry(i, 1));
+        }
+
+        assertThat(appendEntriesAsync(initialEntries), willBe(true));
+
+        // Wait for entries to be flushed to disk before setting applied ID
+        awaitLogFlushed(10);
+        this.logManager.setAppliedId(new LogId(2, 1));
+
+        // Append conflicting entries starting from index 5 with term 2
+        // Truncation to index 4 won't affect applied entries (only up to 2)
+        List<LogEntry> conflictingEntries = new ArrayList<>();
+        for (int i = 5; i <= 12; i++) {
+            conflictingEntries.add(TestUtils.mockEntry(i, 2));
+        }
+
+        assertThat(appendEntriesAsync(conflictingEntries), willBe(true));
+
+        // Verify log was truncated and new entries were added
+        assertEquals(12, this.logManager.getLastLogIndex());
+        // Entries 1-4 should have term 1
+        assertEquals(1, this.logManager.getEntry(1).getId().getTerm());
+        assertEquals(1, this.logManager.getEntry(4).getId().getTerm());
+        // Entries 5-12 should have term 2
+        assertEquals(2, this.logManager.getEntry(5).getId().getTerm());
+        assertEquals(2, this.logManager.getEntry(12).getId().getTerm());
+    }
+
+    /**
+     * Test boundary case where conflict is exactly at the applied index.
+     * Scenario: appliedId=(5, term=1), conflict at index 5 → should detect divergence.
+     */
+    @Test
+    public void testCheckAndResolveConflict_ConflictExactlyAtApplied_DetectsDivergence() {
+        // Setup: Append entries 1-10 with term 1
+        List<LogEntry> initialEntries = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            initialEntries.add(TestUtils.mockEntry(i, 1));
+        }
+
+        assertThat(appendEntriesAsync(initialEntries), willBe(true));
+
+        // Wait for entries to be flushed to disk before setting applied ID
+        awaitLogFlushed(10);
+        this.logManager.setAppliedId(new LogId(5, 1));
+
+        // Append conflicting entries starting exactly at index 5 with term 2
+        // This is the boundary case - conflict exactly at applied index
+        List<LogEntry> conflictingEntries = new ArrayList<>();
+        for (int i = 5; i <= 10; i++) {
+            conflictingEntries.add(TestUtils.mockEntry(i, 2));
+        }
+
+        assertThat(appendEntriesAsync(conflictingEntries), willBe(false));
+    }
+
+    /**
+     * Test that truncation is allowed when there are no applied entries.
+     * Scenario: appliedId=(0, term=0), conflict at any index → should allow truncation.
+     */
+    @Test
+    public void testCheckAndResolveConflict_NoAppliedEntries_AllowsTruncation() {
+        // Setup: Append entries 1-10 with term 1
+        List<LogEntry> initialEntries = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            initialEntries.add(TestUtils.mockEntry(i, 1));
+        }
+
+        assertThat(appendEntriesAsync(initialEntries), willBe(true));
+
+        // No entries have been applied (appliedId remains at default 0,0)
+        // Don't call setAppliedId - it should remain at (0, 0)
+
+        // Append conflicting entries from index 1 with term 2
+        // Should be allowed since nothing has been applied yet
+        List<LogEntry> conflictingEntries = new ArrayList<>();
+        for (int i = 1; i <= 8; i++) {
+            conflictingEntries.add(TestUtils.mockEntry(i, 2));
+        }
+
+        assertThat(appendEntriesAsync(conflictingEntries), willBe(true));
+
+        // Verify entries were replaced with term 2
+        assertEquals(8, this.logManager.getLastLogIndex());
+        for (int i = 1; i <= 8; i++) {
+            assertEquals(2, this.logManager.getEntry(i).getId().getTerm());
+        }
+    }
+
+    /**
+     * Test that normal append without conflicts works correctly (regression test).
+     */
+    @Test
+    public void testCheckAndResolveConflict_NoConflict_AppendsSuccessfully() {
+        // Setup: Append entries 1-5 with term 1
+        List<LogEntry> initialEntries = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            initialEntries.add(TestUtils.mockEntry(i, 1));
+        }
+
+        assertThat(appendEntriesAsync(initialEntries), willBe(true));
+
+        // Wait for entries to be flushed to disk before setting applied ID
+        awaitLogFlushed(5);
+        this.logManager.setAppliedId(new LogId(3, 1));
+
+        // Append entries 6-10 with term 1 (no conflict)
+        List<LogEntry> newEntries = new ArrayList<>();
+        for (int i = 6; i <= 10; i++) {
+            newEntries.add(TestUtils.mockEntry(i, 1));
+        }
+
+        assertThat(appendEntriesAsync(newEntries), willBe(true));
+
+        assertEquals(10, this.logManager.getLastLogIndex());
+        for (int i = 1; i <= 10; i++) {
+            assertEquals(1, this.logManager.getEntry(i).getId().getTerm());
+        }
     }
 }

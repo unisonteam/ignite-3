@@ -31,6 +31,7 @@ import org.apache.ignite.internal.logger.IgniteLogger;
 import org.apache.ignite.internal.logger.Loggers;
 import org.apache.ignite.internal.raft.storage.TermCache;
 import org.apache.ignite.raft.jraft.FSMCaller;
+import org.apache.ignite.raft.jraft.Node;
 import org.apache.ignite.raft.jraft.Status;
 import org.apache.ignite.raft.jraft.conf.Configuration;
 import org.apache.ignite.raft.jraft.conf.ConfigurationEntry;
@@ -72,6 +73,7 @@ public class LogManagerImpl implements LogManager {
     private LogStorage logStorage;
     private ConfigurationManager configManager;
     private FSMCaller fsmCaller;
+    private Node node;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Lock writeLock = this.lock.writeLock();
     private final Lock readLock = this.lock.readLock();
@@ -167,6 +169,7 @@ public class LogManagerImpl implements LogManager {
             this.nodeMetrics = opts.getNodeMetrics();
             this.logStorage = opts.getLogStorage();
             this.configManager = opts.getConfigurationManager();
+            this.node = opts.getNode();
             this.nodeOptions = opts.getNode().getOptions();
             this.nodeId = opts.getNode().getNodeId();
 
@@ -1070,6 +1073,58 @@ public class LogManagerImpl implements LogManager {
         lock.lock();
     }
 
+    /**
+     * Checks if log truncation would affect applied entries with divergent terms and handles the error condition.
+     *
+     * <p>When a node has applied log entries that conflict with the leader's log (same index, different term),
+     * truncation would cause silent data loss. This method detects that condition and transitions the node
+     * to BROKEN state instead, requiring manual recovery via disaster recovery commands.
+     *
+     * @param conflictingLogIndex Index where the conflict was detected
+     * @param lastIndexKept Index that would be kept after truncation (conflictingLogIndex - 1)
+     * @param appliedIndex Current applied index on this node
+     * @param done Closure to execute with error status
+     * @return {@code true} if divergent applied data was detected and handled, {@code false} otherwise
+     */
+    private boolean checkAndHandleDivergentAppliedData(long conflictingLogIndex, long lastIndexKept,
+                                                        long appliedIndex, StableClosure done) {
+        // If truncation would affect applied entries, this indicates divergent data
+        // because the leader has different terms at indices we've already applied
+        if (lastIndexKept < appliedIndex) {
+            // Build detailed error message with recovery instructions
+            String errorMsg = String.format(
+                "Cannot truncate log: would lose divergent applied data. " +
+                "Node has applied entries that conflict with leader's log. " +
+                "ConflictingIndex=%d, lastIndexKept=%d, appliedIndex=%d, appliedTerm=%d. " +
+                "This partition is now in BROKEN state and requires manual recovery via " +
+                "'recovery partitions restart --with-cleanup' or 'recovery partitions reset'.",
+                conflictingLogIndex, lastIndexKept, appliedIndex, this.appliedId.getTerm()
+            );
+
+            LOG.error("DIVERGENT APPLIED DATA DETECTED [node={}]: {}", this.nodeId, errorMsg);
+
+            // Create exception and transition node to error state
+            RaftException error = new RaftException(
+                ErrorType.ERROR_TYPE_LOG,
+                RaftError.EINTERNAL,
+                errorMsg
+            );
+
+            // Transition node to error state
+            if (this.node != null) {
+                this.node.onError(error);
+            }
+
+            // Fail the AppendEntries request
+            Utils.runClosureInThread(nodeOptions.getCommonExecutor(), done,
+                new Status(RaftError.EINTERNAL, errorMsg));
+
+            return true;
+        }
+
+        return false;
+    }
+
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private boolean checkAndResolveConflict(final List<LogEntry> entries, final StableClosure done, final Lock lock) {
         final LogEntry firstLogEntry = ArrayDeque.peekFirst(entries);
@@ -1118,10 +1173,17 @@ public class LogManagerImpl implements LogManager {
                     }
                 }
                 if (conflictingIndex != entries.size()) {
-                    if (entries.get(conflictingIndex).getId().getIndex() <= this.lastLogIndex) {
-                        // Truncate all the conflicting entries to make local logs
-                        // consensus with the leader.
-                        unsafeTruncateSuffix(entries.get(conflictingIndex).getId().getIndex() - 1, lock);
+                    long conflictingLogIndex = entries.get(conflictingIndex).getId().getIndex();
+
+                    if (conflictingLogIndex <= this.lastLogIndex) {
+                        long lastIndexKept = conflictingLogIndex - 1;
+
+                        // Check for divergent applied data before truncation
+                        if (checkAndHandleDivergentAppliedData(conflictingLogIndex, lastIndexKept, appliedIndex, done)) {
+                            return false;
+                        }
+
+                        unsafeTruncateSuffix(lastIndexKept, lock);
                     }
                     this.lastLogIndex = lastLogEntry.getId().getIndex();
                 } // else this is a duplicated AppendEntriesRequest, we have
