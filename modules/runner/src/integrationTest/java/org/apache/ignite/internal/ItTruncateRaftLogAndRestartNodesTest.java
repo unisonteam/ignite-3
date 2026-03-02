@@ -72,13 +72,13 @@ import org.apache.ignite.internal.tx.InternalTransaction;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.raft.jraft.conf.ConfigurationManager;
 import org.apache.ignite.raft.jraft.core.NodeImpl;
+import org.apache.ignite.raft.jraft.core.State;
 import org.apache.ignite.raft.jraft.option.LogStorageOptions;
 import org.apache.ignite.raft.jraft.option.NodeOptions;
 import org.apache.ignite.raft.jraft.option.RaftOptions;
 import org.apache.ignite.raft.jraft.storage.LogStorage;
 import org.apache.ignite.tx.TransactionOptions;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -98,7 +98,6 @@ public class ItTruncateRaftLogAndRestartNodesTest extends ClusterPerTestIntegrat
         return 0;
     }
 
-    @Disabled("https://issues.apache.org/jira/browse/IGNITE-25502")
     @Test
     void enterNodeWithIndexGreaterThanCurrentMajority() throws Exception {
         cluster.startAndInit(3);
@@ -148,12 +147,26 @@ public class ItTruncateRaftLogAndRestartNodesTest extends ClusterPerTestIntegrat
 
             startNode(2);
 
+            // Node 2 has applied entries that the new majority (nodes 0, 1) doesn't have,
+            // so it must go to ERROR state when the leader tries to overwrite those entries.
+            assertTrue(
+                    IgniteTestUtils.waitForCondition(() -> {
+                        try {
+                            return raftNodeImpl(2, replicationGroup).getState() == State.STATE_ERROR;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    }, 10_000),
+                    "Node 2 should transition to ERROR state due to raft log suffix conflict"
+            );
+
+            // SQL should still work via the healthy majority.
             assertThat(
                     toPeopleFromSqlRows(executeSql(selectPeopleDml(TABLE_NAME))),
                     arrayWithSize(Matchers.allOf(greaterThan(0), lessThan(people.length)))
             );
 
-            for (int nodeIndex = 0; nodeIndex < 3; nodeIndex++) {
+            for (int nodeIndex = 0; nodeIndex < 2; nodeIndex++) {
                 assertThat(
                         "nodeIndex=" + nodeIndex,
                         scanPeopleFromAllPartitions(nodeIndex, TABLE_NAME),
