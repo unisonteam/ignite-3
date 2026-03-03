@@ -349,6 +349,9 @@ public enum Options {
         public static final String RESET_DATA_NODES_ZONE_NAMES_OPTION_DESC = "Comma-separated list of zone names to reset data nodes for. "
                 + "If not specified, resets for all zones.";
 
+        /** Default node URL used when no URL is provided via CLI args or config. */
+        public static final String DEFAULT_NODE_URL = "http://localhost:10300";
+
         /** Maximum column width option long name. */
         public static final String MAX_COL_WIDTH_OPTION = "--max-col-width";
 

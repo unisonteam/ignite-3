@@ -19,6 +19,7 @@ package org.apache.ignite.internal.cli.commands.connect;
 
 import static org.apache.ignite.internal.cli.commands.CommandConstants.FOOTER_HEADING;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.CLUSTER_URL_KEY;
+import static org.apache.ignite.internal.cli.commands.Options.Constants.DEFAULT_NODE_URL;
 import static org.apache.ignite.internal.cli.commands.Options.Constants.NODE_URL_OPTION_DESC;
 
 import jakarta.inject.Inject;
@@ -52,7 +53,8 @@ import picocli.CommandLine.Parameters;
 public class ConnectReplCommand extends BaseCommand implements Runnable {
 
     /** Node URL option. */
-    @Parameters(description = NODE_URL_OPTION_DESC, descriptionKey = CLUSTER_URL_KEY, converter = RestEndpointUrlConverter.class)
+    @Parameters(description = NODE_URL_OPTION_DESC, descriptionKey = CLUSTER_URL_KEY, converter = RestEndpointUrlConverter.class,
+            defaultValue = DEFAULT_NODE_URL)
     private URL nodeUrl;
 
     @ArgGroup(exclusive = false)

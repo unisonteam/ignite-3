@@ -291,7 +291,7 @@ public class UrlOptionsNegativeTest extends BaseIgniteAbstractTest {
 
         assertAll(
                 this::assertOutputIsEmpty,
-                () -> assertErrOutputContains("Missing required parameter: '<nodeUrl>'")
+                () -> assertErrOutputContains("Could not connect to node with URL http://localhost:10300")
         );
     }
 

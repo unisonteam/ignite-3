@@ -31,6 +31,16 @@ class ConnectCommandTest extends CliCommandTestBase {
     }
 
     @Test
+    @DisplayName("Should use default URL when no URL is provided")
+    void connectWithoutUrl() {
+        execute(new String[0]);
+
+        // Exit code 0 means picocli parsed args successfully (no "missing required parameter" error).
+        // The command uses the default URL http://localhost:10300 and attempts to connect.
+        assertExitCodeIsZero();
+    }
+
+    @Test
     void invalidNodeUrl() {
         execute("nodeName");
 
