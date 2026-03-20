@@ -203,6 +203,22 @@ class LeaseBatchSerializerTest {
     }
 
     @Test
+    void batchWithMoreNodesThanNamesWhenNameCountAtCompactModeLimit() {
+        // Simulates the scenario where nodes restart with new UUIDs but keep the same name.
+        // This can cause nodeCount > nameCount, breaking compact mode which only checked nameCount.
+        List<Lease> originalLeases = IntStream.range(0, 9)
+                .mapToObj(n -> {
+                    // Use only 8 unique names (indices 0-7), but 9 unique UUIDs (indices 0-8).
+                    String nodeName = "node" + (n % 8);
+                    return tableLease(nodeName, randomUUID(), null, n);
+                })
+                .collect(toList());
+        LeaseBatch originalBatch = new LeaseBatch(originalLeases);
+
+        verifySerializationAndDeserializationGivesSameResult(originalBatch);
+    }
+
+    @Test
     void batchWithMoreThan8NodeNames() {
         List<Lease> originalLeases = IntStream.range(0, 9)
                 .mapToObj(n -> tableLease("node" + n, randomUUID(), "candidate" + n, n))

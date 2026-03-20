@@ -81,8 +81,9 @@ import org.jetbrains.annotations.Nullable;
  *       ]
  *
  *       <HOLDER_AND_PROPOSED_CANDIDATE> ::=
- *         <HOLDER_AND_PROPOSED_CANDIDATE_COMPACTLY> (byte) // Only if number of node names in the dictionary is 8 or less; lowest 3 bits
- *                                                          // encode holder index (in the nodes table), and next 3 bits are for proposed
+ *         <HOLDER_AND_PROPOSED_CANDIDATE_COMPACTLY> (byte) // Only if both node names and nodes in the dictionary
+ *                                                          // are 8 or less; lowest 3 bits encode holder index
+ *                                                          // (in the nodes table), and next 3 bits are for proposed
  *                                                          // candidate index (in the names table)
  *         | <HOLDER_INDEX> (varint) [ <PROPOSED_CANDIDATE> (varint) ] // Proposed candidate is only written if HAS_PROPOSED_CANDIDATE
  *                                                                     // flag is 1
@@ -356,7 +357,10 @@ public class LeaseBatchSerializer extends VersionedSerializer<LeaseBatch> {
     private static boolean holderIdAndProposedCandidateFitIn1Byte(NodesDictionary dictionary) {
         // Up to 8 names means that for name index it's enough to have 3 bits, same for node index, so, in sum, they
         // require up to 6 bits, and we have 7 bits in a varint byte.
-        return dictionary.nameCount() <= MAX_NODES_FOR_COMPACT_MODE;
+        // We need to check both: name count (for proposed candidate index) and node count (for holder node index),
+        // as these can diverge when nodes restart with new UUIDs but the same name.
+        return dictionary.nameCount() <= MAX_NODES_FOR_COMPACT_MODE
+                && dictionary.nodeCount() <= MAX_NODES_FOR_COMPACT_MODE;
     }
 
     private static int flags(
