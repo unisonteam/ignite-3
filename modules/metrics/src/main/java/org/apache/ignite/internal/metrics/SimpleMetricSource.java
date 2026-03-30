@@ -59,7 +59,7 @@ public final class SimpleMetricSource implements MetricSource {
 
     private final String name;
 
-    private final @Nullable String description;
+    private final String description;
 
     private final @Nullable String group;
 
@@ -69,19 +69,14 @@ public final class SimpleMetricSource implements MetricSource {
     private volatile @Nullable MetricSet metricSet;
 
     /** Constructor. */
-    public SimpleMetricSource(String name) {
-        this(name, null, null);
-    }
-
-    /** Constructor. */
-    public SimpleMetricSource(String name, @Nullable String description) {
+    public SimpleMetricSource(String name, String description) {
         this(name, description, null);
     }
 
     /** Constructor. */
-    public SimpleMetricSource(String name, @Nullable String description, @Nullable String group) {
-        this.name = Objects.requireNonNull(name, "Metric source name must not be null");
-        this.description = description;
+    public SimpleMetricSource(String name, String description, @Nullable String group) {
+        this.name = Objects.requireNonNull(name, "name");
+        this.description = Objects.requireNonNull(description, "description");
         this.group = group;
     }
 
@@ -91,7 +86,7 @@ public final class SimpleMetricSource implements MetricSource {
     }
 
     @Override
-    public @Nullable String description() {
+    public String description() {
         return description;
     }
 

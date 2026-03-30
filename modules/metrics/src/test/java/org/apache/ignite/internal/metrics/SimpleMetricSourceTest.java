@@ -34,7 +34,7 @@ public class SimpleMetricSourceTest {
     private static final String SOURCE_NAME = "test.source";
 
     private static SimpleMetricSource createSource() {
-        return new SimpleMetricSource(SOURCE_NAME);
+        return new SimpleMetricSource(SOURCE_NAME, "Test source.");
     }
 
     private static SimpleMetricSource createEnabledSource() {
@@ -55,16 +55,20 @@ public class SimpleMetricSourceTest {
     }
 
     @Test
-    void optionalPropertiesDefaultToNull() {
-        SimpleMetricSource source = new SimpleMetricSource("name");
+    void groupDefaultsToNull() {
+        SimpleMetricSource source = new SimpleMetricSource("name", "desc");
 
-        assertNull(source.description());
         assertNull(source.group());
     }
 
     @Test
     void nullNameThrows() {
-        assertThrows(NullPointerException.class, () -> new SimpleMetricSource(null));
+        assertThrows(NullPointerException.class, () -> new SimpleMetricSource(null, "desc"));
+    }
+
+    @Test
+    void nullDescriptionThrows() {
+        assertThrows(NullPointerException.class, () -> new SimpleMetricSource("name", null));
     }
 
     // -- Factory methods --
