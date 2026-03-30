@@ -15,20 +15,31 @@
  * limitations under the License.
  */
 
-namespace Apache.Ignite.Internal.Proto;
+namespace Apache.Ignite.Sql;
+
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
-/// Error data extensions. When the server returns an error response, it may contain additional data in a map. Keys are defined here.
+/// SQL exception base class.
 /// </summary>
-internal static class ErrorExtensions
+[Serializable]
+[SuppressMessage(
+    "Microsoft.Design",
+    "CA1032:ImplementStandardExceptionConstructors",
+    Justification = "Ignite exceptions use a special constructor.")]
+public class SqlException : IgniteException // Non-sealed class (generated exceptions are sealed)
 {
     /// <summary>
-    /// Expected schema version for <see cref="ErrorGroups.Table.SchemaVersionMismatch"/> error.
+    /// Initializes a new instance of the <see cref="SqlException"/> class.
     /// </summary>
-    public const string ExpectedSchemaVersion = "expected-schema-ver";
-
-    /// <summary>
-    /// SQL update counters for <see cref="Ignite.Sql.SqlBatchException"/> (binary format - array of big-endian longs).
-    /// </summary>
-    public const string SqlUpdateCounters2 = "sql-update-counters-2";
+    /// <param name="traceId">Trace id.</param>
+    /// <param name="code">Code.</param>
+    /// <param name="message">Message.</param>
+    /// <param name="innerException">Inner exception.</param>
+    public SqlException(Guid traceId, int code, string? message, Exception? innerException = null)
+        : base(traceId, code, message, innerException)
+    {
+        // No-op.
+    }
 }
