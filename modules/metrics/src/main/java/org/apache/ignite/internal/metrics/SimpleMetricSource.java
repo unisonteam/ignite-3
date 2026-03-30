@@ -20,6 +20,7 @@ package org.apache.ignite.internal.metrics;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
@@ -52,6 +53,10 @@ import org.jetbrains.annotations.Nullable;
  * }</pre>
  */
 public final class SimpleMetricSource implements MetricSource {
+    @SuppressWarnings("rawtypes")
+    private static final AtomicReferenceFieldUpdater<SimpleMetricSource, MetricSet> METRIC_SET_UPD =
+            AtomicReferenceFieldUpdater.newUpdater(SimpleMetricSource.class, MetricSet.class, "metricSet");
+
     private final String name;
 
     private final @Nullable String description;
@@ -61,7 +66,7 @@ public final class SimpleMetricSource implements MetricSource {
     private final ConcurrentHashMap<String, Metric> metrics = new ConcurrentHashMap<>();
 
     /** Non-null when enabled. */
-    private @Nullable MetricSet metricSet;
+    private volatile @Nullable MetricSet metricSet;
 
     /** Constructor. */
     public SimpleMetricSource(String name) {
@@ -171,23 +176,27 @@ public final class SimpleMetricSource implements MetricSource {
     }
 
     @Override
-    public synchronized @Nullable MetricSet enable() {
+    public @Nullable MetricSet enable() {
         if (metricSet != null) {
             return null;
         }
 
-        metricSet = new MetricSet(name, description, group, new HashMap<>(metrics));
+        MetricSet newMetricSet = new MetricSet(name, description, group, new HashMap<>(metrics));
 
-        return metricSet;
+        if (METRIC_SET_UPD.compareAndSet(this, null, newMetricSet)) {
+            return newMetricSet;
+        }
+
+        return null;
     }
 
     @Override
-    public synchronized void disable() {
-        metricSet = null;
+    public void disable() {
+        METRIC_SET_UPD.set(this, null);
     }
 
     @Override
-    public synchronized boolean enabled() {
+    public boolean enabled() {
         return metricSet != null;
     }
 
