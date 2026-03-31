@@ -68,12 +68,23 @@ public final class SimpleMetricSource implements MetricSource {
     /** Non-null when enabled. */
     private volatile @Nullable MetricSet metricSet;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     *
+     * @param name Metric source name.
+     * @param description Metric source description.
+     */
     public SimpleMetricSource(String name, String description) {
         this(name, description, null);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     *
+     * @param name Metric source name.
+     * @param description Metric source description.
+     * @param group Optional group name for additional grouping in external systems (e.g. JMX).
+     */
     public SimpleMetricSource(String name, String description, @Nullable String group) {
         this.name = Objects.requireNonNull(name, "name");
         this.description = Objects.requireNonNull(description, "description");
