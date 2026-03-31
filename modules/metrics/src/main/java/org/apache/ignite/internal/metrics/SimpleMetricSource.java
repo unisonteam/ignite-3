@@ -20,6 +20,7 @@ package org.apache.ignite.internal.metrics;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
@@ -63,7 +64,7 @@ public final class SimpleMetricSource implements MetricSource {
 
     private final @Nullable String group;
 
-    private final ConcurrentHashMap<String, Metric> metrics = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Metric> metrics = new ConcurrentHashMap<>();
 
     /** Non-null when enabled. */
     private volatile @Nullable MetricSet metricSet;
@@ -187,6 +188,7 @@ public final class SimpleMetricSource implements MetricSource {
             return null;
         }
 
+        // TODO: IGNITE-28412 consider making MetricSet observable instead of a single snapshot to support post-enable metric addition.
         MetricSet newMetricSet = new MetricSet(name, description, group, new HashMap<>(metrics));
 
         if (METRIC_SET_UPD.compareAndSet(this, null, newMetricSet)) {
