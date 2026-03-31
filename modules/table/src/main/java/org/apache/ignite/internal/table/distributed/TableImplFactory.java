@@ -54,8 +54,7 @@ import org.apache.ignite.table.QualifiedName;
 /**
  * Factory for creating {@link TableImpl} instances.
  *
- * <p>Encapsulates all dependencies needed to create {@link InternalTableImpl} and {@link TableImpl},
- * removing them from {@link TableManager}.
+ * <p>Encapsulates all dependencies needed to create {@link InternalTableImpl} and {@link TableImpl}.
  */
 public final class TableImplFactory {
     private static final IgniteLogger LOG = Loggers.forClass(TableImplFactory.class);
