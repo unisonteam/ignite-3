@@ -483,7 +483,7 @@ public class LogManagerTest extends BaseStorageTest {
         assertEquals("Node is shutting down", e.getMessage());
     }
 
-    /** Suffix truncation below appliedId must report error and abort the append (IGNITE-25502). */
+    /** Suffix truncation below appliedId must report error and abort the append. */
     @Test
     public void testSuffixTruncationBelowAppliedIndexReportsError() {
         List<LogEntry> entries = new ArrayList<>();

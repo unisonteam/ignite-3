@@ -1071,10 +1071,11 @@ public class NodeImpl implements Node, RaftServerService {
         if (persistedApplied > 0) {
             long term = this.logManager.getTerm(persistedApplied);
             if (term > 0) {
-                // Term is 0 when the index is outside the log (covered by a snapshot) — skip in that case.
                 this.logManager.setAppliedId(new LogId(persistedApplied, term));
             } else {
-                LOG.warn("Node {} persisted applied index {} is not in the raft log, expecting snapshot to cover it.",
+                // Term is 0 when the index is outside the log (covered by a snapshot) — skip in that case.
+                LOG.warn("Persisted applied index is not in the raft log, expecting snapshot to cover it "
+                        + "[nodeId={}, persistedAppliedIndex={}]",
                         getNodeId(), persistedApplied);
             }
         }

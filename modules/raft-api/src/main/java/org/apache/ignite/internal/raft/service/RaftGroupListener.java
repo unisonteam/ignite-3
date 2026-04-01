@@ -99,7 +99,7 @@ public interface RaftGroupListener {
 
     /**
      * Returns the last applied index persisted by the state machine.
-     * Called during {@code NodeImpl.init()} to prevent truncation of already-applied log entries.
+     * Called during Raft node initialization to prevent truncation of already-applied log entries.
      *
      * @return persisted applied index, or 0 if unknown.
      */
