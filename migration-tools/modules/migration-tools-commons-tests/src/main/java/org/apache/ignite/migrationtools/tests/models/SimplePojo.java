@@ -77,6 +77,9 @@ public class SimplePojo {
     }
 
     @Override public int hashCode() {
-        return Objects.hash(name, amount, decimalAmount);
+        int result = Objects.hashCode(name);
+        result = 31 * result + amount;
+        result = 31 * result + Objects.hashCode(decimalAmount);
+        return result;
     }
 }

@@ -78,6 +78,10 @@ public class IdentifiedPojo extends IdentifiedEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), name, amount, decimalAmount);
+        int result = super.hashCode();
+        result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + amount;
+        result = 31 * result + Objects.hashCode(decimalAmount);
+        return result;
     }
 }

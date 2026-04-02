@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.apache.ignite.internal.catalog.storage.serialization.CatalogEntrySerializerProvider;
@@ -349,7 +348,9 @@ final class CatalogSerializationChecker {
 
         @Override
         public int hashCode() {
-            return Objects.hash(entryTypeId, serializerVersion);
+            int result = entryTypeId;
+            result = 31 * result + serializerVersion;
+            return result;
         }
 
         @Override

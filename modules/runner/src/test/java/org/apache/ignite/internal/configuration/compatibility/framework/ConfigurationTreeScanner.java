@@ -432,7 +432,10 @@ public class ConfigurationTreeScanner {
 
         @Override
         public int hashCode() {
-            return Objects.hash(name, returnType, parameterTypes);
+            int result = Objects.hashCode(name);
+            result = 31 * result + Objects.hashCode(returnType);
+            result = 31 * result + Objects.hashCode(parameterTypes);
+            return result;
         }
     }
 }

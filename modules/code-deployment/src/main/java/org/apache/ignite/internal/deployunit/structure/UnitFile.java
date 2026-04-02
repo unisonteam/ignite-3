@@ -64,6 +64,8 @@ public class UnitFile implements UnitEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, size);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Long.hashCode(size);
+        return result;
     }
 }

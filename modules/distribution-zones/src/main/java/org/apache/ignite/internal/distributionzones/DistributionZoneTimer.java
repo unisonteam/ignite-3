@@ -132,7 +132,10 @@ public class DistributionZoneTimer {
 
     @Override
     public int hashCode() {
-        return Objects.hash(createTimestamp, timeToWaitInSeconds, nodes);
+        int result = Objects.hashCode(createTimestamp);
+        result = 31 * result + timeToWaitInSeconds;
+        result = 31 * result + Objects.hashCode(nodes);
+        return result;
     }
 
     @Override

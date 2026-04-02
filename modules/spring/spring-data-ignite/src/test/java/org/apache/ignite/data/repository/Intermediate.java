@@ -88,7 +88,11 @@ public class Intermediate implements Persistable<Long> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, leaf, leaves);
+        int result = Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(leaf);
+        result = 31 * result + Objects.hashCode(leaves);
+        return result;
     }
 
     private static long idCounter = 1;

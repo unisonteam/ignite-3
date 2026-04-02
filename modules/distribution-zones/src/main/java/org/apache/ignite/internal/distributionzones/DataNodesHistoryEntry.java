@@ -75,7 +75,9 @@ public class DataNodesHistoryEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(timestamp, dataNodes);
+        int result = Objects.hashCode(timestamp);
+        result = 31 * result + Objects.hashCode(dataNodes);
+        return result;
     }
 
     @Override

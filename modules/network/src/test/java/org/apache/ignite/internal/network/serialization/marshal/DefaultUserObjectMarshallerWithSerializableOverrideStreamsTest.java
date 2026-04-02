@@ -44,7 +44,6 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Stream;
 import org.apache.ignite.internal.network.serialization.ClassDescriptorFactory;
 import org.apache.ignite.internal.network.serialization.ClassDescriptorRegistry;
@@ -903,7 +902,7 @@ class DefaultUserObjectMarshallerWithSerializableOverrideStreamsTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return value;
         }
     }
 

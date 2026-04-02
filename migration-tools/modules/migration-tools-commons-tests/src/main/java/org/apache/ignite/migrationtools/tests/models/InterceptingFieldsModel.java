@@ -106,7 +106,10 @@ public class InterceptingFieldsModel {
 
         @Override
         public int hashCode() {
-            return Objects.hash(key1, key2, value);
+            int result = Long.hashCode(key1);
+            result = 31 * result + Long.hashCode(key2);
+            result = 31 * result + Objects.hashCode(value);
+            return result;
         }
     }
 }

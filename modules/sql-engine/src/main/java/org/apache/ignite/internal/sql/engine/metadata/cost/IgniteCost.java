@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.sql.engine.metadata.cost;
 
-import java.util.Objects;
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -162,7 +161,12 @@ public class IgniteCost implements RelOptCost {
     @Override
     @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
     public int hashCode() {
-        return Objects.hash(rowCount, cpu, io, memory, network);
+        int result = Double.hashCode(rowCount);
+        result = 31 * result + Double.hashCode(cpu);
+        result = 31 * result + Double.hashCode(io);
+        result = 31 * result + Double.hashCode(memory);
+        result = 31 * result + Double.hashCode(network);
+        return result;
     }
 
     /** {@inheritDoc} */

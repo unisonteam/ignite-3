@@ -91,7 +91,9 @@ public class UnitStatuses {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(id, versionToStatus);
+        int result = Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(versionToStatus);
+        return result;
     }
 
     @Override

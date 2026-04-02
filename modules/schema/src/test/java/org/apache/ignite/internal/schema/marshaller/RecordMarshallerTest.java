@@ -504,7 +504,7 @@ public class RecordMarshallerTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id);
+            return Long.hashCode(id);
         }
     }
 
@@ -600,7 +600,10 @@ public class RecordMarshallerTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, intField, strField);
+            int result = Long.hashCode(id);
+            result = 31 * result + intField;
+            result = 31 * result + Objects.hashCode(strField);
+            return result;
         }
     }
 
@@ -642,7 +645,7 @@ public class RecordMarshallerTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(primLongCol);
+            return Long.hashCode(primLongCol);
         }
     }
 

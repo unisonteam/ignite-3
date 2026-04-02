@@ -21,7 +21,6 @@ import static org.apache.ignite.internal.catalog.commands.CatalogUtils.defaultZo
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import org.apache.ignite.internal.catalog.Catalog;
 import org.apache.ignite.internal.catalog.descriptors.CatalogSchemaDescriptor;
 import org.apache.ignite.internal.catalog.descriptors.CatalogZoneDescriptor;
@@ -130,7 +129,7 @@ public class SnapshotEntry implements UpdateLogEvent {
 
     @Override
     public int hashCode() {
-        return Objects.hash(version);
+        return version;
     }
 
     /** {@inheritDoc} */

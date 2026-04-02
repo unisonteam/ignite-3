@@ -69,7 +69,9 @@ public class ConfigAnnotation {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, properties);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(properties);
+        return result;
     }
 
     String digest() {

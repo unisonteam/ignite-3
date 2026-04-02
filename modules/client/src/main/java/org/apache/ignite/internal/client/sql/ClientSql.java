@@ -714,7 +714,7 @@ public class ClientSql implements IgniteSql {
         private PaCacheKey(String defaultSchema, String query) {
             this.defaultSchema = defaultSchema;
             this.query = query;
-            this.hash = Objects.hash(defaultSchema, query);
+            this.hash = 31 * Objects.hashCode(defaultSchema) + Objects.hashCode(query);
         }
 
         @Override

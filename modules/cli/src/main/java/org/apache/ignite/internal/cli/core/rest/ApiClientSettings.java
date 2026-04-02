@@ -105,7 +105,14 @@ public class ApiClientSettings {
 
     @Override
     public int hashCode() {
-        return Objects.hash(basePath, keyStorePath, keyStorePassword, trustStorePath, trustStorePassword,
-                ciphers, basicAuthenticationUsername, basicAuthenticationPassword);
+        int result = Objects.hashCode(basePath);
+        result = 31 * result + Objects.hashCode(keyStorePath);
+        result = 31 * result + Objects.hashCode(keyStorePassword);
+        result = 31 * result + Objects.hashCode(trustStorePath);
+        result = 31 * result + Objects.hashCode(trustStorePassword);
+        result = 31 * result + Objects.hashCode(ciphers);
+        result = 31 * result + Objects.hashCode(basicAuthenticationUsername);
+        result = 31 * result + Objects.hashCode(basicAuthenticationPassword);
+        return result;
     }
 }

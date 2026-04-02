@@ -53,6 +53,8 @@ public class ComplexKeyIntStr {
     }
 
     @Override public int hashCode() {
-        return Objects.hash(id, affinityStr);
+        int result = id;
+        result = 31 * result + Objects.hashCode(affinityStr);
+        return result;
     }
 }

@@ -82,7 +82,7 @@ public final class NullableValue<T> {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return Objects.hashCode(value);
     }
 
     /** {@inheritDoc} */

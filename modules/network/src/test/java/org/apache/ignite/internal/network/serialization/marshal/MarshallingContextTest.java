@@ -105,7 +105,7 @@ class MarshallingContextTest {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return Objects.hash(key);
+            return Objects.hashCode(key);
         }
     }
 }

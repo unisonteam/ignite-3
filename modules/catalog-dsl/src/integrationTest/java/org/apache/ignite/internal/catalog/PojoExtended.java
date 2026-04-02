@@ -72,6 +72,12 @@ class PojoExtended extends Pojo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, idStr, firstName, lastName, str, firstNameExtended);
+        int result = Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(idStr);
+        result = 31 * result + Objects.hashCode(firstName);
+        result = 31 * result + Objects.hashCode(lastName);
+        result = 31 * result + Objects.hashCode(str);
+        result = 31 * result + Objects.hashCode(firstNameExtended);
+        return result;
     }
 }

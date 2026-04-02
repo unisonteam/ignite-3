@@ -624,38 +624,37 @@ public class InteropOperationsTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(
-                    fboolean,
-                    fbooleanN,
-                    fint8,
-                    fint8N,
-                    fint16,
-                    fint16N,
-                    fint32,
-                    fint32N,
-                    fint64,
-                    fint64N,
-                    ffloat,
-                    ffloatN,
-                    fdouble,
-                    fdoubleN,
-                    fuuid,
-                    fuuidN,
-                    fstring,
-                    fstringN,
-                    fbyte_array,
-                    fbyte_arrayN,
-                    fdate,
-                    fdateN,
-                    ftime,
-                    ftimeN,
-                    fdatetime,
-                    fdatetimeN,
-                    ftimestamp,
-                    ftimestampN,
-                    fdecimal,
-                    fdecimalN
-            );
+            int result = Boolean.hashCode(fboolean);
+            result = 31 * result + Objects.hashCode(fbooleanN);
+            result = 31 * result + fint8;
+            result = 31 * result + Objects.hashCode(fint8N);
+            result = 31 * result + fint16;
+            result = 31 * result + Objects.hashCode(fint16N);
+            result = 31 * result + fint32;
+            result = 31 * result + Objects.hashCode(fint32N);
+            result = 31 * result + Long.hashCode(fint64);
+            result = 31 * result + Objects.hashCode(fint64N);
+            result = 31 * result + Float.hashCode(ffloat);
+            result = 31 * result + Objects.hashCode(ffloatN);
+            result = 31 * result + Double.hashCode(fdouble);
+            result = 31 * result + Objects.hashCode(fdoubleN);
+            result = 31 * result + Objects.hashCode(fuuid);
+            result = 31 * result + Objects.hashCode(fuuidN);
+            result = 31 * result + Objects.hashCode(fstring);
+            result = 31 * result + Objects.hashCode(fstringN);
+            result = 31 * result + Arrays.hashCode(fbyte_array);
+            result = 31 * result + Arrays.hashCode(fbyte_arrayN);
+            result = 31 * result + Objects.hashCode(fdate);
+            result = 31 * result + Objects.hashCode(fdateN);
+            result = 31 * result + Objects.hashCode(ftime);
+            result = 31 * result + Objects.hashCode(ftimeN);
+            result = 31 * result + Objects.hashCode(fdatetime);
+            result = 31 * result + Objects.hashCode(fdatetimeN);
+            result = 31 * result + Objects.hashCode(ftimestamp);
+            result = 31 * result + Objects.hashCode(ftimestampN);
+            result = 31 * result + Objects.hashCode(fdecimal);
+            result = 31 * result + Objects.hashCode(fdecimalN);
+            return result;
         }
     }
 
@@ -764,39 +763,38 @@ public class InteropOperationsTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(
-                    id,
-                    fboolean,
-                    fbooleanN,
-                    fint8,
-                    fint8N,
-                    fint16,
-                    fint16N,
-                    fint32,
-                    fint32N,
-                    fint64,
-                    fint64N,
-                    ffloat,
-                    ffloatN,
-                    fdouble,
-                    fdoubleN,
-                    fuuid,
-                    fuuidN,
-                    fstring,
-                    fstringN,
-                    fbyte_array,
-                    fbyte_arrayN,
-                    fdate,
-                    fdateN,
-                    ftime,
-                    ftimeN,
-                    fdatetime,
-                    fdatetimeN,
-                    ftimestamp,
-                    ftimestampN,
-                    fdecimal,
-                    fdecimalN
-            );
+            int result = Long.hashCode(id);
+            result = 31 * result + Boolean.hashCode(fboolean);
+            result = 31 * result + Objects.hashCode(fbooleanN);
+            result = 31 * result + fint8;
+            result = 31 * result + Objects.hashCode(fint8N);
+            result = 31 * result + fint16;
+            result = 31 * result + Objects.hashCode(fint16N);
+            result = 31 * result + fint32;
+            result = 31 * result + Objects.hashCode(fint32N);
+            result = 31 * result + Long.hashCode(fint64);
+            result = 31 * result + Objects.hashCode(fint64N);
+            result = 31 * result + Float.hashCode(ffloat);
+            result = 31 * result + Objects.hashCode(ffloatN);
+            result = 31 * result + Double.hashCode(fdouble);
+            result = 31 * result + Objects.hashCode(fdoubleN);
+            result = 31 * result + Objects.hashCode(fuuid);
+            result = 31 * result + Objects.hashCode(fuuidN);
+            result = 31 * result + Objects.hashCode(fstring);
+            result = 31 * result + Objects.hashCode(fstringN);
+            result = 31 * result + Arrays.hashCode(fbyte_array);
+            result = 31 * result + Arrays.hashCode(fbyte_arrayN);
+            result = 31 * result + Objects.hashCode(fdate);
+            result = 31 * result + Objects.hashCode(fdateN);
+            result = 31 * result + Objects.hashCode(ftime);
+            result = 31 * result + Objects.hashCode(ftimeN);
+            result = 31 * result + Objects.hashCode(fdatetime);
+            result = 31 * result + Objects.hashCode(fdatetimeN);
+            result = 31 * result + Objects.hashCode(ftimestamp);
+            result = 31 * result + Objects.hashCode(ftimestampN);
+            result = 31 * result + Objects.hashCode(fdecimal);
+            result = 31 * result + Objects.hashCode(fdecimalN);
+            return result;
         }
     }
 }

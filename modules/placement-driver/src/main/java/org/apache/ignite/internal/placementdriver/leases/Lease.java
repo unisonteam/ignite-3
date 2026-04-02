@@ -220,6 +220,13 @@ public class Lease implements ReplicaMeta {
 
     @Override
     public int hashCode() {
-        return Objects.hash(leaseholder, leaseholderId, accepted, startTime, expirationTime, prolongable, replicationGroupId);
+        int result = Objects.hashCode(leaseholder);
+        result = 31 * result + Objects.hashCode(leaseholderId);
+        result = 31 * result + Boolean.hashCode(accepted);
+        result = 31 * result + Objects.hashCode(startTime);
+        result = 31 * result + Objects.hashCode(expirationTime);
+        result = 31 * result + Boolean.hashCode(prolongable);
+        result = 31 * result + Objects.hashCode(replicationGroupId);
+        return result;
     }
 }

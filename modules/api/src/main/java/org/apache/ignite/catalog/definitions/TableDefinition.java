@@ -254,18 +254,17 @@ public class TableDefinition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-                qualifiedName,
-                ifNotExists,
-                columns,
-                pkType,
-                pkColumns,
-                colocationColumns,
-                zoneName,
-                keyClass,
-                valueClass,
-                indexes
-        );
+        int result = Objects.hashCode(qualifiedName);
+        result = 31 * result + Boolean.hashCode(ifNotExists);
+        result = 31 * result + Objects.hashCode(columns);
+        result = 31 * result + Objects.hashCode(pkType);
+        result = 31 * result + Objects.hashCode(pkColumns);
+        result = 31 * result + Objects.hashCode(colocationColumns);
+        result = 31 * result + Objects.hashCode(zoneName);
+        result = 31 * result + Objects.hashCode(keyClass);
+        result = 31 * result + Objects.hashCode(valueClass);
+        result = 31 * result + Objects.hashCode(indexes);
+        return result;
     }
 
     /**

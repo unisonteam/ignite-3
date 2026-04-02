@@ -55,7 +55,10 @@ final class DateTimeFormatElement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(kind, delimiter, template);
+        int result = Objects.hashCode(kind);
+        result = 31 * result + delimiter;
+        result = 31 * result + Objects.hashCode(template);
+        return result;
     }
 
     @Override

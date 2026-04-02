@@ -73,7 +73,10 @@ public class NodeMetadata implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(restHost, httpPort, httpsPort);
+        int result = Objects.hashCode(restHost);
+        result = 31 * result + httpPort;
+        result = 31 * result + httpsPort;
+        return result;
     }
 
     @Override

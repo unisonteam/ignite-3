@@ -121,7 +121,9 @@ public class FullyQualifiedResourceId implements Comparable<FullyQualifiedResour
 
     @Override
     public int hashCode() {
-        return Objects.hash(contextId, resourceId);
+        int result = Objects.hashCode(contextId);
+        result = 31 * result + Objects.hashCode(resourceId);
+        return result;
     }
 
     /** {@inheritDoc} */

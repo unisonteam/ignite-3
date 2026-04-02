@@ -2045,7 +2045,9 @@ public class ZonePartitionReplicaListenerTest extends IgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(intKey, strKey);
+            int result = intKey;
+            result = 31 * result + Objects.hashCode(strKey);
+            return result;
         }
 
         @Override
@@ -2093,7 +2095,9 @@ public class ZonePartitionReplicaListenerTest extends IgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(intVal, strVal);
+            int result = Objects.hashCode(intVal);
+            result = 31 * result + Objects.hashCode(strVal);
+            return result;
         }
 
         @Override

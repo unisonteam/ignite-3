@@ -66,7 +66,9 @@ public class InvalidParam {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, reason);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(reason);
+        return result;
     }
 
     @Override

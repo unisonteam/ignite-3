@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import org.apache.calcite.rel.RelCollations;
@@ -889,7 +888,8 @@ public class SqlExpressionFactoryImplTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(lowerInclude, upperInclude);
+            int result = Boolean.hashCode(lowerInclude);
+            result = 31 * result + Boolean.hashCode(upperInclude);
             result = 31 * result + Arrays.hashCode(lower);
             result = 31 * result + Arrays.hashCode(upper);
             return result;

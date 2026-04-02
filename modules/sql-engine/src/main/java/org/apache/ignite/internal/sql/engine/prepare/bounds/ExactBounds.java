@@ -77,7 +77,7 @@ public class ExactBounds extends SearchBounds {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(bound);
+        return Objects.hashCode(bound);
     }
 
     /** {@inheritDoc} */

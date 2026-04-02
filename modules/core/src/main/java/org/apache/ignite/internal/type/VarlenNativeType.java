@@ -19,7 +19,6 @@ package org.apache.ignite.internal.type;
 
 import static org.apache.ignite.internal.lang.IgniteStringFormatter.format;
 
-import java.util.Objects;
 import org.apache.ignite.internal.tostring.S;
 import org.apache.ignite.sql.ColumnType;
 
@@ -80,7 +79,9 @@ public class VarlenNativeType extends NativeType {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), len);
+        int result = super.hashCode();
+        result = 31 * result + len;
+        return result;
     }
 
     /** {@inheritDoc} */

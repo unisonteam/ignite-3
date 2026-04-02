@@ -83,6 +83,9 @@ public class IndexDefinition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, columns);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(type);
+        result = 31 * result + Objects.hashCode(columns);
+        return result;
     }
 }

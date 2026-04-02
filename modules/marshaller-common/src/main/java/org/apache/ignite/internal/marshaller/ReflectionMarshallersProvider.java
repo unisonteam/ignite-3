@@ -193,7 +193,11 @@ public class ReflectionMarshallersProvider implements MarshallersProvider {
 
         @Override
         public int hashCode() {
-            int result = Objects.hash(schemaVersion, mapper, type, requireAllFields, allowUnmappedFields);
+            int result = schemaVersion;
+            result = 31 * result + Objects.hashCode(mapper);
+            result = 31 * result + Objects.hashCode(type);
+            result = 31 * result + Boolean.hashCode(requireAllFields);
+            result = 31 * result + Boolean.hashCode(allowUnmappedFields);
             result = 31 * result + Arrays.hashCode(columns);
             return result;
         }

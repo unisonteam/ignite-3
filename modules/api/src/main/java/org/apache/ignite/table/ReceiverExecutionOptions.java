@@ -86,7 +86,10 @@ public class ReceiverExecutionOptions {
 
     @Override
     public int hashCode() {
-        return Objects.hash(priority, maxRetries, executorType);
+        int result = priority;
+        result = 31 * result + maxRetries;
+        result = 31 * result + Objects.hashCode(executorType);
+        return result;
     }
 
     @Override

@@ -333,7 +333,10 @@ class TimeBagImpl implements TimeBag {
 
         @Override
         public int hashCode() {
-            return Objects.hash(description, time, measurementUnit);
+            int result = Objects.hashCode(description);
+            result = 31 * result + Long.hashCode(time);
+            result = 31 * result + Objects.hashCode(measurementUnit);
+            return result;
         }
     }
 

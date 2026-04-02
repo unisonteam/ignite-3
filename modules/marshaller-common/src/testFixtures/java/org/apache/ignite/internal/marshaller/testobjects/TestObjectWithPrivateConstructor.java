@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.marshaller.testobjects;
 
-import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -65,6 +64,6 @@ public class TestObjectWithPrivateConstructor {
 
     /** {@inheritDoc} */
     @Override public int hashCode() {
-        return Objects.hash(primLongCol);
+        return Long.hashCode(primLongCol);
     }
 }

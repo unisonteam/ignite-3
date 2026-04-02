@@ -109,7 +109,11 @@ public class RowMeta {
 
     @Override
     public int hashCode() {
-        return Objects.hash(rowId, transactionId, commitZoneId, commitPartitionId);
+        int result = Objects.hashCode(rowId);
+        result = 31 * result + Objects.hashCode(transactionId);
+        result = 31 * result + Objects.hashCode(commitZoneId);
+        result = 31 * result + commitPartitionId;
+        return result;
     }
 
     @Override

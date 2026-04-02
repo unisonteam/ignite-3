@@ -117,6 +117,9 @@ public class ColumnDefinition {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, definition);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(type);
+        result = 31 * result + Objects.hashCode(definition);
+        return result;
     }
 }

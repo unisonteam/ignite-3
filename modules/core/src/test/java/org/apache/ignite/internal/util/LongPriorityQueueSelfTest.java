@@ -24,7 +24,6 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Objects;
 import org.apache.ignite.internal.lang.IgniteStringFormatter;
 import org.junit.jupiter.api.Test;
 
@@ -163,7 +162,9 @@ public class LongPriorityQueueSelfTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(timestamp, value);
+            int result = Long.hashCode(timestamp);
+            result = 31 * result + value;
+            return result;
         }
 
         @Override

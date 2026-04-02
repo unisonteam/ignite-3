@@ -116,7 +116,11 @@ public class ClusterState {
 
     @Override
     public int hashCode() {
-        return Objects.hash(cmgNodes, msNodes, igniteVersion, clusterTag);
+        int result = Objects.hashCode(cmgNodes);
+        result = 31 * result + Objects.hashCode(msNodes);
+        result = 31 * result + Objects.hashCode(igniteVersion);
+        result = 31 * result + Objects.hashCode(clusterTag);
+        return result;
     }
 
     @Override

@@ -297,7 +297,9 @@ public class SqlStatisticManagerImpl extends AbstractEventProducer<StatisticChan
 
         @Override
         public int hashCode() {
-            return Objects.hash(modificationCounter, size);
+            int result = Long.hashCode(modificationCounter);
+            result = 31 * result + Long.hashCode(size);
+            return result;
         }
     }
 

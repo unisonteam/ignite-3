@@ -195,7 +195,11 @@ public final class DistributionTrait implements IgniteDistribution {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(function, keys, zoneId, tableId);
+        int result = Objects.hashCode(function);
+        result = 31 * result + Objects.hashCode(keys);
+        result = 31 * result + zoneId;
+        result = 31 * result + tableId;
+        return result;
     }
 
     /** {@inheritDoc} */

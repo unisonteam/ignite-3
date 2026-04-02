@@ -80,7 +80,7 @@ public class MultiBounds extends SearchBounds {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Objects.hash(bounds);
+        return Objects.hashCode(bounds);
     }
 
     /** {@inheritDoc} */

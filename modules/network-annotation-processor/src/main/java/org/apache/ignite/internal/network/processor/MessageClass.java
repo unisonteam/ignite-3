@@ -248,6 +248,6 @@ public class MessageClass {
 
     @Override
     public int hashCode() {
-        return Objects.hash(element);
+        return Objects.hashCode(element);
     }
 }

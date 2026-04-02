@@ -64,7 +64,9 @@ public class Leaf implements Persistable<Long> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name);
+        int result = Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(name);
+        return result;
     }
 
     private static long idCounter = 1;

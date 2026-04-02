@@ -125,7 +125,9 @@ public abstract class DefaultValue {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return Objects.hash(type, functionName);
+            int result = Objects.hashCode(type);
+            result = 31 * result + Objects.hashCode(functionName);
+            return result;
         }
     }
 
@@ -172,7 +174,9 @@ public abstract class DefaultValue {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return Objects.hash(type, value);
+            int result = Objects.hashCode(type);
+            result = 31 * result + Objects.hashCode(value);
+            return result;
         }
 
         @Override

@@ -26,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.Objects;
 import org.apache.ignite.internal.schema.BinaryRow;
 import org.apache.ignite.internal.schema.Column;
 import org.apache.ignite.internal.schema.SchemaDescriptor;
@@ -185,7 +184,9 @@ public class RecordMarshallerValidationsTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, fbyte1);
+            int result = id;
+            result = 31 * result + fbyte1;
+            return result;
         }
     }
 
@@ -221,7 +222,10 @@ public class RecordMarshallerValidationsTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, fbyte1, fbyte2);
+            int result = id;
+            result = 31 * result + fbyte1;
+            result = 31 * result + fbyte2;
+            return result;
         }
     }
 

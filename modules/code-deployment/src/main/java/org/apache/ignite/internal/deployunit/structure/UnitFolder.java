@@ -87,6 +87,8 @@ public class UnitFolder implements UnitEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, children);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(children);
+        return result;
     }
 }

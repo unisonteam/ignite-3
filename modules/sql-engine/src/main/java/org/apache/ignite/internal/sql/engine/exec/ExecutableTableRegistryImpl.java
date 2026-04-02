@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.sql.engine.exec;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 import org.apache.ignite.internal.hlc.ClockService;
 import org.apache.ignite.internal.replicator.ReplicaService;
@@ -176,7 +175,9 @@ public class ExecutableTableRegistryImpl implements ExecutableTableRegistry {
 
         @Override
         public int hashCode() {
-            return Objects.hash(timestamp, tableId);
+            int result = Long.hashCode(timestamp);
+            result = 31 * result + tableId;
+            return result;
         }
     }
 

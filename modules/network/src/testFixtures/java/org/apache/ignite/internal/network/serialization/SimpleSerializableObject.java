@@ -18,7 +18,6 @@
 package org.apache.ignite.internal.network.serialization;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /** Serializable class for marshallable test. */
 public class SimpleSerializableObject implements Serializable {
@@ -44,6 +43,6 @@ public class SimpleSerializableObject implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(val);
+        return val;
     }
 }

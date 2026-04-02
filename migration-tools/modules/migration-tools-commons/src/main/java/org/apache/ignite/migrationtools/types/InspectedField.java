@@ -143,7 +143,12 @@ public class InspectedField {
 
     @Override
     public int hashCode() {
-        return Objects.hash(fieldName, typeName, fieldType, nullable, hasAnnotation);
+        int result = Objects.hashCode(fieldName);
+        result = 31 * result + Objects.hashCode(typeName);
+        result = 31 * result + Objects.hashCode(fieldType);
+        result = 31 * result + Boolean.hashCode(nullable);
+        result = 31 * result + Boolean.hashCode(hasAnnotation);
+        return result;
     }
 
     @Override

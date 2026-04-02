@@ -415,7 +415,7 @@ public class FieldAccessorTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(data);
+            return Objects.hashCode(data);
         }
     }
 }

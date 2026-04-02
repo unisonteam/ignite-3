@@ -86,7 +86,12 @@ public class EventImpl implements Event {
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, timestamp, productVersion, user, fields);
+        int result = Objects.hashCode(type);
+        result = 31 * result + Long.hashCode(timestamp);
+        result = 31 * result + Objects.hashCode(productVersion);
+        result = 31 * result + Objects.hashCode(user);
+        result = 31 * result + Objects.hashCode(fields);
+        return result;
     }
 
     @Override

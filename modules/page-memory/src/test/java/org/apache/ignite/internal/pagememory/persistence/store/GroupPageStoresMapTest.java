@@ -279,7 +279,9 @@ public class GroupPageStoresMapTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(groupPartitionId, filePageStore);
+            int result = Objects.hashCode(groupPartitionId);
+            result = 31 * result + Objects.hashCode(filePageStore);
+            return result;
         }
 
         @Override

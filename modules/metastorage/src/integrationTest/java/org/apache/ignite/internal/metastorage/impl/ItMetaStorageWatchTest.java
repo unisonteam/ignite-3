@@ -520,7 +520,9 @@ public class ItMetaStorageWatchTest extends IgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            return Objects.hash(revision, timestamp);
+            int result = Long.hashCode(revision);
+            result = 31 * result + Objects.hashCode(timestamp);
+            return result;
         }
     }
 }

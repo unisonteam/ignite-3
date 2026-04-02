@@ -372,7 +372,7 @@ public final class TestTypeArguments<T extends Comparable<T>> {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return Objects.hashCode(value);
         }
 
         /** {@inheritDoc} */

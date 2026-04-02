@@ -115,7 +115,14 @@ public class ColumnParams {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, nullable, length, precision, scale, defaultValueDefinition);
+        int result = Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(type);
+        result = 31 * result + Boolean.hashCode(nullable);
+        result = 31 * result + Objects.hashCode(length);
+        result = 31 * result + Objects.hashCode(precision);
+        result = 31 * result + Objects.hashCode(scale);
+        result = 31 * result + Objects.hashCode(defaultValueDefinition);
+        return result;
     }
 
     /** Parameters builder. */

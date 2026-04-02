@@ -123,6 +123,10 @@ public class MarshallerColumn {
     @Override
     public int hashCode() {
         // See comment in equals method.
-        return Objects.hash(schemaIndex, name, type, scale);
+        int result = schemaIndex;
+        result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(type);
+        result = 31 * result + scale;
+        return result;
     }
 }

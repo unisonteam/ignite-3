@@ -155,7 +155,9 @@ public class SensitiveDataToStringTest extends IgniteAbstractTest {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return Objects.hash(orgId, name);
+            int result = orgId;
+            result = 31 * result + Objects.hashCode(name);
+            return result;
         }
 
         /** {@inheritDoc} */

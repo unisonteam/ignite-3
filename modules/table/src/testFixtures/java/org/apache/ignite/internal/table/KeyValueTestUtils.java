@@ -31,7 +31,6 @@ import static org.apache.ignite.internal.type.NativeTypes.datetime;
 import static org.apache.ignite.internal.type.NativeTypes.time;
 import static org.apache.ignite.internal.type.NativeTypes.timestamp;
 
-import java.util.Objects;
 import java.util.Random;
 import org.apache.ignite.internal.marshaller.testobjects.TestObjectWithAllTypes;
 import org.apache.ignite.internal.schema.Column;
@@ -127,7 +126,7 @@ public class KeyValueTestUtils {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id);
+            return Long.hashCode(id);
         }
     }
 }

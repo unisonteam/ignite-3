@@ -55,6 +55,6 @@ public class OperationContext {
 
     @Override
     public int hashCode() {
-        return Objects.hash(txContext.hashCode());
+        return txContext.hashCode();
     }
 }

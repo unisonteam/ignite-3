@@ -79,7 +79,11 @@ public class Root implements Persistable<Long> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, intermediate, intermediates);
+        int result = Objects.hashCode(id);
+        result = 31 * result + Objects.hashCode(name);
+        result = 31 * result + Objects.hashCode(intermediate);
+        result = 31 * result + Objects.hashCode(intermediates);
+        return result;
     }
 
     private static long idCounter = 1;

@@ -53,7 +53,9 @@ public class StoredRaftNodeId {
 
     @Override
     public int hashCode() {
-        return Objects.hash(groupIdName, peer);
+        int result = Objects.hashCode(groupIdName);
+        result = 31 * result + Objects.hashCode(peer);
+        return result;
     }
 
     @Override

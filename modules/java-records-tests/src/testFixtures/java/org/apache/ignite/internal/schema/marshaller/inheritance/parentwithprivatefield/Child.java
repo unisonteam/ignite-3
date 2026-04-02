@@ -50,6 +50,9 @@ public class Child extends Parent {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getKey(), getVal(), val2);
+        int result = Objects.hashCode(getKey());
+        result = 31 * result + Objects.hashCode(getVal());
+        result = 31 * result + Objects.hashCode(val2);
+        return result;
     }
 }

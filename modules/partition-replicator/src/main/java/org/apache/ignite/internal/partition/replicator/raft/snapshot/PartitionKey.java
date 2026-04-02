@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.partition.replicator.raft.snapshot;
 
-import java.util.Objects;
 import org.apache.ignite.internal.replicator.ZonePartitionId;
 import org.apache.ignite.internal.tostring.S;
 
@@ -65,7 +64,9 @@ public class PartitionKey {
 
     @Override
     public int hashCode() {
-        return Objects.hash(zoneId, partitionId);
+        int result = zoneId;
+        result = 31 * result + partitionId;
+        return result;
     }
 
     @Override
