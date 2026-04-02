@@ -155,6 +155,28 @@
     </rule>
 
 
+    <rule name="AvoidObjectsHashInHashCode"
+      language="java"
+      message="Do not use Objects.hash() in hashCode() - use the manual ''31 * result + Objects.hashCode(field)'' pattern to avoid varargs array allocation."
+      class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            Objects.hash() allocates a varargs array on every call.
+            Use the manual 31 * result + Objects.hashCode(field) pattern instead.
+        </description>
+        <priority>3</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+                    <![CDATA[
+//MethodDeclaration[@Name='hashCode']
+  //MethodCall[@MethodName='hash']
+    [child::TypeExpression/ClassType[@SimpleName='Objects']]
+                    ]]>
+                </value>
+            </property>
+        </properties>
+    </rule>
+
     <!-- exclusions -->
     <exclude-pattern>.*/src/main/java/com/facebook/presto/.*</exclude-pattern>
     <exclude-pattern>.*/sql/engine/exec/exp/RexImpTable\.java</exclude-pattern>
