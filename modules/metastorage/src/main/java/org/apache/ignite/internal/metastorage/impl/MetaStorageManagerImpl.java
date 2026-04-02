@@ -113,6 +113,7 @@ import org.apache.ignite.internal.raft.TimeAwareRaftGroupServiceFactory;
 import org.apache.ignite.internal.raft.client.PhysicalTopologyAwareRaftGroupService;
 import org.apache.ignite.internal.raft.server.RaftGroupOptions;
 import org.apache.ignite.internal.raft.service.TimeAwareRaftGroupService;
+import org.apache.ignite.internal.thread.IgniteThreadFactory;
 import org.apache.ignite.internal.tostring.S;
 import org.apache.ignite.internal.util.Cursor;
 import org.apache.ignite.internal.util.ExceptionUtils;
@@ -1173,7 +1174,9 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
 
         try {
             metaStorageSvcFut
-                    .thenCompose(MetaStorageServiceImpl::currentRevisions)
+                    .thenCompose(metaStorageService ->
+                            metaStorageService.currentRevisions(TimeAwareRaftGroupService.NO_TIMEOUT)
+                    )
                     .orTimeout(AVAILABILITY_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                     .whenComplete((rev, ex) -> msAvailable = ex == null);
         } finally {
