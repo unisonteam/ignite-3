@@ -38,10 +38,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Flow.Publisher;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -49,6 +52,7 @@ import java.util.function.Supplier;
 import org.apache.ignite.internal.cluster.management.ClusterManagementGroupManager;
 import org.apache.ignite.internal.cluster.management.ClusterState;
 import org.apache.ignite.internal.cluster.management.MetaStorageInfo;
+import org.apache.ignite.internal.cluster.management.topology.api.LogicalNode;
 import org.apache.ignite.internal.cluster.management.topology.api.LogicalTopologyService;
 import org.apache.ignite.internal.configuration.SystemDistributedConfiguration;
 import org.apache.ignite.internal.disaster.system.message.ResetClusterMessage;
@@ -215,6 +219,24 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
     /** Tracks only reads from the leader, local reads are tracked by the storage itself. */
     private final ReadOperationForCompactionTracker readOperationFromLeaderForCompactionTracker;
 
+    /** Current Meta Storage voting peers (consistent IDs), updated on each committed Raft configuration. */
+    private volatile Set<String> currentVotingPeers = Set.of();
+
+    /**
+     * MetaStorage availability flag: {@code true} if Meta Storage majority can execute commands, {@code false} otherwise.
+     * Updated by the periodic availability check.
+     */
+    private volatile boolean msAvailable = false;
+
+    /** Periodic executor that checks Meta Storage availability. */
+    private @Nullable ScheduledExecutorService availabilityCheckExecutor;
+
+    /** Interval between availability checks, in milliseconds. */
+    private static final long AVAILABILITY_CHECK_PERIOD_MS = 5_000L;
+
+    /** Timeout for a single availability check command, in milliseconds. */
+    private static final long AVAILABILITY_CHECK_TIMEOUT_MS = 5_000L;
+
     private final MetastorageDivergencyValidator divergencyValidator = new MetastorageDivergencyValidator();
 
     private final RecoveryRevisionsListenerImpl recoveryRevisionsListener;
@@ -257,7 +279,7 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
         this.storage = storage;
         this.clock = clock;
         this.clusterTime = new ClusterTimeImpl(clusterService.nodeName(), busyLock, clock, failureProcessor);
-        this.metaStorageMetricSource = new MetaStorageMetricSource(clusterTime);
+        this.metaStorageMetricSource = new MetaStorageMetricSource(clusterTime, this::computeAvailablePeers, () -> msAvailable ? 1 : 0);
         this.raftServiceFactory = raftServiceFactory;
         this.metricManager = metricManager;
         this.metastorageRepairStorage = metastorageRepairStorage;
@@ -621,6 +643,8 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
     private void onConfigurationCommitted(RaftGroupConfiguration configuration) {
         LOG.info("MS configuration committed {}", configuration);
 
+        currentVotingPeers = Set.copyOf(configuration.peers());
+
         // TODO: IGNITE-23210 - use thenAccept() when implemented.
         raftServiceFuture
                 .handle((raftService, ex) -> {
@@ -775,6 +799,16 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
         metricManager.registerSource(metaStorageMetricSource);
         metricManager.enable(metaStorageMetricSource);
 
+        availabilityCheckExecutor = Executors.newSingleThreadScheduledExecutor(
+                IgniteThreadFactory.create(clusterService.nodeName(), "metastorage-availability-check", LOG)
+        );
+        availabilityCheckExecutor.scheduleWithFixedDelay(
+                this::checkMgAvailability,
+                AVAILABILITY_CHECK_PERIOD_MS,
+                AVAILABILITY_CHECK_PERIOD_MS,
+                TimeUnit.MILLISECONDS
+        );
+
         return nullCompletedFuture();
     }
 
@@ -812,6 +846,7 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
 
         try {
             IgniteUtils.closeAllManually(
+                    () -> IgniteUtils.shutdownAndAwaitTermination(availabilityCheckExecutor, 10, TimeUnit.SECONDS),
                     () -> metricManager.unregisterSource(metaStorageMetricSource),
                     clusterTime,
                     () -> failOrConsume(metaStorageSvcFut, new NodeStoppingException(), MetaStorageServiceImpl::close),
@@ -1101,6 +1136,46 @@ public class MetaStorageManagerImpl implements MetaStorageManager, MetastorageGr
                     () -> new CompletableFuturePublisher<>(metaStorageSvcFut.thenApply(
                             svc -> svc.prefix(keyPrefix, revUpperBound, TimeAwareRaftGroupService.NO_TIMEOUT)))
             );
+        } finally {
+            busyLock.leaveBusy();
+        }
+    }
+
+    /**
+     * Returns the number of MetaStorage voting peers that are present in the current logical topology.
+     */
+    private int computeAvailablePeers() {
+        Set<String> peers = currentVotingPeers;
+
+        if (peers.isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+
+        for (LogicalNode node : logicalTopologyService.localLogicalTopology().nodes()) {
+            if (peers.contains(node.name())) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Performs a periodic check of Meta Storage availability by attempting to execute a command.
+     * Updates {@link #msAvailable} based on whether the attempt succeeds within the timeout.
+     */
+    private void checkMgAvailability() {
+        if (!busyLock.enterBusy()) {
+            return;
+        }
+
+        try {
+            metaStorageSvcFut
+                    .thenCompose(MetaStorageServiceImpl::currentRevisions)
+                    .orTimeout(AVAILABILITY_CHECK_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    .whenComplete((rev, ex) -> msAvailable = ex == null);
         } finally {
             busyLock.leaveBusy();
         }

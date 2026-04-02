@@ -183,7 +183,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
     }
 
     private void startPlacementDriverManager() {
-        var nodeFinder = new StaticNodeFinder(Collections.singletonList(new NetworkAddress("localhost", PORT)));
+        var nodeFinder = new StaticNodeFinder(Collections.singletonList(new NetworkAddress("127.0.0.1", PORT)));
 
         clusterService = ClusterServiceTestUtils.clusterService(testInfo, PORT, nodeFinder);
         anotherClusterService = ClusterServiceTestUtils.clusterService(testInfo, PORT + 1, nodeFinder);
@@ -537,7 +537,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
         ClusterService nodeClusterService = ClusterServiceTestUtils.clusterService(
                 testInfo,
                 port,
-                new StaticNodeFinder(Collections.singletonList(new NetworkAddress("localhost", PORT)))
+                new StaticNodeFinder(Collections.singletonList(new NetworkAddress("127.0.0.1", PORT)))
         );
 
         nodeClusterService.messagingService().addMessageHandler(
