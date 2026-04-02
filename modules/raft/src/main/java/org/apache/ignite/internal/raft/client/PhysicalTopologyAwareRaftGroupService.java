@@ -334,6 +334,7 @@ public class PhysicalTopologyAwareRaftGroupService implements TimeAwareRaftGroup
             return refreshAndGetLeaderWithTerm(timeoutMillis)
                     .thenCompose(ignored -> commandExecutor.run(cmd, timeoutMillis));
         }
+
         return commandExecutor.run(cmd, timeoutMillis);
     }
 

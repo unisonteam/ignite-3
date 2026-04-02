@@ -788,7 +788,7 @@ public class IgniteImpl implements Ignite {
                 raftGroupEventsClientListener
         );
 
-        var msRaftServiceFactory = new PhysicalTopologyAwareRaftGroupServiceFactory(
+        var msRaftGroupServiceFactory = new PhysicalTopologyAwareRaftGroupServiceFactory(
                 clusterSvc,
                 raftGroupEventsClientListener,
                 failureManager
@@ -811,7 +811,7 @@ public class IgniteImpl implements Ignite {
                 raftMgr,
                 storage,
                 clock,
-                msRaftServiceFactory,
+                msRaftGroupServiceFactory,
                 metricManager,
                 systemDisasterRecoveryStorage,
                 new MetastorageRepairImpl(clusterSvc.messagingService(), logicalTopology, cmgMgr),
