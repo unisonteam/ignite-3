@@ -861,9 +861,13 @@ public class PhysicalTopologyAwareRaftGroupServiceRunTest extends BaseIgniteAbst
      */
     @ParameterizedTest
     @EnumSource(names = {"UNKNOWN", "EINTERNAL", "ENOENT"})
-    void testGetLeaderRequestTriesDifferentPeerOnTransientError(RaftError error) throws Exception {
+    void testGetLeaderRequestTriesDifferentPeerOnTransientError(RaftError error) {
+        // Track which peers received GetLeaderRequest calls.
         Set<String> calledPeers = ConcurrentHashMap.newKeySet();
-        AtomicInteger callCount = new AtomicInteger(0);
+        // The first peer to receive a request will always get a transient error.
+        // Any different peer will get a success response. This ensures the test verifies
+        // that the executor switches to a different peer after a transient error.
+        AtomicReference<String> errorPeer = new AtomicReference<>();
 
         when(messagingService.invoke(
                 any(InternalClusterNode.class),
@@ -871,17 +875,17 @@ public class PhysicalTopologyAwareRaftGroupServiceRunTest extends BaseIgniteAbst
                 anyLong())
         ).thenAnswer(invocation -> {
             InternalClusterNode target = invocation.getArgument(0);
-            calledPeers.add(target.name());
-            int count = callCount.incrementAndGet();
+            String peerName = target.name();
+            calledPeers.add(peerName);
 
-            if (count == 1) {
-                // First call returns transient error.
+            // The first peer to call gets "sticky" transient errors.
+            // Any other peer succeeds immediately.
+            if (errorPeer.compareAndSet(null, peerName) || errorPeer.get().equals(peerName)) {
                 return completedFuture(FACTORY.errorResponse()
                         .errorCode(error.getNumber())
                         .build());
             }
 
-            // Second call succeeds.
             return completedFuture(FACTORY.getLeaderResponse()
                     .leaderId(PeerId.fromPeer(NODES.get(0)).toString())
                     .currentTerm(CURRENT_TERM)
