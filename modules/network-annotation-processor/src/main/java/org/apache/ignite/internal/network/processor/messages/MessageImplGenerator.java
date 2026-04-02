@@ -42,8 +42,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -653,20 +651,11 @@ public class MessageImplGenerator {
                 .addStatement("var otherMessage = ($T)other", message.implClassName())
                 .addStatement(comparisonStatement.build());
 
-        hashCode
-                .addStatement("int result = 0");
+        first = true;
 
-        // primitives can be boxed and used in "Objects.hash"
-        String objectHashCode = Stream.concat(primitives.stream(), others.stream())
-                .map(element -> "this." + element.getSimpleName())
-                .collect(Collectors.joining(", ", "result = $T.hash(", ")"));
-
-        if (!objectHashCode.isEmpty()) {
-            hashCode.addStatement(objectHashCode, Objects.class);
-        }
-
-        for (ExecutableElement array : arrays) {
-            hashCode.addStatement("result = 31 * result + $T.hashCode(this.$L)", Arrays.class, array.getSimpleName());
+        for (ExecutableElement element : message.getters()) {
+            addHashStatement(hashCode, element, first);
+            first = false;
         }
 
         hashCode.addStatement("return result");
@@ -674,6 +663,39 @@ public class MessageImplGenerator {
         messageImplBuilder
                 .addMethod(equals.build())
                 .addMethod(hashCode.build());
+    }
+
+    private static void addHashStatement(MethodSpec.Builder hashCode, ExecutableElement element, boolean first) {
+        String fieldName = element.getSimpleName().toString();
+        TypeKind typeKind = element.getReturnType().getKind();
+        String prefix = first ? "int result = " : "result = 31 * result + ";
+        String template = prefix + "$T.hashCode(this.$L)";
+
+        switch (typeKind) {
+            case LONG:
+                hashCode.addStatement(template, Long.class, fieldName);
+                break;
+            case FLOAT:
+                hashCode.addStatement(template, Float.class, fieldName);
+                break;
+            case DOUBLE:
+                hashCode.addStatement(template, Double.class, fieldName);
+                break;
+            case BOOLEAN:
+                hashCode.addStatement(template, Boolean.class, fieldName);
+                break;
+            case ARRAY:
+                hashCode.addStatement(template, Arrays.class, fieldName);
+                break;
+            default:
+                if (typeKind.isPrimitive()) {
+                    // byte, short, char, int
+                    hashCode.addStatement(prefix + "this.$L", fieldName);
+                } else {
+                    hashCode.addStatement(template, Objects.class, fieldName);
+                }
+                break;
+        }
     }
 
     /**
