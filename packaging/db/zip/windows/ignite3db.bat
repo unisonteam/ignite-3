@@ -88,13 +88,29 @@ set CLI_EXTRA_CLASSPATH=
 @rem Parse command line arguments into CLI_* variables
 :parseArgs
 if "%~1"=="" goto applyOverrides
+if "%~1"=="--help" goto argHelp
+if "%~1"=="-h" goto argHelp
 if "%~1"=="--node-name" goto argNodeName
 if "%~1"=="--work-dir" goto argWorkDir
 if "%~1"=="--log-dir" goto argLogDir
 if "%~1"=="--config" goto argConfig
 if "%~1"=="--extra-classpath" goto argExtraClasspath
-shift
-goto parseArgs
+@rem Fail on unrecognized --* options
+echo Error: unknown option '%~1' 1>&2
+echo Use --help to see available options. 1>&2
+goto fail
+
+:argHelp
+echo Usage: ignite3db [OPTIONS]
+echo.
+echo Options:
+echo   --node-name ^<name^>       Set the node name
+echo   --work-dir ^<path^>        Set the work directory
+echo   --log-dir ^<path^>         Set the log directory
+echo   --config ^<path^>          Set the configuration file
+echo   --extra-classpath ^<path^>  Add extra entries to the classpath
+echo   --help, -h               Show this help message
+goto mainEnd
 
 :argNodeName
 if "%~2"=="" (echo Error: --node-name requires a value 1>&2 & goto fail)

@@ -45,6 +45,18 @@ parse_args() {
 
     while [ $# -gt 0 ]; do
         case "$1" in
+            --help|-h)
+                echo "Usage: ignite3db [OPTIONS]"
+                echo ""
+                echo "Options:"
+                echo "  --node-name <name>       Set the node name"
+                echo "  --work-dir <path>        Set the work directory"
+                echo "  --log-dir <path>         Set the log directory"
+                echo "  --config <path>          Set the configuration file"
+                echo "  --extra-classpath <path>  Add extra entries to the classpath"
+                echo "  --help, -h               Show this help message"
+                exit 0
+                ;;
             --node-name)
                 shift
                 if [ $# -eq 0 ]; then echo "Error: --node-name requires a value" >&2; exit 1; fi
@@ -69,6 +81,11 @@ parse_args() {
                 shift
                 if [ $# -eq 0 ]; then echo "Error: --extra-classpath requires a value" >&2; exit 1; fi
                 CLI_EXTRA_CLASSPATH="$1"
+                ;;
+            --*)
+                echo "Error: unknown option '$1'" >&2
+                echo "Use --help to see available options." >&2
+                exit 1
                 ;;
         esac
         shift
