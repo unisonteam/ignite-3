@@ -162,6 +162,7 @@ final class CancelHandleImpl implements CancelHandle {
                 });
 
                 listenersCopy = new ArrayList<>(listeners);
+                listeners.clear();
             }
 
             IgniteException error = null;
@@ -177,6 +178,9 @@ final class CancelHandleImpl implements CancelHandle {
                     error.addSuppressed(t);
                 }
             }
+
+            // Release references to cancellation actions after execution
+            cancellations.clear();
 
             // Run listener callbacks outside of lock
             for (Runnable listener : listenersCopy) {
