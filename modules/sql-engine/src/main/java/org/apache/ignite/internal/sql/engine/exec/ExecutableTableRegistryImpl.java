@@ -175,7 +175,7 @@ public class ExecutableTableRegistryImpl implements ExecutableTableRegistry {
 
         @Override
         public int hashCode() {
-            int result = Long.hashCode(timestamp);
+            int result = 31 + Long.hashCode(timestamp);
             result = 31 * result + tableId;
             return result;
         }

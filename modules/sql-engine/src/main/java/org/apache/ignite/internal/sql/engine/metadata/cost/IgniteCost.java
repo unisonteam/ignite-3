@@ -161,7 +161,7 @@ public class IgniteCost implements RelOptCost {
     @Override
     @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
     public int hashCode() {
-        int result = Double.hashCode(rowCount);
+        int result = 31 + Double.hashCode(rowCount);
         result = 31 * result + Double.hashCode(cpu);
         result = 31 * result + Double.hashCode(io);
         result = 31 * result + Double.hashCode(memory);

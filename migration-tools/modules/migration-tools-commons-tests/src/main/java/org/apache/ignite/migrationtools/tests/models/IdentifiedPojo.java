@@ -78,7 +78,7 @@ public class IdentifiedPojo extends IdentifiedEntity {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 31 + super.hashCode();
         result = 31 * result + Objects.hashCode(name);
         result = 31 * result + amount;
         result = 31 * result + Objects.hashCode(decimalAmount);

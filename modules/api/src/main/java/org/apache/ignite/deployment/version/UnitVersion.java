@@ -192,7 +192,7 @@ class UnitVersion implements Version {
 
     @Override
     public int hashCode() {
-        int result = major;
+        int result = 31 + major;
         result = 31 * result + minor;
         result = 31 * result + maintenance;
         result = 31 * result + Objects.hashCode(patch);

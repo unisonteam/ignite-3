@@ -72,7 +72,7 @@ public class SnapshotEntry implements UpdateLogEvent {
      * Returns catalog snapshot version.
      */
     public int version() {
-        return version;
+        return 31 + version;
     }
 
     public long activationTime() {
@@ -129,7 +129,7 @@ public class SnapshotEntry implements UpdateLogEvent {
 
     @Override
     public int hashCode() {
-        return version;
+        return 31 + version;
     }
 
     /** {@inheritDoc} */

@@ -948,7 +948,7 @@ public class KvMarshallerTest {
 
         @Override
         public int hashCode() {
-            return Long.hashCode(id);
+            return 31 + Long.hashCode(id);
         }
     }
 
@@ -993,7 +993,7 @@ public class KvMarshallerTest {
 
         @Override
         public int hashCode() {
-            int result = Long.hashCode(longCol);
+            int result = 31 + Long.hashCode(longCol);
             result = 31 * result + Objects.hashCode(longCol2);
             result = 31 * result + Objects.hashCode(dateCol);
             return result;
@@ -1103,7 +1103,7 @@ public class KvMarshallerTest {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return Long.hashCode(primLongCol);
+            return 31 + Long.hashCode(primLongCol);
         }
     }
 
@@ -1136,7 +1136,7 @@ public class KvMarshallerTest {
 
         @Override
         public int hashCode() {
-            return intField;
+            return 31 + intField;
         }
     }
 
@@ -1171,7 +1171,7 @@ public class KvMarshallerTest {
 
         @Override
         public int hashCode() {
-            int result = intField;
+            int result = 31 + intField;
             result = 31 * result + Objects.hashCode(strField);
             return result;
         }
@@ -1211,7 +1211,7 @@ public class KvMarshallerTest {
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(pojoField);
+            int result = 31 + Objects.hashCode(pojoField);
             result = 31 * result + Arrays.hashCode(rawField);
             return result;
         }

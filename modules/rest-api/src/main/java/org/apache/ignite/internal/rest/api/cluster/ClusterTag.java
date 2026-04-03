@@ -70,7 +70,7 @@ public class ClusterTag {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(clusterId);
+        int result = 31 + Objects.hashCode(clusterId);
         result = 31 * result + Objects.hashCode(clusterName);
         return result;
     }

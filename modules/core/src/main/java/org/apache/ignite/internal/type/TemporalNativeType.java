@@ -115,7 +115,7 @@ public class TemporalNativeType extends NativeType {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 31 + super.hashCode();
         result = 31 * result + precision;
         return result;
     }

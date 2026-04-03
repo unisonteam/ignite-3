@@ -65,7 +65,7 @@ public class DefaultFlowable<T> implements Flowable<T> {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(body);
+        int result = 31 + Objects.hashCode(body);
         result = 31 * result + Objects.hashCode(cause);
         return result;
     }

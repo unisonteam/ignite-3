@@ -93,7 +93,7 @@ public class StructNativeType extends NativeType {
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(name);
+            int result = 31 + Objects.hashCode(name);
             result = 31 * result + Objects.hashCode(type);
             result = 31 * result + Boolean.hashCode(nullable);
             return result;
@@ -119,7 +119,7 @@ public class StructNativeType extends NativeType {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 31 + super.hashCode();
         result = 31 * result + Objects.hashCode(fields);
         return result;
     }

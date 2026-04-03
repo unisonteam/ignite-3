@@ -668,7 +668,7 @@ public class MessageImplGenerator {
     private static void addHashStatement(MethodSpec.Builder hashCode, ExecutableElement element, boolean first) {
         String fieldName = element.getSimpleName().toString();
         TypeKind typeKind = element.getReturnType().getKind();
-        String prefix = first ? "int result = " : "result = 31 * result + ";
+        String prefix = first ? "int result = 31 + " : "result = 31 * result + ";
         String template = prefix + "$T.hashCode(this.$L)";
 
         switch (typeKind) {

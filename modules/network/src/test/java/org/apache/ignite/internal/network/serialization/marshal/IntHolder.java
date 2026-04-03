@@ -43,7 +43,7 @@ class IntHolder {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return value;
+        return 31 + value;
     }
 
     /** {@inheritDoc} */

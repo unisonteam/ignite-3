@@ -71,7 +71,7 @@ public class DefaultCallOutput<T> implements CallOutput<T> {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(status);
+        int result = 31 + Objects.hashCode(status);
         result = 31 * result + Objects.hashCode(body);
         result = 31 * result + Objects.hashCode(cause);
         return result;

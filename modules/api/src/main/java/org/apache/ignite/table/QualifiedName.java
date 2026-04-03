@@ -163,7 +163,7 @@ public final class QualifiedName implements Serializable {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(schemaIdentifier);
+        int result = 31 + Objects.hashCode(schemaIdentifier);
         result = 31 * result + Objects.hashCode(objectIdentifier);
         return result;
     }

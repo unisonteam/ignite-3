@@ -184,7 +184,7 @@ public class RecordMarshallerValidationsTest {
 
         @Override
         public int hashCode() {
-            int result = id;
+            int result = 31 + id;
             result = 31 * result + fbyte1;
             return result;
         }
@@ -222,7 +222,7 @@ public class RecordMarshallerValidationsTest {
 
         @Override
         public int hashCode() {
-            int result = id;
+            int result = 31 + id;
             result = 31 * result + fbyte1;
             result = 31 * result + fbyte2;
             return result;

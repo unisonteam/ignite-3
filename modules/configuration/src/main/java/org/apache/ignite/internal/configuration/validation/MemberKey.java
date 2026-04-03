@@ -56,7 +56,7 @@ public class MemberKey {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(clazz);
+        int result = 31 + Objects.hashCode(clazz);
         result = 31 * result + Objects.hashCode(fieldName);
         return result;
     }

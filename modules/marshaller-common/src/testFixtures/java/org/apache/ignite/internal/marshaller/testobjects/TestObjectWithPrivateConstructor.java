@@ -64,6 +64,6 @@ public class TestObjectWithPrivateConstructor {
 
     /** {@inheritDoc} */
     @Override public int hashCode() {
-        return Long.hashCode(primLongCol);
+        return 31 + Long.hashCode(primLongCol);
     }
 }

@@ -220,7 +220,7 @@ public class Lease implements ReplicaMeta {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(leaseholder);
+        int result = 31 + Objects.hashCode(leaseholder);
         result = 31 * result + Objects.hashCode(leaseholderId);
         result = 31 * result + Boolean.hashCode(accepted);
         result = 31 * result + Objects.hashCode(startTime);

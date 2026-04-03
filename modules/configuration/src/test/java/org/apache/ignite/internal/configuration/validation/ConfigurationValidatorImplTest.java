@@ -409,7 +409,7 @@ public class ConfigurationValidatorImplTest extends BaseIgniteAbstractTest {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(key());
+            int result = 31 + Objects.hashCode(key());
             result = 31 * result + Objects.hashCode(oldVal);
             result = 31 * result + Objects.hashCode(newVal);
             return result;

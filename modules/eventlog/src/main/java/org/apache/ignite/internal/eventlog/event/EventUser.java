@@ -65,7 +65,7 @@ public final class EventUser {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(username);
+        int result = 31 + Objects.hashCode(username);
         result = 31 * result + Objects.hashCode(authenticationProvider);
         return result;
     }

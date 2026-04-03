@@ -556,7 +556,7 @@ public class SqlSchemaManagerImpl implements SqlSchemaManager {
 
         @Override
         public int hashCode() {
-            int result = id;
+            int result = 31 + id;
             result = 31 * result + Long.hashCode(timestamp);
             return result;
         }

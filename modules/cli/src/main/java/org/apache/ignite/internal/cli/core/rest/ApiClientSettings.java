@@ -105,7 +105,7 @@ public class ApiClientSettings {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(basePath);
+        int result = 31 + Objects.hashCode(basePath);
         result = 31 * result + Objects.hashCode(keyStorePath);
         result = 31 * result + Objects.hashCode(keyStorePassword);
         result = 31 * result + Objects.hashCode(trustStorePath);

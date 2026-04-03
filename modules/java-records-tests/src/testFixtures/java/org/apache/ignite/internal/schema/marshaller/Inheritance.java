@@ -71,7 +71,7 @@ class Inheritance {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(key);
+                int result = 31 + Objects.hashCode(key);
                 result = 31 * result + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(val2);
                 return result;
@@ -123,7 +123,7 @@ class Inheritance {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(key);
+                int result = 31 + Objects.hashCode(key);
                 result = 31 * result + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(val2);
                 return result;
@@ -183,7 +183,7 @@ class Inheritance {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(key);
+                int result = 31 + Objects.hashCode(key);
                 result = 31 * result + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(val2);
                 return result;
@@ -246,7 +246,7 @@ class Inheritance {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(getKey());
+                int result = 31 + Objects.hashCode(getKey());
                 result = 31 * result + Objects.hashCode(getVal());
                 result = 31 * result + Objects.hashCode(val2);
                 return result;
@@ -304,7 +304,7 @@ class Inheritance {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(key);
+                int result = 31 + Objects.hashCode(key);
                 result = 31 * result + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(val2);
                 return result;
@@ -376,7 +376,7 @@ class Inheritance {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(val);
+                int result = 31 + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(val2);
                 return result;
             }

@@ -186,7 +186,7 @@ public abstract class ItTablePutGetBaseTest extends ClusterPerClassIntegrationTe
 
         @Override
         public int hashCode() {
-            int result = id;
+            int result = 31 + id;
             result = 31 * result + Objects.hashCode(lowercase);
             return result;
         }

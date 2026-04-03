@@ -64,7 +64,7 @@ public class PartitionKey {
 
     @Override
     public int hashCode() {
-        int result = zoneId;
+        int result = 31 + zoneId;
         result = 31 * result + partitionId;
         return result;
     }

@@ -143,7 +143,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(id);
+                int result = 31 + Objects.hashCode(id);
                 result = 31 * result + Objects.hashCode(val);
                 return result;
             }
@@ -173,7 +173,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                return Objects.hashCode(id);
+                return 31 + Objects.hashCode(id);
             }
         }
 
@@ -201,7 +201,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                return Objects.hashCode(val);
+                return 31 + Objects.hashCode(val);
             }
         }
     }
@@ -245,7 +245,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(id);
+                int result = 31 + Objects.hashCode(id);
                 result = 31 * result + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(val2);
                 result = 31 * result + Objects.hashCode(val3);
@@ -281,7 +281,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                return Objects.hashCode(id);
+                return 31 + Objects.hashCode(id);
             }
         }
     }
@@ -317,7 +317,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(val);
+                int result = 31 + Objects.hashCode(val);
                 result = 31 * result + Objects.hashCode(id);
                 return result;
             }
@@ -360,7 +360,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(id);
+                int result = 31 + Objects.hashCode(id);
                 result = 31 * result + Objects.hashCode(val);
                 return result;
             }
@@ -390,7 +390,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                return Objects.hashCode(id);
+                return 31 + Objects.hashCode(id);
             }
         }
 
@@ -418,7 +418,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                return Objects.hashCode(val);
+                return 31 + Objects.hashCode(val);
             }
         }
     }
@@ -459,7 +459,7 @@ class Records {
 
             @Override
             public int hashCode() {
-                int result = Objects.hashCode(id);
+                int result = 31 + Objects.hashCode(id);
                 result = 31 * result + Objects.hashCode(value);
                 return result;
             }

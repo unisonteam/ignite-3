@@ -171,7 +171,7 @@ public class RangeBounds extends SearchBounds {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(lowerBound);
+        int result = 31 + Objects.hashCode(lowerBound);
         result = 31 * result + Objects.hashCode(upperBound);
         result = 31 * result + Objects.hashCode(shouldComputeLower);
         result = 31 * result + Objects.hashCode(shouldComputeUpper);

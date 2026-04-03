@@ -76,7 +76,7 @@ public class PrimaryReplica {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(node);
+        int result = 31 + Objects.hashCode(node);
         result = 31 * result + Long.hashCode(enlistmentConsistencyToken);
         return result;
     }

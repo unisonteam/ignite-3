@@ -84,7 +84,7 @@ public class DeploymentUnit {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(name);
+        int result = 31 + Objects.hashCode(name);
         result = 31 * result + Objects.hashCode(version);
         return result;
     }

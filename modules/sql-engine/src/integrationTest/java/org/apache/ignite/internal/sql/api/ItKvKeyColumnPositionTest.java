@@ -281,7 +281,7 @@ public class ItKvKeyColumnPositionTest extends BaseSqlIntegrationTest {
 
         @Override
         public int hashCode() {
-            int result = intCol;
+            int result = 31 + intCol;
             result = 31 * result + Objects.hashCode(strCol);
             return result;
         }
@@ -312,7 +312,7 @@ public class ItKvKeyColumnPositionTest extends BaseSqlIntegrationTest {
 
         @Override
         public int hashCode() {
-            int result = Boolean.hashCode(boolCol);
+            int result = 31 + Boolean.hashCode(boolCol);
             result = 31 * result + Objects.hashCode(dateCol);
             return result;
         }
@@ -345,7 +345,7 @@ public class ItKvKeyColumnPositionTest extends BaseSqlIntegrationTest {
 
         @Override
         public int hashCode() {
-            int result = intCol;
+            int result = 31 + intCol;
             result = 31 * result + Boolean.hashCode(boolCol);
             result = 31 * result + Objects.hashCode(dateCol);
             return result;

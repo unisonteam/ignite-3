@@ -624,7 +624,7 @@ public class InteropOperationsTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            int result = Boolean.hashCode(fboolean);
+            int result = 31 + Boolean.hashCode(fboolean);
             result = 31 * result + Objects.hashCode(fbooleanN);
             result = 31 * result + fint8;
             result = 31 * result + Objects.hashCode(fint8N);
@@ -763,7 +763,7 @@ public class InteropOperationsTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            int result = Long.hashCode(id);
+            int result = 31 + Long.hashCode(id);
             result = 31 * result + Boolean.hashCode(fboolean);
             result = 31 * result + Objects.hashCode(fbooleanN);
             result = 31 * result + fint8;

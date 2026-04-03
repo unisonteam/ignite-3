@@ -169,7 +169,7 @@ public class Problem {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(title);
+        int result = 31 + Objects.hashCode(title);
         result = 31 * result + status;
         result = 31 * result + Objects.hashCode(code);
         result = 31 * result + Objects.hashCode(type);

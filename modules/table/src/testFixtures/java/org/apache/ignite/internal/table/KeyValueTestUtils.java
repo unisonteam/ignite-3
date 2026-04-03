@@ -126,7 +126,7 @@ public class KeyValueTestUtils {
 
         @Override
         public int hashCode() {
-            return Long.hashCode(id);
+            return 31 + Long.hashCode(id);
         }
     }
 }

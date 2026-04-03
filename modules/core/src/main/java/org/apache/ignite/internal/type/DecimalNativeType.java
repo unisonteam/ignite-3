@@ -88,7 +88,7 @@ public class DecimalNativeType extends NativeType {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 31 + super.hashCode();
         result = 31 * result + precision;
         result = 31 * result + scale;
         return result;

@@ -115,7 +115,7 @@ public class ColumnParams {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(name);
+        int result = 31 + Objects.hashCode(name);
         result = 31 * result + Objects.hashCode(type);
         result = 31 * result + Boolean.hashCode(nullable);
         result = 31 * result + Objects.hashCode(length);

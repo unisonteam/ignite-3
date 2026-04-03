@@ -77,7 +77,7 @@ class PojoValue {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(firstName);
+        int result = 31 + Objects.hashCode(firstName);
         result = 31 * result + Objects.hashCode(lastName);
         result = 31 * result + Objects.hashCode(str);
         return result;

@@ -501,7 +501,7 @@ public class ExecutionContext<RowT> implements SqlEvaluationContext<RowT> {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(executionId);
+        int result = 31 + Objects.hashCode(executionId);
         result = 31 * result + Long.hashCode(description.fragmentId());
         return result;
     }

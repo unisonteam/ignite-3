@@ -84,7 +84,7 @@ class Pojo {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
+        int result = 31 + Objects.hashCode(id);
         result = 31 * result + Objects.hashCode(idStr);
         result = 31 * result + Objects.hashCode(firstName);
         result = 31 * result + Objects.hashCode(lastName);

@@ -902,7 +902,7 @@ class DefaultUserObjectMarshallerWithSerializableOverrideStreamsTest {
 
         @Override
         public int hashCode() {
-            return value;
+            return 31 + value;
         }
     }
 

@@ -1548,7 +1548,7 @@ public class ExecutionServiceImpl<RowT> implements ExecutionService, LogicalTopo
 
         @Override
         public int hashCode() {
-            int result = catalogVersion;
+            int result = 31 + catalogVersion;
             result = 31 * result + Objects.hashCode(fragmentString);
             return result;
         }

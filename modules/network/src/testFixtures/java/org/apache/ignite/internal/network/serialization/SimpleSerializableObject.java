@@ -43,6 +43,6 @@ public class SimpleSerializableObject implements Serializable {
 
     @Override
     public int hashCode() {
-        return val;
+        return 31 + val;
     }
 }

@@ -491,7 +491,7 @@ public class MappingServiceImpl implements MappingService, LogicalTopologyEventL
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(planId);
+            int result = 31 + Objects.hashCode(planId);
             result = 31 * result + Boolean.hashCode(mapOnBackups);
             return result;
         }

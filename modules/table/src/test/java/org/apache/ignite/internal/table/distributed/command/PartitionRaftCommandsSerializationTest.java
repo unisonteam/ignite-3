@@ -371,7 +371,7 @@ public class PartitionRaftCommandsSerializationTest extends IgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            int result = intKey;
+            int result = 31 + intKey;
             result = 31 * result + Objects.hashCode(strKey);
             return result;
         }
@@ -416,7 +416,7 @@ public class PartitionRaftCommandsSerializationTest extends IgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(intVal);
+            int result = 31 + Objects.hashCode(intVal);
             result = 31 * result + Objects.hashCode(strVal);
             return result;
         }

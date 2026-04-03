@@ -1607,7 +1607,7 @@ public class ItThinClientTransactionsTest extends ItAbstractThinClientTest {
 
         @Override
         public int hashCode() {
-            int result = key;
+            int result = 31 + key;
             result = 31 * result + Objects.hashCode(val);
             return result;
         }

@@ -161,7 +161,7 @@ public class ItRecordViewKeyPositionsTest extends BaseSqlIntegrationTest {
 
         @Override
         public int hashCode() {
-            int result = intCol;
+            int result = 31 + intCol;
             result = 31 * result + Boolean.hashCode(boolCol);
             result = 31 * result + Objects.hashCode(strCol);
             result = 31 * result + Objects.hashCode(dateCol);

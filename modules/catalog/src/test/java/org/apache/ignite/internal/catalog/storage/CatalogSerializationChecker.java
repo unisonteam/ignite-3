@@ -348,7 +348,7 @@ final class CatalogSerializationChecker {
 
         @Override
         public int hashCode() {
-            int result = entryTypeId;
+            int result = 31 + entryTypeId;
             result = 31 * result + serializerVersion;
             return result;
         }

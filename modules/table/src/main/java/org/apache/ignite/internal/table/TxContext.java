@@ -152,7 +152,7 @@ public abstract class TxContext {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(txId);
+            return 31 + Objects.hashCode(txId);
         }
 
         @Override
@@ -215,7 +215,7 @@ public abstract class TxContext {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(txId);
+            return 31 + Objects.hashCode(txId);
         }
 
         @Override

@@ -89,7 +89,7 @@ public class ConfigAnnotationValue {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(typeName);
+        int result = 31 + Objects.hashCode(typeName);
         result = 31 * result + Objects.hashCode(value);
         return result;
     }

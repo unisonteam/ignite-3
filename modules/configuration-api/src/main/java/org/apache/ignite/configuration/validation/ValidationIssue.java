@@ -84,7 +84,7 @@ public class ValidationIssue {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(key);
+        int result = 31 + Objects.hashCode(key);
         result = 31 * result + Objects.hashCode(message);
         return result;
     }

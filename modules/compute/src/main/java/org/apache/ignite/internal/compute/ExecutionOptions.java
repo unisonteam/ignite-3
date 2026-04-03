@@ -87,7 +87,7 @@ public class ExecutionOptions {
 
     @Override
     public int hashCode() {
-        int result = priority;
+        int result = 31 + priority;
         result = 31 * result + maxRetries;
         result = 31 * result + Objects.hashCode(partition);
         result = 31 * result + Objects.hashCode(executorType);

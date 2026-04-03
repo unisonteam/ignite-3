@@ -47,7 +47,7 @@ public final class DistributionTrait implements IgniteDistribution {
                 return 1;
             }
 
-            int result = Integer.compare(it0.next(), it1.next());
+            int result = 31 + Integer.compare(it0.next(), it1.next());
 
             if (result != 0) {
                 return result;
@@ -195,7 +195,7 @@ public final class DistributionTrait implements IgniteDistribution {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(function);
+        int result = 31 + Objects.hashCode(function);
         result = 31 * result + Objects.hashCode(keys);
         result = 31 * result + zoneId;
         result = 31 * result + tableId;

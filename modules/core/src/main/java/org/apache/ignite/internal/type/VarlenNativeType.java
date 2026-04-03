@@ -79,7 +79,7 @@ public class VarlenNativeType extends NativeType {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 31 + super.hashCode();
         result = 31 * result + len;
         return result;
     }

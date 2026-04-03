@@ -385,7 +385,7 @@ public class IgniteMdRowCount extends RelMdRowCount {
 
         @Override
         public int hashCode() {
-            int result = Objects.hashCode(left);
+            int result = 31 + Objects.hashCode(left);
             result = 31 * result + Objects.hashCode(right);
             return result;
         }

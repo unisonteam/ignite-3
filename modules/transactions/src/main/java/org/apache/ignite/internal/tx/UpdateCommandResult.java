@@ -124,7 +124,7 @@ public class UpdateCommandResult implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = Boolean.hashCode(primaryReplicaMatch);
+        int result = 31 + Boolean.hashCode(primaryReplicaMatch);
         result = 31 * result + Objects.hashCode(currentLeaseStartTime);
         result = 31 * result + Boolean.hashCode(primaryInPeersAndLearners);
         return result;

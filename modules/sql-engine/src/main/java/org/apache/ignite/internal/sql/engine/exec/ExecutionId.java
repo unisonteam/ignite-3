@@ -57,7 +57,7 @@ public class ExecutionId {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(queryId);
+        int result = 31 + Objects.hashCode(queryId);
         result = 31 * result + executionToken;
         return result;
     }

@@ -254,7 +254,7 @@ public class TableDefinition {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(qualifiedName);
+        int result = 31 + Objects.hashCode(qualifiedName);
         result = 31 * result + Boolean.hashCode(ifNotExists);
         result = 31 * result + Objects.hashCode(columns);
         result = 31 * result + Objects.hashCode(pkType);

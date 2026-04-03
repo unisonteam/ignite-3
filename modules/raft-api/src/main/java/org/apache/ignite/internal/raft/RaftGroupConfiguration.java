@@ -162,7 +162,7 @@ public class RaftGroupConfiguration implements Serializable {
 
     @Override
     public int hashCode() {
-        int result = Long.hashCode(index);
+        int result = 31 + Long.hashCode(index);
         result = 31 * result + Long.hashCode(term);
         result = 31 * result + Long.hashCode(sequenceToken);
         result = 31 * result + Long.hashCode(oldSequenceToken);

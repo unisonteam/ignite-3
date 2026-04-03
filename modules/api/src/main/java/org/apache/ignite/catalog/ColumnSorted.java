@@ -122,7 +122,7 @@ public final class ColumnSorted {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(columnName);
+        int result = 31 + Objects.hashCode(columnName);
         result = 31 * result + Objects.hashCode(sortOrder);
         return result;
     }

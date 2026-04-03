@@ -125,7 +125,7 @@ public class CatalogSystemViewDescriptor extends CatalogObjectDescriptor impleme
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        int result = schemaId;
+        int result = 31 + schemaId;
         result = 31 * result + Objects.hashCode(columns);
         result = 31 * result + Objects.hashCode(systemViewType);
         return result;

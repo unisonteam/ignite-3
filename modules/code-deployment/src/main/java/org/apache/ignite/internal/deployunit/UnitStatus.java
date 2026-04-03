@@ -118,7 +118,7 @@ public abstract class UnitStatus {
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
+        int result = 31 + Objects.hashCode(id);
         result = 31 * result + Objects.hashCode(version);
         result = 31 * result + Objects.hashCode(status);
         result = 31 * result + Objects.hashCode(opId);

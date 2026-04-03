@@ -66,7 +66,7 @@ class FileProperties {
 
     @Override
     public int hashCode() {
-        int result = ordinal;
+        int result = 31 + ordinal;
         result = 31 * result + generation;
         return result;
     }

@@ -888,7 +888,7 @@ public class SqlExpressionFactoryImplTest extends BaseIgniteAbstractTest {
 
         @Override
         public int hashCode() {
-            int result = Boolean.hashCode(lowerInclude);
+            int result = 31 + Boolean.hashCode(lowerInclude);
             result = 31 * result + Boolean.hashCode(upperInclude);
             result = 31 * result + Arrays.hashCode(lower);
             result = 31 * result + Arrays.hashCode(upper);

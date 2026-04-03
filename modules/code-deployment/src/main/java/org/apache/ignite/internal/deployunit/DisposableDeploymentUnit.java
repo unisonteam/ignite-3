@@ -84,7 +84,7 @@ public class DisposableDeploymentUnit {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(unit);
+        return 31 + Objects.hashCode(unit);
     }
 
     @Override
