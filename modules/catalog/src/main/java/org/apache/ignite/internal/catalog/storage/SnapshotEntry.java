@@ -72,7 +72,7 @@ public class SnapshotEntry implements UpdateLogEvent {
      * Returns catalog snapshot version.
      */
     public int version() {
-        return 31 + version;
+        return version;
     }
 
     public long activationTime() {
