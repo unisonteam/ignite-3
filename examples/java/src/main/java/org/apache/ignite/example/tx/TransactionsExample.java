@@ -73,8 +73,9 @@ public class TransactionsExample {
 
             AccountKey key = new AccountKey(123);
 
-            // Insert initial account.
-            accounts.put(null, key, new Account("John", "Doe", 1000.0d));
+            /* Insert initial account */
+            accounts.put(key, new Account("John", "Doe", 1000.0d));
+
             System.out.println("Initial balance: " + accounts.get(key).balance);
 
             // Using synchronous transactional API to update the balance.
