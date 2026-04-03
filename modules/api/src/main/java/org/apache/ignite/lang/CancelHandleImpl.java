@@ -111,7 +111,7 @@ final class CancelHandleImpl implements CancelHandle {
             Objects.requireNonNull(callback, "callback");
 
             if (cancelFut != null) {
-                callback.run();
+                runListener(callback);
                 return () -> { };
             }
 
@@ -126,8 +126,16 @@ final class CancelHandleImpl implements CancelHandle {
                 }
             }
 
-            callback.run();
+            runListener(callback);
             return () -> { };
+        }
+
+        private static void runListener(Runnable callback) {
+            try {
+                callback.run();
+            } catch (Throwable t) {
+                throw new IgniteException(Common.INTERNAL_ERR, "Failed to cancel an operation", t);
+            }
         }
 
         @SuppressWarnings("rawtypes")

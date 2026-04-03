@@ -403,6 +403,25 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
     }
 
     @Test
+    public void testExceptionInListenerCallbackWrappedWhenAlreadyCancelled() {
+        CancelHandle cancelHandle = CancelHandle.create();
+        CancellationToken token = cancelHandle.token();
+
+        cancelHandle.cancel();
+
+        // Listener registered after cancellation should wrap exceptions consistently
+        // with the cancel() path (IgniteException with INTERNAL_ERR).
+        assertThrowsWithCode(
+                IgniteException.class,
+                Common.INTERNAL_ERR,
+                () -> token.listen(() -> {
+                    throw new RuntimeException("listener error");
+                }),
+                "Failed to cancel an operation"
+        );
+    }
+
+    @Test
     public void testExceptionsInListenerCallbacksAreWrapped() {
         CancelHandle cancelHandle = CancelHandle.create();
         CancellationToken token = cancelHandle.token();
