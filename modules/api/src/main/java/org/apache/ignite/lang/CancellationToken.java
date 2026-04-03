@@ -41,5 +41,5 @@ public interface CancellationToken {
      * @param callback Callback to execute when cancellation is requested.
      * @return A handle which can be used to stop listening for cancellation requests.
      */
-    AutoCloseable listen(Runnable callback);
+    AutoCloseable addListener(Runnable callback);
 }

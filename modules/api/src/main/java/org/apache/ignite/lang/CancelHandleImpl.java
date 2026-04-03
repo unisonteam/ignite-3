@@ -107,7 +107,7 @@ final class CancelHandleImpl implements CancelHandle {
         }
 
         @Override
-        public AutoCloseable listen(Runnable callback) {
+        public AutoCloseable addListener(Runnable callback) {
             Objects.requireNonNull(callback, "callback");
 
             if (cancelFut != null) {

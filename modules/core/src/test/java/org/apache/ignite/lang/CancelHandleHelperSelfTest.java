@@ -321,7 +321,7 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         CancellationToken token = cancelHandle.token();
 
         AtomicBoolean callbackCalled = new AtomicBoolean();
-        token.listen(() -> callbackCalled.set(true));
+        token.addListener(() -> callbackCalled.set(true));
 
         assertThat(callbackCalled.get(), is(false));
 
@@ -338,7 +338,7 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         cancelHandle.cancel();
 
         AtomicBoolean callbackCalled = new AtomicBoolean();
-        token.listen(() -> callbackCalled.set(true));
+        token.addListener(() -> callbackCalled.set(true));
 
         assertThat(callbackCalled.get(), is(true));
     }
@@ -349,9 +349,9 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         CancellationToken token = cancelHandle.token();
 
         AtomicInteger counter = new AtomicInteger();
-        token.listen(counter::incrementAndGet);
-        token.listen(counter::incrementAndGet);
-        token.listen(counter::incrementAndGet);
+        token.addListener(counter::incrementAndGet);
+        token.addListener(counter::incrementAndGet);
+        token.addListener(counter::incrementAndGet);
 
         cancelHandle.cancel();
 
@@ -364,7 +364,7 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         CancellationToken token = cancelHandle.token();
 
         AtomicBoolean callbackCalled = new AtomicBoolean();
-        AutoCloseable handle = token.listen(() -> callbackCalled.set(true));
+        AutoCloseable handle = token.addListener(() -> callbackCalled.set(true));
 
         // Close the handle before cancellation
         handle.close();
@@ -381,7 +381,7 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         CancellationToken token = cancelHandle.token();
 
         AtomicBoolean callbackCalled = new AtomicBoolean();
-        AutoCloseable handle = token.listen(() -> callbackCalled.set(true));
+        AutoCloseable handle = token.addListener(() -> callbackCalled.set(true));
 
         cancelHandle.cancel();
         assertThat(callbackCalled.get(), is(true));
@@ -397,7 +397,7 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
 
         assertThrows(
                 NullPointerException.class,
-                () -> token.listen(null),
+                () -> token.addListener(null),
                 "callback"
         );
     }
@@ -414,7 +414,7 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         assertThrowsWithCode(
                 IgniteException.class,
                 Common.INTERNAL_ERR,
-                () -> token.listen(() -> {
+                () -> token.addListener(() -> {
                     throw new RuntimeException("listener error");
                 }),
                 "Failed to cancel an operation"
@@ -427,12 +427,12 @@ public class CancelHandleHelperSelfTest extends BaseIgniteAbstractTest {
         CancellationToken token = cancelHandle.token();
 
         RuntimeException e1 = new RuntimeException("e1");
-        token.listen(() -> {
+        token.addListener(() -> {
             throw e1;
         });
 
         RuntimeException e2 = new RuntimeException("e2");
-        token.listen(() -> {
+        token.addListener(() -> {
             throw e2;
         });
 
