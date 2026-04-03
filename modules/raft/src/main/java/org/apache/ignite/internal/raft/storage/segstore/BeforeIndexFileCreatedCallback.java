@@ -15,18 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.internal.tx.impl;
+package org.apache.ignite.internal.raft.storage.segstore;
 
-/**
- * Knows how to obtain a 32-bit nodeId needed for transactionId generation. Must return the same value for all invocations
- * run in the same Ignite instance.
- */
+/** Callback executed by the {@link RaftLogCheckpointer} before an index file is created. */
 @FunctionalInterface
-public interface NodeIdSupplier {
-    /**
-     * Returns the node ID.
-     *
-     * @return Node ID.
-     */
-    int nodeId();
+interface BeforeIndexFileCreatedCallback {
+    void beforeIndexFileCreated(long indexFileSize);
 }

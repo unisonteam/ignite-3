@@ -667,9 +667,11 @@ public class IgniteImpl implements Ignite {
 
         partitionsWorkDir = partitionsPath(systemConfiguration, workDir);
 
+        InternalClusterNode localNode = clusterSvc.staticLocalNode();
+
         partitionsLogStorageManager = SharedLogStorageManagerUtils.create(
                 "table data log",
-                clusterSvc.nodeName(),
+                localNode.name(),
                 partitionsWorkDir.raftLogPath(),
                 raftConfiguration.fsync().value(),
                 RocksDbLogStorageOptions.forPartitions(systemConfiguration.value())
@@ -681,7 +683,7 @@ public class IgniteImpl implements Ignite {
 
         msLogStorageManager = SharedLogStorageManagerUtils.create(
                 "meta-storage log",
-                clusterSvc.nodeName(),
+                localNode.name(),
                 metastorageWorkDir.raftLogPath(),
                 // If it changes, then it will be necessary to set LogSyncer to RocksDbKeyValueStorage.
                 true
@@ -689,7 +691,7 @@ public class IgniteImpl implements Ignite {
 
         cmgLogStorageManager = SharedLogStorageManagerUtils.create(
                 "cluster-management-group log",
-                clusterSvc.nodeName(),
+                localNode.name(),
                 cmgWorkDir.raftLogPath(),
                 true
         );
@@ -805,7 +807,7 @@ public class IgniteImpl implements Ignite {
         );
 
         metaStorageMgr = new MetaStorageManagerImpl(
-                clusterSvc,
+                localNode,
                 cmgMgr,
                 logicalTopologyService,
                 raftMgr,
@@ -980,7 +982,6 @@ public class IgniteImpl implements Ignite {
         var validationSchemasSource = new CatalogValidationSchemasSource(catalogManager, schemaManager, indexMetaStorage);
 
         replicaMgr = new ReplicaManager(
-                name,
                 clusterSvc,
                 cmgMgr,
                 groupId -> zonePartitionStableAssignments(metaStorageMgr, groupId),
@@ -1038,8 +1039,7 @@ public class IgniteImpl implements Ignite {
         raftMgr.actionRequestInterceptor(new CheckCatalogVersionOnActionRequest(catalogManager));
 
         distributionZoneManager = new DistributionZoneManager(
-                name,
-                () -> clusterSvc.topologyService().localMember().id(),
+                localNode,
                 metaStorageMgr,
                 logicalTopologyService,
                 failureManager,
@@ -1066,7 +1066,7 @@ public class IgniteImpl implements Ignite {
         MinimumRequiredTimeCollectorServiceImpl minTimeCollectorService = new MinimumRequiredTimeCollectorServiceImpl();
 
         CatalogCompactionRunner catalogCompactionRunner = new CatalogCompactionRunner(
-                name,
+                localNode,
                 catalogManager,
                 clusterSvc.messagingService(),
                 logicalTopologyService,
@@ -1074,7 +1074,6 @@ public class IgniteImpl implements Ignite {
                 replicaSvc,
                 clockService,
                 schemaSyncService,
-                clusterSvc.topologyService(),
                 lowWatermark,
                 indexNodeFinishedRwTransactionsChecker,
                 minTimeCollectorService,
@@ -1097,7 +1096,7 @@ public class IgniteImpl implements Ignite {
 
         // TODO: IGNITE-19344 - use nodeId that is validated on join (and probably generated differently).
         txManager = new TxManagerImpl(
-                name,
+                localNode,
                 txConfig,
                 systemDistributedConfiguration,
                 messagingServiceReturningToStorageOperationsPool,
@@ -1106,7 +1105,7 @@ public class IgniteImpl implements Ignite {
                 lockMgr,
                 txStateVolatileStorage,
                 clockService,
-                new TransactionIdGenerator(() -> clusterSvc.nodeName().hashCode()),
+                new TransactionIdGenerator(localNode.name().hashCode()),
                 placementDriverMgr.placementDriver(),
                 partitionIdleSafeTimePropagationPeriodMsSupplier,
                 indexNodeFinishedRwTransactionsChecker,
@@ -1134,6 +1133,7 @@ public class IgniteImpl implements Ignite {
                 distributionZoneManager,
                 metaStorageMgr,
                 clusterSvc.topologyService(),
+                localNode,
                 lowWatermark,
                 failureManager,
                 threadPoolsManager.tableIoExecutor(),
@@ -1179,6 +1179,7 @@ public class IgniteImpl implements Ignite {
                 replicationConfig,
                 messagingServiceReturningToStorageOperationsPool,
                 clusterSvc.topologyService(),
+                localNode,
                 lockMgr,
                 replicaSvc,
                 txManager,
@@ -1214,7 +1215,7 @@ public class IgniteImpl implements Ignite {
                 catalogManager,
                 distributionZoneManager,
                 raftMgr,
-                clusterSvc.topologyService(),
+                localNode,
                 logicalTopologyService,
                 distributedTblMgr,
                 metricManager,
@@ -1284,7 +1285,7 @@ public class IgniteImpl implements Ignite {
                 this::createJobScopedIgnite,
                 stateMachine,
                 computeCfg,
-                clusterSvc.topologyService(),
+                localNode,
                 clockService,
                 eventLog
         );
@@ -1305,6 +1306,7 @@ public class IgniteImpl implements Ignite {
                 name,
                 clusterSvc.messagingService(),
                 clusterSvc.topologyService(),
+                localNode,
                 logicalTopologyService,
                 new UnitsContextManager(
                         deploymentManagerImpl,
@@ -1955,7 +1957,7 @@ public class IgniteImpl implements Ignite {
      */
     // TODO: should be encapsulated in local properties, see https://issues.apache.org/jira/browse/IGNITE-15131
     public UUID id() {
-        return clusterSvc.topologyService().localMember().id();
+        return clusterSvc.staticLocalNode().id();
     }
 
     /**

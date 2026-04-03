@@ -157,10 +157,9 @@ public class ItMetaStorageWatchTest extends IgniteAbstractTest {
 
             ComponentWorkingDir workingDir = new ComponentWorkingDir(basePath.resolve("raft"));
 
-            LogStorageManager partitionsLogStorageManager = SharedLogStorageManagerUtils.create(
-                    clusterService.nodeName(),
-                    workingDir.raftLogPath()
-            );
+            String nodeName = clusterService.staticLocalNode().name();
+
+            LogStorageManager partitionsLogStorageManager = SharedLogStorageManagerUtils.create(nodeName, workingDir.raftLogPath());
 
             components.add(partitionsLogStorageManager);
 
@@ -192,8 +191,7 @@ public class ItMetaStorageWatchTest extends IgniteAbstractTest {
 
             ComponentWorkingDir cmgWorkDir = new ComponentWorkingDir(basePath.resolve("cmg"));
 
-            LogStorageManager cmgLogStorageManager =
-                    SharedLogStorageManagerUtils.create(clusterService.nodeName(), cmgWorkDir.raftLogPath());
+            LogStorageManager cmgLogStorageManager = SharedLogStorageManagerUtils.create(nodeName, cmgWorkDir.raftLogPath());
 
             components.add(cmgLogStorageManager);
 
@@ -233,7 +231,7 @@ public class ItMetaStorageWatchTest extends IgniteAbstractTest {
             ComponentWorkingDir metastorageWorkDir = new ComponentWorkingDir(basePath.resolve("storage"));
 
             LogStorageManager msLogStorageManager = SharedLogStorageManagerUtils.create(
-                    clusterService.nodeName(),
+                    nodeName,
                     metastorageWorkDir.raftLogPath()
             );
 
@@ -253,7 +251,7 @@ public class ItMetaStorageWatchTest extends IgniteAbstractTest {
             );
 
             this.metaStorageManager = new MetaStorageManagerImpl(
-                    clusterService,
+                    clusterService.staticLocalNode(),
                     cmgManager,
                     logicalTopologyService,
                     raftManager,
@@ -278,7 +276,7 @@ public class ItMetaStorageWatchTest extends IgniteAbstractTest {
         }
 
         String name() {
-            return clusterService.nodeName();
+            return clusterService.staticLocalNode().name();
         }
 
         void stop() throws Exception {

@@ -197,7 +197,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
 
         ClusterManagementGroupManager cmgManager = mock(ClusterManagementGroupManager.class);
 
-        Set<String> metastorageNodes = Set.of(clusterService.nodeName());
+        Set<String> metastorageNodes = Set.of(clusterService.staticLocalNode().name());
         when(cmgManager.metaStorageNodes()).thenReturn(completedFuture(metastorageNodes));
         when(cmgManager.metaStorageInfo()).thenReturn(completedFuture(
                 new CmgMessagesFactory().metaStorageInfo().metaStorageNodes(metastorageNodes).build()
@@ -218,7 +218,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
         ComponentWorkingDir workingDir = new ComponentWorkingDir(workDir.resolve("loza"));
 
         partitionsLogStorageManager = SharedLogStorageManagerUtils.create(
-                clusterService.nodeName(),
+                clusterService.staticLocalNode().name(),
                 workingDir.raftLogPath()
         );
 
@@ -239,7 +239,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
         ComponentWorkingDir metastorageWorkDir = new ComponentWorkingDir(workDir.resolve("metastorage"));
 
         msLogStorageManager =
-                SharedLogStorageManagerUtils.create(clusterService.nodeName(), metastorageWorkDir.raftLogPath());
+                SharedLogStorageManagerUtils.create(clusterService.staticLocalNode().name(), metastorageWorkDir.raftLogPath());
 
         RaftGroupOptionsConfigurer msRaftConfigurer =
                 RaftGroupOptionsConfigHelper.configureProperties(msLogStorageManager, metastorageWorkDir.metaPath());
@@ -251,7 +251,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
         );
 
         metaStorageManager = new MetaStorageManagerImpl(
-                clusterService,
+                clusterService.staticLocalNode(),
                 cmgManager,
                 logicalTopologyService,
                 raftManager,
@@ -493,7 +493,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
             ReplicaMeta meta = sync(fut);
 
             return meta != null
-                    && meta.getLeaseholderId().equals(anotherClusterService.topologyService().localMember().id())
+                    && meta.getLeaseholderId().equals(anotherClusterService.staticLocalNode().id())
                     // Check event map sizes to prevent race condition between receiving events and the check above.
                     && electedEvts.size() == 1 && expiredEvts.size() == 1;
         }, 10_000));
@@ -518,7 +518,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
         assertThat(nodeClusterService.stopAsync(new ComponentContext()), willCompleteSuccessfully());
 
         assertTrue(waitForCondition(
-                () -> !clusterService.topologyService().allMembers().contains(nodeClusterService.topologyService().localMember()),
+                () -> !clusterService.topologyService().allMembers().contains(nodeClusterService.staticLocalNode()),
                 10_000
         ));
 
@@ -548,7 +548,7 @@ public class PlacementDriverManagerTest extends BasePlacementDriverTest {
         assertThat(nodeClusterService.startAsync(new ComponentContext()), willCompleteSuccessfully());
 
         assertTrue(waitForCondition(
-                () -> clusterService.topologyService().allMembers().contains(nodeClusterService.topologyService().localMember()),
+                () -> clusterService.topologyService().allMembers().contains(nodeClusterService.staticLocalNode()),
                 10_000
         ));
 
