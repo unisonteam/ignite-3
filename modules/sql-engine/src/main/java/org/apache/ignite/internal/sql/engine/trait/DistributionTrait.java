@@ -47,7 +47,7 @@ public final class DistributionTrait implements IgniteDistribution {
                 return 1;
             }
 
-            int result = 31 + Integer.compare(it0.next(), it1.next());
+            int result = Integer.compare(it0.next(), it1.next());
 
             if (result != 0) {
                 return result;

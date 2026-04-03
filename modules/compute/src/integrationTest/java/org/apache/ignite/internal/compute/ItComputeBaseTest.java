@@ -646,7 +646,7 @@ public abstract class ItComputeBaseTest extends ClusterPerClassIntegrationTest {
 
     @Test
     void executeMapReduce() {
-        int result = 31 + compute().executeMapReduce(mapReduceTask(), units());
+        int result = compute().executeMapReduce(mapReduceTask(), units());
 
         int sumOfNodeNamesLengths = CLUSTER.runningNodes().map(Ignite::name).map(String::length).reduce(Integer::sum).orElseThrow();
         assertThat(result, is(sumOfNodeNamesLengths));
