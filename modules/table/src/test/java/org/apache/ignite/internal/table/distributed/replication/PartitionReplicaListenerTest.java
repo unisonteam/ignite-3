@@ -531,8 +531,6 @@ public class PartitionReplicaListenerTest extends IgniteAbstractTest {
             }
         });
 
-        when(topologySrv.localMember()).thenReturn(localNode);
-
         when(safeTimeClock.waitFor(any())).thenReturn(nullCompletedFuture());
         when(safeTimeClock.current()).thenReturn(HybridTimestamp.MIN_VALUE);
 
@@ -651,7 +649,7 @@ public class PartitionReplicaListenerTest extends IgniteAbstractTest {
                         clockService
                 ),
                 new TxRecoveryEngine(txManager, mock(ClusterNodeResolver.class)),
-                new Lazy<>(() -> mock(InternalClusterNode.class)),
+                localNode,
                 Runnable::run
         );
 
@@ -2050,7 +2048,7 @@ public class PartitionReplicaListenerTest extends IgniteAbstractTest {
         doAnswer(invocation -> nullCompletedFuture())
                 .when(txManager).finish(any(), any(), anyBoolean(), any(), anyBoolean(), anyBoolean(), any(), any());
         doAnswer(invocation -> nullCompletedFuture())
-                .when(txManager).cleanup(any(), anyString(), any());
+                .when(txManager).cleanup(any(), anyString(), any(), anyBoolean(), any());
     }
 
     private void testWritesAreSuppliedWithRequiredCatalogVersion(RequestType requestType, RwListenerInvocation listenerInvocation) {

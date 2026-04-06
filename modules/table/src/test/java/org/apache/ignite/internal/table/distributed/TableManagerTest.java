@@ -120,7 +120,6 @@ import org.apache.ignite.internal.testframework.InjectExecutorService;
 import org.apache.ignite.internal.testframework.failure.FailureManagerExtension;
 import org.apache.ignite.internal.tx.LockManager;
 import org.apache.ignite.internal.tx.TxManager;
-import org.apache.ignite.internal.tx.configuration.TransactionConfiguration;
 import org.apache.ignite.internal.tx.impl.RemotelyTriggeredResourceRegistry;
 import org.apache.ignite.internal.tx.impl.TransactionInflights;
 import org.apache.ignite.internal.tx.metrics.TransactionMetricsSource;
@@ -191,9 +190,6 @@ public class TableManagerTest extends IgniteAbstractTest {
     /** Garbage collector configuration. */
     @InjectConfiguration
     private GcConfiguration gcConfig;
-
-    @InjectConfiguration
-    private TransactionConfiguration txConfig;
 
     /** Storage update configuration. */
     @InjectConfiguration
@@ -581,7 +577,7 @@ public class TableManagerTest extends IgniteAbstractTest {
         sm = new SchemaManager(revisionUpdater, catalogManager);
 
         var tableManager = new TableManager(
-                NODE_NAME,
+                node,
                 revisionUpdater,
                 gcConfig,
                 replicationConfiguration,

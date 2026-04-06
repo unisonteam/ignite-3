@@ -88,6 +88,7 @@ import org.apache.ignite.internal.manager.IgniteComponent;
 import org.apache.ignite.internal.metastorage.MetaStorageManager;
 import org.apache.ignite.internal.metastorage.Revisions;
 import org.apache.ignite.internal.metrics.MetricManager;
+import org.apache.ignite.internal.network.InternalClusterNode;
 import org.apache.ignite.internal.network.MessagingService;
 import org.apache.ignite.internal.network.TopologyService;
 import org.apache.ignite.internal.partition.replicator.PartitionReplicaLifecycleManager;
@@ -238,7 +239,7 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
     /**
      * Creates a new table manager.
      *
-     * @param nodeName Node name.
+     * @param localNode Local node.
      * @param registry Registry for versioned values.
      * @param gcConfig Garbage collector configuration.
      * @param replicationConfiguration Replication configuration.
@@ -264,7 +265,7 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
      * @param mvTableStorageFactory Factory for creating MV table storages.
      */
     public TableManager(
-            String nodeName,
+            InternalClusterNode localNode,
             RevisionListenerRegistry registry,
             GcConfiguration gcConfig,
             ReplicationConfiguration replicationConfiguration,
@@ -322,9 +323,9 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
         assignmentsUpdatedVv = new IncrementalVersionedValue<>("TableManager#assignmentsUpdated", dependingOn(localPartitionsVv));
 
         scanRequestExecutor = Executors.newSingleThreadExecutor(
-                IgniteThreadFactory.create(nodeName, "scan-query-executor", LOG, STORAGE_READ));
+                IgniteThreadFactory.create(localNode.name(), "scan-query-executor", LOG, STORAGE_READ));
 
-        MvGc mvGc = new MvGc(nodeName, gcConfig, lowWatermark, failureProcessor);
+        MvGc mvGc = new MvGc(localNode.name(), gcConfig, lowWatermark, failureProcessor);
 
         partitionReplicatorNodeRecovery = new PartitionReplicatorNodeRecovery(
                 messagingService,
@@ -348,6 +349,7 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
                 this.executorInclinedSchemaSyncService,
                 executorInclinedPlacementDriver,
                 topologyService,
+                localNode,
                 remotelyTriggeredResourceRegistry,
                 failureProcessor,
                 schemaManager,
@@ -359,7 +361,7 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
                 fullStateTransferIndexChooser
         );
 
-        streamerFlushExecutorFactory = new StreamerFlushExecutorFactory(nodeName);
+        streamerFlushExecutorFactory = new StreamerFlushExecutorFactory(localNode);
 
         tableImplFactory = new TableImplFactory(
                 topologyService,

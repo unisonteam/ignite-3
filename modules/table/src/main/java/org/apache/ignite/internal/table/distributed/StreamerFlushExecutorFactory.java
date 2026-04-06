@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.ignite.internal.lang.NodeStoppingException;
 import org.apache.ignite.internal.logger.IgniteLogger;
 import org.apache.ignite.internal.logger.Loggers;
+import org.apache.ignite.internal.network.InternalClusterNode;
 import org.apache.ignite.internal.thread.IgniteThreadFactory;
 import org.apache.ignite.internal.util.IgniteSpinBusyLock;
 import org.apache.ignite.lang.IgniteException;
@@ -41,7 +42,7 @@ import org.jetbrains.annotations.Nullable;
 public final class StreamerFlushExecutorFactory {
     private static final IgniteLogger LOG = Loggers.forClass(StreamerFlushExecutorFactory.class);
 
-    private final String nodeName;
+    private final InternalClusterNode localNode;
 
     private final IgniteSpinBusyLock busyLock = new IgniteSpinBusyLock();
 
@@ -51,10 +52,10 @@ public final class StreamerFlushExecutorFactory {
     /**
      * Constructor.
      *
-     * @param nodeName Node name used for thread naming.
+     * @param localNode Local node, used for thread naming.
      */
-    public StreamerFlushExecutorFactory(String nodeName) {
-        this.nodeName = nodeName;
+    public StreamerFlushExecutorFactory(InternalClusterNode localNode) {
+        this.localNode = localNode;
     }
 
     /**
@@ -71,7 +72,7 @@ public final class StreamerFlushExecutorFactory {
         try {
             if (executor == null) {
                 executor = Executors.newSingleThreadScheduledExecutor(
-                        IgniteThreadFactory.create(nodeName, "streamer-flush-executor", LOG, STORAGE_WRITE));
+                        IgniteThreadFactory.create(localNode.name(), "streamer-flush-executor", LOG, STORAGE_WRITE));
             }
 
             return executor;

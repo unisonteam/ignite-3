@@ -925,7 +925,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
     private static boolean isNodeInAssignments(Node node, Set<Assignment> assignments) {
         return assignmentsToPeersSet(assignments).stream()
                 .map(Peer::consistentId)
-                .anyMatch(id -> id.equals(node.clusterService.nodeName()));
+                .anyMatch(id -> id.equals(node.clusterService.staticLocalNode().name()));
     }
 
     private static boolean isReplicationGroupStarted(Node node, ReplicationGroupId replicationGroupId) {
@@ -1062,9 +1062,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
 
         assertTrue(waitForCondition(() -> isReplicationGroupStarted(leaseholderNode, groupId), AWAIT_TIMEOUT_MILLIS));
 
-        InternalClusterNode leaseholder = leaseholderNode.clusterService
-                .topologyService()
-                .localMember();
+        InternalClusterNode leaseholder = leaseholderNode.clusterService.staticLocalNode();
 
         nodes.forEach(node -> node.placementDriver.setPrimaryReplicaSupplier(() -> new TestReplicaMetaImpl(
                 leaseholder.name(),
@@ -1079,7 +1077,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
         String leaseholderConsistentId = assignments.stream().findFirst().get().consistentId();
 
         return nodes.stream()
-                .filter(n -> n.clusterService.topologyService().localMember().name().equals(leaseholderConsistentId))
+                .filter(n -> n.clusterService.staticLocalNode().name().equals(leaseholderConsistentId))
                 .findFirst()
                 .get();
     }
@@ -1272,7 +1270,9 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
 
             ComponentWorkingDir partitionsBasePath = partitionsPath(systemConfiguration, dir);
 
-            logStorageManager = SharedLogStorageManagerUtils.create(clusterService.nodeName(), partitionsBasePath.raftLogPath());
+            String nodeName = clusterService.staticLocalNode().name();
+
+            logStorageManager = SharedLogStorageManagerUtils.create(nodeName, partitionsBasePath.raftLogPath());
 
             LogSyncer partitionsLogSyncer = logStorageManager.logSyncer();
 
@@ -1302,8 +1302,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
 
             ComponentWorkingDir cmgWorkDir = cmgPath(systemConfiguration, dir);
 
-            cmgLogStorageManager =
-                    SharedLogStorageManagerUtils.create(clusterService.nodeName(), cmgWorkDir.raftLogPath());
+            cmgLogStorageManager = SharedLogStorageManagerUtils.create(nodeName, cmgWorkDir.raftLogPath());
 
             RaftGroupOptionsConfigurer cmgRaftConfigurer =
                     RaftGroupOptionsConfigHelper.configureProperties(cmgLogStorageManager, cmgWorkDir.metaPath());
@@ -1347,14 +1346,13 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
 
             ComponentWorkingDir metastorageWorkDir = metastoragePath(systemConfiguration, dir);
 
-            msLogStorageManager =
-                    SharedLogStorageManagerUtils.create(clusterService.nodeName(), metastorageWorkDir.raftLogPath());
+            msLogStorageManager = SharedLogStorageManagerUtils.create(nodeName, metastorageWorkDir.raftLogPath());
 
             RaftGroupOptionsConfigurer msRaftConfigurer =
                     RaftGroupOptionsConfigHelper.configureProperties(msLogStorageManager, metastorageWorkDir.metaPath());
 
             metaStorageManager = new MetaStorageManagerImpl(
-                    clusterService,
+                    clusterService.staticLocalNode(),
                     cmgManager,
                     logicalTopologyService,
                     raftManager,
@@ -1471,7 +1469,6 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
             );
 
             replicaManager = spy(new ReplicaManager(
-                    name,
                     clusterService,
                     cmgManager,
                     groupId -> completedFuture(Assignments.EMPTY),
@@ -1516,8 +1513,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
                     clusterConfigRegistry.getConfiguration(SystemDistributedExtensionConfiguration.KEY).system();
 
             distributionZoneManager = new DistributionZoneManager(
-                    name,
-                    () -> clusterService.topologyService().localMember().id(),
+                    clusterService.staticLocalNode(),
                     metaStorageManager,
                     logicalTopologyService,
                     catalogManager,
@@ -1546,6 +1542,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
                     distributionZoneManager,
                     metaStorageManager,
                     clusterService.topologyService(),
+                    clusterService.staticLocalNode(),
                     lowWatermark,
                     failureManager,
                     threadPoolsManager.tableIoExecutor(),
@@ -1568,7 +1565,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
             );
 
             tableManager = new TableManager(
-                    name,
+                    clusterService.staticLocalNode(),
                     registry,
                     gcConfig,
                     replicationConfiguration,
@@ -1886,7 +1883,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
 
     private Stream<String> getNodeNames(Predicate<Node> filter) {
         return getNodes(filter)
-                .map(n -> n.clusterService.nodeName());
+                .map(n -> n.clusterService.staticLocalNode().name());
     }
 
     private Stream<Node> getNodes(Predicate<Node> filter) {
@@ -1899,7 +1896,7 @@ public class ItRebalanceDistributedTest extends BaseIgniteAbstractTest {
 
     private Predicate<Node> in(Set<Assignment> assignments) {
         return node -> {
-            String nodeName = node.clusterService.nodeName();
+            String nodeName = node.clusterService.staticLocalNode().name();
             return assignments.stream().anyMatch(a -> a.consistentId().equals(nodeName));
         };
     }

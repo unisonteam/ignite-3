@@ -500,8 +500,6 @@ public class ZonePartitionReplicaListenerTest extends IgniteAbstractTest {
             }
         });
 
-        when(topologySrv.localMember()).thenReturn(localNode);
-
         when(safeTimeTracker.waitFor(any())).thenReturn(nullCompletedFuture());
         when(safeTimeTracker.current()).thenReturn(HybridTimestamp.MIN_VALUE);
 
@@ -620,7 +618,7 @@ public class ZonePartitionReplicaListenerTest extends IgniteAbstractTest {
                         clockService
                 ),
                 new TxRecoveryEngine(txManager, mock(ClusterNodeResolver.class)),
-                new Lazy<>(() -> mock(InternalClusterNode.class)),
+                localNode,
                 Runnable::run
         );
 
@@ -991,7 +989,7 @@ public class ZonePartitionReplicaListenerTest extends IgniteAbstractTest {
         doAnswer(invocation -> nullCompletedFuture())
                 .when(txManager).finish(any(), any(), anyBoolean(), any(), anyBoolean(), anyBoolean(), any(), any());
         doAnswer(invocation -> nullCompletedFuture())
-                .when(txManager).cleanup(any(), anyString(), any());
+                .when(txManager).cleanup(any(), anyString(), any(), anyBoolean(), any());
     }
 
     private void upsertInNewTxFor(TestKey key) {
