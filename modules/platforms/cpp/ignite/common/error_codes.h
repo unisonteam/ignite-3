@@ -141,6 +141,7 @@ enum class code : underlying_t {
     TX_DELAYED_ACK = 0x70011,
     TX_KILLED = 0x70012,
     TX_ALREADY_FINISHED_WITH_EXCEPTION = 0x70013,
+    TX_ABORTED_DUE_TO_RECOVERY = 0x70014,
 
     // Replicator group. Group code: 8
     REPLICA_COMMON = 0x80001,

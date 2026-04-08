@@ -479,6 +479,9 @@ public class ErrorGroups {
 
         /** Operation failed because the transaction is already finished due to an error. */
         public static final int TX_ALREADY_FINISHED_WITH_EXCEPTION_ERR = TX_ERR_GROUP.registerErrorCode((short) 19);
+
+        /** Operation failed because the transaction is aborted due to a recovery. */
+        public static final int TX_ABORTED_DUE_TO_RECOVERY_ERR = TX_ERR_GROUP.registerErrorCode((short) 20);
     }
 
     /** Replicator error group. */
