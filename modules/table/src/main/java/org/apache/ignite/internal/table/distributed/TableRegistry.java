@@ -40,14 +40,12 @@ class TableRegistry {
     /** Local partitions by table ID. */
     private final Map<Integer, PartitionSet> localPartsByTableId = new ConcurrentHashMap<>();
 
-    // ── Registration ──
-
     /** Registers a newly created table. Does not mark it as started. */
     void register(int tableId, TableViewInternal table) {
         tables.put(tableId, table);
     }
 
-    /** Promotes an already-registered table to started. */
+    /** Promotes an already-registered table to the started. */
     void markStarted(int tableId) {
         TableViewInternal table = tables.get(tableId);
 
@@ -55,8 +53,6 @@ class TableRegistry {
 
         startedTables.put(tableId, table);
     }
-
-    // ── Lookup ──
 
     /** Returns a registered table by ID, or null if not found. */
     @Nullable TableViewInternal table(int tableId) {
@@ -78,8 +74,6 @@ class TableRegistry {
         return unmodifiableMap(startedTables);
     }
 
-    // ── Removal ──
-
     /** Removes the table from started tables and clears its local partitions. Returns the removed table, or null. */
     @Nullable TableViewInternal removeStarted(int tableId) {
         TableViewInternal removed = startedTables.remove(tableId);
@@ -91,8 +85,6 @@ class TableRegistry {
     void unregister(int tableId) {
         tables.remove(tableId);
     }
-
-    // ── Local partitions ──
 
     /** Sets the local partition set for a table. */
     void setLocalPartitions(int tableId, PartitionSet partitions) {
