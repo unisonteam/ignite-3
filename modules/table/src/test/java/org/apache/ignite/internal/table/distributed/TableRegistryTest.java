@@ -34,8 +34,6 @@ class TableRegistryTest extends BaseIgniteAbstractTest {
 
     private final TableRegistry registry = new TableRegistry();
 
-    // ── Registration ──
-
     @Test
     void registerAddsToTablesOnly() {
         TableViewInternal table = mock(TableViewInternal.class);
@@ -56,8 +54,6 @@ class TableRegistryTest extends BaseIgniteAbstractTest {
         registry.markStarted(1);
         assertSame(table, registry.startedTable(1));
     }
-
-    // ── Lookup ──
 
     @Test
     void tableReturnsNullForUnknownId() {
@@ -108,8 +104,6 @@ class TableRegistryTest extends BaseIgniteAbstractTest {
         assertEquals(1, registry.allStartedTables().size());
     }
 
-    // ── Removal ──
-
     @Test
     void removeStartedReturnsTableAndClearsLocalPartitions() {
         TableViewInternal table = mock(TableViewInternal.class);
@@ -140,8 +134,6 @@ class TableRegistryTest extends BaseIgniteAbstractTest {
 
         assertNull(registry.table(1));
     }
-
-    // ── Local partitions ──
 
     @Test
     void setAndGetLocalPartitions() {
@@ -184,8 +176,6 @@ class TableRegistryTest extends BaseIgniteAbstractTest {
     void markStartedOnUnregisteredTableFails() {
         assertThrows(AssertionError.class, () -> registry.markStarted(42));
     }
-
-    // ── Combined lifecycle scenarios ──
 
     @Test
     void fullLifecycle() {
