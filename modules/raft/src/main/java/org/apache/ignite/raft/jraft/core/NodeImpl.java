@@ -1066,7 +1066,13 @@ public class NodeImpl implements Node, RaftServerService {
             return false;
         }
 
-        // Restore appliedId so that unsafeTruncateSuffix() can reject truncation of applied entries.
+        /*
+         * Restore appliedId so that unsafeTruncateSuffix() can reject truncation of applied entries.
+         *
+         * After a node restart, logManager.appliedId is transient and resets to 0.
+         * This block restores appliedId from the state machine's persisted applied index
+         * so the unsafeTruncateSuffix() guard is effective immediately after restart, before any entries are re-applied.
+         */
         long persistedApplied = this.options.getFsm().getPersistedAppliedIndex();
         if (persistedApplied > 0) {
             long term = this.logManager.getTerm(persistedApplied);
