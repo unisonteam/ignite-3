@@ -74,7 +74,8 @@ final class TableDestructionCoordinator {
     private final DataStorageManager dataStorageMgr;
     private final MetricManager metricManager;
     private final ExecutorService ioExecutor;
-    private final IgniteSpinBusyLock busyLock;
+
+    private final IgniteSpinBusyLock busyLock = new IgniteSpinBusyLock();
 
     /**
      * Constructor.
@@ -87,7 +88,6 @@ final class TableDestructionCoordinator {
      * @param dataStorageMgr Data storage manager.
      * @param metricManager Metric manager.
      * @param ioExecutor Executor for IO operations.
-     * @param busyLock Busy lock shared with TableManager.
      */
     TableDestructionCoordinator(
             CatalogService catalogService,
@@ -97,8 +97,7 @@ final class TableDestructionCoordinator {
             SchemaManager schemaManager,
             DataStorageManager dataStorageMgr,
             MetricManager metricManager,
-            ExecutorService ioExecutor,
-            IgniteSpinBusyLock busyLock
+            ExecutorService ioExecutor
     ) {
         this.catalogService = catalogService;
         this.lowWatermark = lowWatermark;
@@ -108,7 +107,6 @@ final class TableDestructionCoordinator {
         this.dataStorageMgr = dataStorageMgr;
         this.metricManager = metricManager;
         this.ioExecutor = ioExecutor;
-        this.busyLock = busyLock;
     }
 
     /**
@@ -120,11 +118,13 @@ final class TableDestructionCoordinator {
     }
 
     /**
-     * Unregisters event listeners.
+     * Unregisters event listeners and waits for any in-flight destruction operations to complete.
      */
     void stop() {
         lowWatermark.removeListener(LowWatermarkEvent.LOW_WATERMARK_CHANGED, onLowWatermarkChangedListener);
         catalogService.removeListener(CatalogEvent.TABLE_DROP, onTableDropListener);
+
+        busyLock.block();
     }
 
     /**

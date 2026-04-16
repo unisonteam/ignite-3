@@ -45,7 +45,6 @@ import org.apache.ignite.internal.storage.engine.MvTableStorage;
 import org.apache.ignite.internal.storage.engine.StorageEngine;
 import org.apache.ignite.internal.table.InternalTable;
 import org.apache.ignite.internal.table.TableViewInternal;
-import org.apache.ignite.internal.util.IgniteSpinBusyLock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,7 +60,6 @@ class TableDestructionCoordinatorTest {
     private DataStorageManager dataStorageMgr;
     private MetricManager metricManager;
     private ExecutorService ioExecutor;
-    private IgniteSpinBusyLock busyLock;
 
     private TableDestructionCoordinator coordinator;
 
@@ -75,7 +73,6 @@ class TableDestructionCoordinatorTest {
         dataStorageMgr = mock(DataStorageManager.class);
         metricManager = mock(MetricManager.class);
         ioExecutor = Executors.newSingleThreadExecutor();
-        busyLock = new IgniteSpinBusyLock();
 
         coordinator = new TableDestructionCoordinator(
                 catalogService,
@@ -85,15 +82,13 @@ class TableDestructionCoordinatorTest {
                 schemaManager,
                 dataStorageMgr,
                 metricManager,
-                ioExecutor,
-                busyLock
+                ioExecutor
         );
     }
 
     @AfterEach
     void tearDown() {
         coordinator.stop();
-        busyLock.block();
         ioExecutor.shutdownNow();
     }
 

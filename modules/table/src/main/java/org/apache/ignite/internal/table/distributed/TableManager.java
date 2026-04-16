@@ -386,8 +386,7 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
                 schemaManager,
                 dataStorageMgr,
                 metricManager,
-                ioExecutor,
-                busyLock
+                ioExecutor
         );
     }
 
@@ -557,9 +556,10 @@ public class TableManager implements IgniteTablesInternal, IgniteComponent {
         stopManagerFuture.completeExceptionally(new NodeStoppingException());
 
         streamerFlushExecutorFactory.beforeStop();
-        busyLock.block();
 
         destructionCoordinator.stop();
+
+        busyLock.block();
 
         catalogService.removeListener(CatalogEvent.TABLE_CREATE, onTableCreateListener);
         catalogService.removeListener(CatalogEvent.TABLE_ALTER, onTableAlterListener);
